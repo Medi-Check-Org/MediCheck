@@ -4,14 +4,14 @@
   "private": true,
   "scripts": {
     "create:batch": "ts-node lib/createPublicBatchRegistry.ts",
-    "build": "prisma generate --no-engine && next build",
-    "dev": "next dev",
+    "build": "prisma generate --no-engine && next build --webpack",
+    "dev": "next dev --webpack",
     "postinstall": "prisma generate --no-engine",
     "lint": "next lint",
     "start": "next start"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.31.8",
+    "@clerk/nextjs": "^6.36.4",
     "@google/genai": "^1.20.0",
     "@google/generative-ai": "^0.24.1",
     "@hashgraph/sdk": "^2.72.0",
@@ -65,7 +65,7 @@
     "lucide-react": "^0.454.0",
     "mime": "^4.1.0",
     "nanoid": "^5.1.5",
-    "next": "15.5.2",
+    "next": "16.1.0",
     "next-themes": "^0.4.6",
     "onnxruntime-node": "^1.22.0-rev",
     "onnxruntime-web": "^1.22.0",
@@ -95,7 +95,7 @@
     "zod": "3.25.67"
   },
   "devDependencies": {
-    "@next/swc-win32-x64-msvc": "^15.4.6",
+    "@next/swc-win32-x64-msvc": "^16.1.0",
     "@tailwindcss/postcss": "^4.1.9",
     "@types/leaflet": "^1.9.20",
     "@types/node": "^22.18.11",
@@ -115,5 +115,4 @@
       "@hashgraphonline/standards-sdk": "0.1.119"
     }
   }
-
 }

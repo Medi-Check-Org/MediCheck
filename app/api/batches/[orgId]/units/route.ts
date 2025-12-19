@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 interface Params {
-  params: { orgId: string };
+  params: Promise<{ orgId: string }>;
 }
 
 export async function GET(req: Request, { params }: Params) {

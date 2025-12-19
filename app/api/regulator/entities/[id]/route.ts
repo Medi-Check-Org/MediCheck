@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { userId } = await auth();
     
@@ -26,7 +26,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     const { isVerified, isActive, notes } = await request.json();
-    const entityId = params.id;
+    const { id: entityId } = await params;
 
     // Update entity verification status
     const updatedEntity = await prisma.organization.update({

@@ -5,7 +5,7 @@ import { auth, clerkClient } from '@clerk/nextjs/server'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth()
@@ -13,7 +13,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const teamMemberId = params.id
+    const { id: teamMemberId } = await params
     const body = await request.json()
     const { name, role, department, isAdmin, isActive } = body
 
@@ -80,7 +80,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth()
@@ -88,7 +88,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const teamMemberId = params.id
+    const { id: teamMemberId } = await params
 
     // Get the current user
     const user = await prisma.user.findUnique({

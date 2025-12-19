@@ -16,7 +16,7 @@ import {
   generateQRPayload,
   generateBatchQRPayload,
 } from "@/lib/qrPayload";
-import { hedera10Client } from "@/lib/hedera10Client"; 
+import { hedera10Client } from "@/lib/hedera10Client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

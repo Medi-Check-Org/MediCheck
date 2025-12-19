@@ -15,7 +15,7 @@ const QR_SECRET = process.env.QR_SECRET || "dev-secret";
 
 export async function GET(
   req: Request,
-  context: { params: { batchId: string } }
+  context: { params: Promise<{ batchId: string }> }
 ) {
   try {
     const { batchId } = await context.params;
