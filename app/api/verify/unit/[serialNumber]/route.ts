@@ -15,7 +15,7 @@ const QR_SECRET = process.env.QR_SECRET || "dev-secret";
 
 export async function GET(
   req: Request,
-  context: { params: { serialNumber: string } }
+  context: { params: Promise<{ serialNumber: string }> }
 ) {
   console.log("GET /api/verify/unit/[serialNumber] called");
 
