@@ -7,9 +7,9 @@ export const runtime = "nodejs";
 
 // Correct parameter typing for Next.js App Router
 interface RouteParams {
-  params: {
+  params: Promise<{
     transferId: string;
-  };
+  }>;
 }
 
 // PUT - Update transfer status (approval endpoint)
@@ -18,7 +18,7 @@ export async function PUT(
   { params }: RouteParams
 ) {
   try {
-    const { transferId } = params;
+    const { transferId } = await params;
     const body = await req.json();
     const { organizationId, status, notes } = body;
 
@@ -95,7 +95,7 @@ export async function GET(
   { params }: RouteParams
 ) {
   try {
-    const { transferId } = params;
+    const { transferId } = await params;
 
     const transfer = await prisma.ownershipTransfer.findUnique({
       where: { id: transferId },

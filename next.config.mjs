@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -14,9 +11,9 @@ const nextConfig = {
     "@hashgraphonline/standards-sdk",
     "onnxruntime-node",
     'pino', 
-    'pino-pretty'
+    'pino-pretty',
+    'puppeteer'  // Add puppeteer here
   ],
-
 
   webpack: (config, { isServer }) => {
     if (isServer) {
@@ -24,13 +21,18 @@ const nextConfig = {
         ...config.resolve.fallback,
         worker_threads: false,
       };
+      
+      // Add puppeteer to externals
+      config.externals = [...config.externals, 'puppeteer'];
+    }
+
+    // Optimize webpack cache for large strings
+    if (config.cache && config.cache.type === 'filesystem') {
+      config.cache.compression = 'gzip';
+      config.cache.maxAge = 1000 * 60 * 60 * 24 * 7; // 7 days
     }
 
     return config;
   },
-
-  // Optional: Enable standalone output for better server deployment
-  output: "standalone",
 };
-
 export default nextConfig;

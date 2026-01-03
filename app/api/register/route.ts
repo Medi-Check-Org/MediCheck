@@ -4,6 +4,12 @@ import { UserRole } from "@/lib/generated/prisma";
 import { ORG_TYPE_MAP } from "@/utils";
 import { clerkClient } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
+import { createAndRegisterAgent } from "@/lib/hcs10";
+import {
+  AIAgentCapability,
+} from "@hashgraphonline/standards-sdk";
+import { createOrgManagedRegistry } from "@/lib/hedera";
+
 
 export async function POST(req: Request) {
     console.log("Starting user registration...");
@@ -94,6 +100,7 @@ export async function POST(req: Request) {
       // Handle Organization
       if (accountType === "organization") {
         console.log("Registering organization of type:", organizationType);
+
         console.log(ORG_TYPE_MAP);
 
         if (!ORG_TYPE_MAP[organizationType]) {
@@ -102,6 +109,12 @@ export async function POST(req: Request) {
             { status: 400 }
           );
         }
+
+        // Step 1: Create managed registry for org
+        const registryTopicId = await createOrgManagedRegistry(
+          `org-${Date.now()}`,
+          companyName
+        );
 
         const organization = await prisma.organization.create({
           data: {
@@ -122,10 +135,41 @@ export async function POST(req: Request) {
             agencyName,
             officialId,
             distributorType,
+            managedRegistry: registryTopicId,
           },
         });
 
         console.log("Organization created:", organization.id);
+
+        const roleMap = {
+          manufacturer: "MANUFACTURER",
+          drug_distributor: "DRUG_DISTRIBUTOR",
+          pharmacy: "PHARMACY",
+          hospital: "HOSPITAL",
+          regulator: "REGULATOR",
+        };
+
+        // ✅ create Hedera counterpart agent
+        const agentResult = await createAndRegisterAgent({
+          name: `${companyName}-Agent-${Date.now()}`,
+          description: `${companyName} Hedera Agent`,
+          orgId: organization.id,
+          role: roleMap[organizationType as keyof typeof roleMap],
+          model: "gpt-4",
+          capabilities: [AIAgentCapability.TEXT_GENERATION],
+          metadata: {
+            contactEmail,
+            contactPhone,
+            country,
+          },
+        });
+
+        // if (!agentResult.success) {
+        //   console.error("Failed to create HCS-10 agent:", agentResult.error);
+        //   // optional rollback or alert handling here
+        // } else {
+        //   console.log("HCS-10 agent registered:", agentResult?.data?.agent.accountId);
+        // }
 
         // Add the admin as a team member
         const teamMember = await prisma.teamMember.create({

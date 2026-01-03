@@ -3,13 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 interface Params {
-  params: { orgId: string };
+  params: Promise<{ orgId: string }>;
 }
 
 export async function GET(req: Request, { params }: Params) {
   try {
+    const { orgId } = await params;
+
     const units = await prisma.medicationUnit.findMany({
-      where: { batchId: params.orgId },
+      where: { batchId: orgId },
       orderBy: { createdAt: "asc" },
     });
 

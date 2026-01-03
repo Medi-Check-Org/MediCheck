@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 // components import 
-import { HospitalSidebar } from "@/components/hospital-sidebar";
+import { HospitalSidebar } from "@/components/hospital-page-component/hospital-sidebar";
 import HospitalSettings from "@/components/hospital-page-component/HospitalSettings";
 import HospitalAlerts from "@/components/hospital-page-component/HospitalAlerts";
 import HospitalReports from "@/components/hospital-page-component/HospitalReports";
@@ -11,6 +11,8 @@ import HospitalInventory from "@/components/hospital-page-component/HospitalInve
 import HospitalMain from "@/components/hospital-page-component/HospitalMain";
 import Transfers from "@/components/Transfers";
 import QRScanner from "@/components/qr-scanner";
+import { TeamMemberManagement } from "@/components/team-member-management";
+import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Menu, Shield, X } from "lucide-react";
@@ -176,6 +178,20 @@ export default function HospitalDashboard() {
 
           {activeTab === "inventory" && (
             <HospitalInventory orgId={orgId} />
+          )}
+
+          {activeTab === "team" && (
+            <TeamMemberManagement 
+              organizationType="hospital"
+              organizationId={orgId}
+            />
+          )}
+
+          {activeTab === "analytics" && (
+            <AnalyticsDashboard 
+              dashboardType="hospital"
+              title="Hospital Analytics"
+            />
           )}
 
           {activeTab === "reports" && (

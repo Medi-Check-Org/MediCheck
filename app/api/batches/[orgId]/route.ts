@@ -2,12 +2,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   _request: Request,
-  { params }: { params: Promise<{ orgId: string }> } // <- note Promise
+  { params }: { params: Promise<{ orgId: string }> }
 ) {
   try {
-    const { orgId } = await params; // ✅ must await
+    const { orgId } = await params;
 
     const org = await prisma.organization.findUnique({
       where: { id: orgId },
@@ -31,7 +33,8 @@ export async function GET(
     });
 
     return NextResponse.json(batches, { status: 200 });
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching batches:", error);
     return NextResponse.json(
       { error: "Failed to fetch batches" },
