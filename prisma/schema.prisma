@@ -76,9 +76,28 @@ model Organization {
   transfersTo       OwnershipTransfer[] @relation("TransferTo")
   teamMembers       TeamMember[]
   products          Product[]
+  apikeys           ApiKey[]
 
   @@map("organizations")
 }
+
+model ApiKey {
+  id              String   @id @default(cuid())
+  organizationId  String
+  name            String
+  hashedKey       String   @unique
+  scopes          String[]
+  createdAt       DateTime @default(now())
+  expiresAt       DateTime?
+  revokedAt       DateTime?
+  lastUsedAt      DateTime?
+  createdByUserId String?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId])
+}
+
 
 model Product {
   id                String    @id @default(cuid())

@@ -1,5 +1,10 @@
+import crypto from "crypto";
+
+const API_KEY_SECRET = process.env.API_KEY_SECRET || "";
 
 export function hashApiKey(rawKey: string): string {
-  const crypto = require("crypto");
-  return crypto.createHash("sha256").update(rawKey).digest("hex");
+  return crypto
+    .createHmac("sha256", API_KEY_SECRET)
+    .update(rawKey)
+    .digest("hex");
 }

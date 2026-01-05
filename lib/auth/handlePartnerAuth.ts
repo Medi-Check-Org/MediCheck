@@ -31,6 +31,12 @@ export async function handlePartnerAuth(req: Request) {
     );
   }
 
+  // async usage tracking
+  prisma.apiKey.update({
+    where: { id: apiKey.id },
+    data: { lastUsedAt: new Date() }
+  }).catch(() => {});
+
   const actor: Actor = {
     type: "machine",
     apiKeyId: apiKey.id,
