@@ -9,14 +9,34 @@ export default clerkMiddleware(async (auth, req) => {
 
   console.log('Incoming pathname in middleware', pathname)
 
+  // ============================================================
+  // 🚀 NEW: Partner API Routes (No Clerk Auth Required)
+  // ============================================================
+  // These routes use API key authentication handled within the route itself
+  if (pathname.startsWith("/api/partners/")) {
+    console.log("✓ Partner API route detected - skipping Clerk middleware");
+    return NextResponse.next();
+  }
+
+  // ============================================================
+  // 🔒 Web API Routes (Clerk Auth Required)
+  // ============================================================
+  // These routes require Clerk authentication, handled in the route
+  if (pathname.startsWith("/api/web/")) {
+    console.log("✓ Web API route detected - Clerk auth checked in route handler");
+    return NextResponse.next();
+  }
+
+  // ============================================================
+  // 🌐 Public API Routes (No Auth Required)
+  // ============================================================
   // Skip auth/role checks for these API routes because they are either public,
   // used by third-party services, or need to be accessible without a signed-in user.
   // This prevents the middleware from redirecting or blocking legitimate requests.
 
   if (
-    pathname.startsWith("/api/hotspots") ||
-    pathname.startsWith("/api/batches") ||
     pathname.startsWith("/api/verify") ||
+    pathname.startsWith("/api/hotspots") ||
     pathname.startsWith("/api/geminiTranslation") ||
     pathname.startsWith("/api/auth")
   ) {

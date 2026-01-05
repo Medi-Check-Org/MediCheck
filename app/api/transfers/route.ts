@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { listTransfers } from "@/app/usecases/transfers";
+import { getActorFromClerk } from "@/app/auth/clerk";
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
+    // Get authenticated actor
+    const actor = await getActorFromClerk();
+    if (!actor) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -20,51 +21,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let whereClause: any = {};
+    // Map direction to use case input format
+    let directionFilter: "OUTGOING" | "INCOMING" | "ALL" = "ALL";
+    if (direction === "outgoing") directionFilter = "OUTGOING";
+    else if (direction === "incoming") directionFilter = "INCOMING";
 
-    if (direction === "outgoing") {
-      whereClause.fromOrgId = orgId;
-    } else if (direction === "incoming") {
-      whereClause.toOrgId = orgId;
-    } else {
-      // all - both incoming and outgoing
-      whereClause.OR = [
-        { fromOrgId: orgId },
-        { toOrgId: orgId },
-      ];
-    }
-
-    const transfers = await prisma.ownershipTransfer.findMany({
-      where: whereClause,
-      include: {
-        batch: {
-          select: {
-            batchId: true,
-            drugName: true,
-            batchSize: true,
-            expiryDate: true,
-          },
-        },
-        fromOrg: {
-          select: {
-            companyName: true,
-            organizationType: true,
-          },
-        },
-        toOrg: {
-          select: {
-            companyName: true,
-            organizationType: true,
-          },
-        },
+    // Call use case
+    const result = await listTransfers(
+      {
+        organizationId: orgId,
+        direction: directionFilter,
       },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+      actor
+    );
 
-    // Transform the data for easier frontend consumption
-    const formattedTransfers = transfers.map((transfer) => ({
+    // Transform the data for easier frontend consumption (keep compatible format)
+    const formattedTransfers = result.transfers.map((transfer) => ({
       id: transfer.id,
       batchId: transfer.batch.batchId,
       medicationName: transfer.batch.drugName,
@@ -85,10 +57,11 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json({ transfers: formattedTransfers });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching transfers:", error);
+    const message = error instanceof Error ? error.message : "Failed to fetch transfers";
     return NextResponse.json(
-      { error: "Failed to fetch transfers" },
+      { error: message },
       { status: 500 }
     );
   }
