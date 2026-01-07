@@ -1,6 +1,7 @@
 // app/api/batches/[orgId]/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { listBatches } from "@/app/usecases/batches";
+import { getActorFromClerk } from "@/app/auth/clerk";
 
 export const dynamic = 'force-dynamic';
 
@@ -9,35 +10,32 @@ export async function GET(
   { params }: { params: Promise<{ orgId: string }> }
 ) {
   try {
-    const { orgId } = await params;
-
-    const org = await prisma.organization.findUnique({
-      where: { id: orgId },
-    });
-
-    if (!org) {
+    // Get authenticated actor
+    const actor = await getActorFromClerk();
+    if (!actor) {
       return NextResponse.json(
-        { error: "Organization not found" },
-        { status: 404 }
+        { error: "Unauthorized" },
+        { status: 401 }
       );
     }
 
-    const batches = await prisma.medicationBatch.findMany({
-      where: { organizationId: org.id },
-      orderBy: { createdAt: "desc" },
-      include: {
-        _count: {
-          select: { medicationUnits: true },
-        },
-      },
-    });
+    const { orgId } = await params;
 
-    return NextResponse.json(batches, { status: 200 });
+    // Call use case
+    const result = await listBatches(
+      {
+        organizationId: orgId,
+      },
+      actor
+    );
+
+    return NextResponse.json(result.batches, { status: 200 });
   }
-  catch (error) {
+  catch (error: unknown) {
     console.error("Error fetching batches:", error);
+    const message = error instanceof Error ? error.message : "Failed to fetch batches";
     return NextResponse.json(
-      { error: "Failed to fetch batches" },
+      { error: message },
       { status: 500 }
     );
   }

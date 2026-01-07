@@ -1,80 +1,39 @@
 // /app/api/transfer/ownership/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { TransferStatus } from "@/lib/generated/prisma";
-import { BatchStatus } from "@/lib/generated/prisma";
+import { initiateTransfer, listTransfers } from "@/app/usecases/transfers";
+import { getActorFromClerk } from "@/app/auth/clerk";
 
 export const runtime = "nodejs";
 
 // POST - Create new transfer ownership record
 export async function POST(req: Request) {
   try {
+    // Get authenticated actor
+    const actor = await getActorFromClerk();
+    if (!actor) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
     const { batchId, fromOrgId, toOrgId, notes } = body;
 
-    // Basic validation
-    if (!batchId || !fromOrgId || !toOrgId) {
-      return NextResponse.json(
-        { error: "Missing required fields: batchId, fromOrgId, toOrgId" },
-        { status: 400 }
-      );
-    }
-
-    // Verify batch exists
-    const batch = await prisma.medicationBatch.findUnique({
-      where: { batchId },
-    });
-
-    if (!batch) {
-      return NextResponse.json({ error: "Batch not found" }, { status: 404 });
-    }
-
-    // Verify organizations exist
-    const [fromOrg, toOrg] = await Promise.all([
-      prisma.organization.findUnique({ where: { id: fromOrgId } }),
-      prisma.organization.findUnique({ where: { id: toOrgId } }),
-    ]);
-
-
-    if (!fromOrg || !toOrg) {
-      return NextResponse.json(
-        { error: "One or both organizations not found" },
-        { status: 404 }
-      );
-    }
-
-    // Create transfer ownership record - simple insertion into OwnershipTransfer table
-    const transfer = await prisma.ownershipTransfer.create({
-      data: {
-        batchId: batch.id,
+    // Call use case
+    const result = await initiateTransfer(
+      {
+        batchId,
         fromOrgId,
         toOrgId,
-        status: TransferStatus.PENDING,
-        notes: notes || null,
+        notes,
       },
-    });
-
-    // ✅ Update batch status to IN_TRANSIT
-    await prisma.medicationBatch.update({
-      where: { id: batch.id },
-      data: {
-        status: BatchStatus.IN_TRANSIT
-      },
-    });
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Transfer ownership created successfully",
-        transferId: transfer.id,
-        status: transfer.status,
-      },
-      { status: 201 }
+      actor
     );
-  } catch (error) {
+
+    return NextResponse.json(result, { status: 201 });
+  } catch (error: unknown) {
     console.error("Transfer Creation Error:", error);
+    const message = error instanceof Error ? error.message : "Failed to create transfer ownership";
     return NextResponse.json(
-      { error: "Failed to create transfer ownership" },
+      { error: message },
       { status: 500 }
     );
   }
@@ -84,6 +43,12 @@ export async function POST(req: Request) {
 // GET - Get all transfers where organization is sender OR receiver
 export async function GET(req: Request) {
   try {
+    // Get authenticated actor
+    const actor = await getActorFromClerk();
+    if (!actor) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const organizationId = searchParams.get("organizationId");
     const status = searchParams.get("status");
@@ -95,82 +60,28 @@ export async function GET(req: Request) {
       );
     }
 
-    // Build where clause - fromOrgId matches OR toOrgId matches organizationId
-    let whereClause: any = {
-      OR: [
-        { fromOrgId: organizationId },
-        { toOrgId: organizationId }
-      ]
-    };
-
-    // Add status filter if provided
-    if (status) {
-      whereClause.status = status;
-    }
-
-    // Get all transfers from OwnershipTransfer table
-    const transfers = await prisma.ownershipTransfer.findMany({
-      where: whereClause,
-      include: {
-        batch: {
-          select: {
-            batchId: true,
-            drugName: true,
-            batchSize: true,
-            manufacturingDate: true,
-            expiryDate: true
-          }
-        },
-        fromOrg: {
-          select: {
-            companyName: true,
-            organizationType: true,
-            contactEmail: true
-          }
-        },
-        toOrg: {
-          select: {
-            companyName: true,
-            organizationType: true,
-            contactEmail: true
-          }
-        }
+    // Call use case
+    const result = await listTransfers(
+      {
+        organizationId,
+        status: status || undefined,
+        direction: "ALL",
       },
-      orderBy: { createdAt: 'desc' }
-    });
+      actor
+    );
 
-    // Add direction info for the logged in organization
-    const transfersWithDirection = transfers.map(transfer => ({
-      id: transfer.id,
-      batchId: transfer.batchId,
-      fromOrgId: transfer.fromOrgId,
-      toOrgId: transfer.toOrgId,
-      status: transfer.status,
-      notes: transfer.notes,
-      transferDate: transfer.transferDate,
-      createdAt: transfer.createdAt,
-      updatedAt: transfer.updatedAt,
-      
-      // Direction from logged-in organization perspective
-      direction: transfer.fromOrgId === organizationId ? 'OUTGOING' : 'INCOMING',
-      requiresApproval: transfer.status === 'PENDING',
-      canApprove: transfer.toOrgId === organizationId && transfer.status === 'PENDING',
-      
-      // Include related data
-      batch: transfer.batch,
-      fromOrg: transfer.fromOrg,
-      toOrg: transfer.toOrg
-    }));
-
-    return NextResponse.json({
-      transfers: transfersWithDirection,
-      total: transfers.length
-    }, { status: 200 });
-
-  } catch (error) {
-    console.error("Get Transfers Error:", error);
     return NextResponse.json(
-      { error: "Failed to retrieve transfers" },
+      {
+        transfers: result.transfers,
+        total: result.total,
+      },
+      { status: 200 }
+    );
+  } catch (error: unknown) {
+    console.error("Get Transfers Error:", error);
+    const message = error instanceof Error ? error.message : "Failed to retrieve transfers";
+    return NextResponse.json(
+      { error: message },
       { status: 500 }
     );
   }

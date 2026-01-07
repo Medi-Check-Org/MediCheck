@@ -1,6 +1,7 @@
 // /app/api/organizations/route.ts
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { listOrganizations } from "@/app/usecases/organizations";
+import { getActorFromClerk } from "@/app/auth/clerk";
 
 export const runtime = "nodejs";
 
@@ -10,15 +11,24 @@ export const runtime = "nodejs";
  */
 export async function GET() {
   try {
-    const organizations = await prisma.organization.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+    // Get authenticated actor
+    const actor = await getActorFromClerk();
+    if (!actor) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
-    return NextResponse.json(organizations, { status: 200 });
-  } catch (error) {
+    // Call use case
+    const result = await listOrganizations({}, actor);
+
+    return NextResponse.json(result.organizations, { status: 200 });
+  } catch (error: unknown) {
     console.error("Error fetching organizations:", error);
+    const message = error instanceof Error ? error.message : "Failed to fetch organizations";
     return NextResponse.json(
-      { error: "Failed to fetch organizations" },
+      { error: message },
       { status: 500 }
     );
   }
