@@ -1,15 +1,15 @@
 /**
  * Actor Normalizer
- * 
+ *
  * Shared utility for normalizing Actor objects from different auth sources.
  * Ensures consistent Actor structure regardless of authentication method.
  */
 
-import { Actor } from "@/app/types/actor";
+import { Actor } from "@/utils/types/actor";
 
 /**
  * Normalize Actor object
- * 
+ *
  * Ensures all required fields are present and properly formatted.
  * This is useful when creating Actors from different sources.
  */
@@ -37,12 +37,12 @@ export function normalizeActor(actor: Partial<Actor>): Actor {
 
 /**
  * Merge permissions from multiple sources
- * 
+ *
  * Useful when Actor has both role-based and custom permissions
  */
 export function mergePermissions(...permissionSets: string[][]): string[] {
   const allPermissions = new Set<string>();
-  
+
   for (const set of permissionSets) {
     for (const permission of set) {
       allPermissions.add(permission);
@@ -54,7 +54,7 @@ export function mergePermissions(...permissionSets: string[][]): string[] {
 
 /**
  * Sanitize Actor for logging
- * 
+ *
  * Removes sensitive metadata before logging
  */
 export function sanitizeActorForLogging(actor: Actor): Partial<Actor> {

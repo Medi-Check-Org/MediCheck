@@ -1,38 +1,42 @@
 /**
  * Use Case: Create Batch
- * 
+ *
  * Handles the complete business logic for creating a new medication batch.
  * Built with dependency injection and repository pattern for proper separation of concerns.
  */
 
-import { Actor, Permissions, requirePermission } from "@/app/types/actor";
-import { CreateBatchInput, CreateBatchSchema, validateInput } from "@/app/types/validation";
-import { 
-  BatchRepository, 
+import { Actor, Permissions, requirePermission } from "@/utils/types/actor";
+import {
+  CreateBatchInput,
+  CreateBatchSchema,
+  validateInput,
+} from "@/utils/types/validation";
+import {
+  BatchRepository,
   OrganizationRepository,
   batchRepository,
-  organizationRepository 
+  organizationRepository,
 } from "@/app/infrastructure/db/repositories";
 import {
   ForbiddenError,
   BusinessRuleViolationError,
   ExternalServiceError,
-} from "@/app/types/errors";
+} from "@/utils/types/errors";
 import { nanoid } from "nanoid";
 import {
   registerUnitOnBatch,
   createBatchRegistry,
   logBatchEvent,
 } from "@/lib/hedera";
-import {
-  generateQRPayload,
-  generateBatchQRPayload,
-} from "@/lib/qrPayload";
+import { generateQRPayload, generateBatchQRPayload } from "@/lib/qrPayload";
 import { hedera10Client } from "@/lib/hedera10Client";
 
 const QR_SECRET = process.env.QR_SECRET || "dev-secret";
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-const UNIT_REG_CONCURRENCY = parseInt(process.env.UNIT_REG_CONCURRENCY || "10", 10);
+const UNIT_REG_CONCURRENCY = parseInt(
+  process.env.UNIT_REG_CONCURRENCY || "10",
+  10
+);
 
 import type { MedicationBatch } from "@/lib/generated/prisma";
 
@@ -59,7 +63,7 @@ async function runInBatches<T>(
 
 /**
  * Create Batch Use Case
- * 
+ *
  * Dependencies injected for testability and loose coupling
  */
 export class CreateBatchUseCase {
@@ -77,7 +81,9 @@ export class CreateBatchUseCase {
 
     // 3. Verify actor belongs to the organization
     if (actor.organizationId !== input.organizationId) {
-      throw new ForbiddenError("Actor does not have access to this organization");
+      throw new ForbiddenError(
+        "Actor does not have access to this organization"
+      );
     }
 
     // 4. Load organization with agent info
@@ -91,12 +97,17 @@ export class CreateBatchUseCase {
       topicId: string;
       transactionId?: string;
     }
-    
+
     let registryTopicId: RegistryResult;
     try {
-      registryTopicId = await createBatchRegistry(batchId, org.id, input.drugName) as RegistryResult;
+      registryTopicId = (await createBatchRegistry(
+        batchId,
+        org.id,
+        input.drugName
+      )) as RegistryResult;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       throw new ExternalServiceError(
         "Hedera",
         `Failed to create batch registry: ${errorMessage}`
@@ -170,9 +181,15 @@ export class CreateBatchUseCase {
           }),
           "Batch creation announcement"
         );
-        console.log("Announced batch on agent outbound topic:", org.organizationAgent.outboundTopic);
+        console.log(
+          "Announced batch on agent outbound topic:",
+          org.organizationAgent.outboundTopic
+        );
       } catch (e) {
-        console.warn("Failed to announce to HCS-10 outbound topic (non-fatal):", e);
+        console.warn(
+          "Failed to announce to HCS-10 outbound topic (non-fatal):",
+          e
+        );
       }
     }
 
@@ -187,11 +204,14 @@ export class CreateBatchUseCase {
       const serialNumber = `UNIT-${batchId}-${unitNumber}${randomSuffix}`;
 
       // Register unit on HCS-2 registry
-      const seq = await registerUnitOnBatch(registryTopicId?.topicId as string, {
-        serialNumber,
-        drugName: input.drugName,
-        batchId,
-      });
+      const seq = await registerUnitOnBatch(
+        registryTopicId?.topicId as string,
+        {
+          serialNumber,
+          drugName: input.drugName,
+          batchId,
+        }
+      );
 
       const qrUnitPayload = generateQRPayload(
         serialNumber,
@@ -250,7 +270,9 @@ export class CreateBatchUseCase {
           }),
           "New batch announcement"
         );
-        console.log(`📢 Announced new batch ${batchId} on managed registry ${org.managedRegistry}`);
+        console.log(
+          `📢 Announced new batch ${batchId} on managed registry ${org.managedRegistry}`
+        );
       } catch (e) {
         console.warn("Failed to announce on managed registry (non-fatal):", e);
       }
@@ -272,6 +294,9 @@ export const createBatchUseCase = new CreateBatchUseCase(
 );
 
 // Export convenience function
-export async function createBatch(input: unknown, actor: Actor): Promise<CreateBatchOutput> {
+export async function createBatch(
+  input: unknown,
+  actor: Actor
+): Promise<CreateBatchOutput> {
   return createBatchUseCase.execute(input, actor);
 }

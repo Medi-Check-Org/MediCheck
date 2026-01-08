@@ -1,11 +1,14 @@
 /**
  * Use Case: Update Transfer Status
- * 
+ *
  * Accepts or rejects a pending transfer
  */
 
-import { Actor, Permissions, requirePermission } from "@/app/types/actor";
-import { UpdateTransferStatusSchema, validateInput } from "@/app/types/validation";
+import { Actor, Permissions, requirePermission } from "@/utils/types/actor";
+import {
+  UpdateTransferStatusSchema,
+  validateInput,
+} from "@/utils/types/validation";
 import {
   BatchRepository,
   TransferRepository,
@@ -15,7 +18,7 @@ import {
 import {
   ForbiddenError,
   BusinessRuleViolationError,
-} from "@/app/types/errors";
+} from "@/utils/types/errors";
 import type { OwnershipTransfer, TransferStatus } from "@/lib/generated/prisma";
 
 export interface UpdateTransferOutput {
@@ -29,7 +32,10 @@ export class UpdateTransferStatusUseCase {
     private readonly batchRepo: BatchRepository
   ) {}
 
-  async execute(rawInput: unknown, actor: Actor): Promise<UpdateTransferOutput> {
+  async execute(
+    rawInput: unknown,
+    actor: Actor
+  ): Promise<UpdateTransferOutput> {
     // 1. Validate input
     const input = validateInput(UpdateTransferStatusSchema, rawInput);
 
@@ -74,7 +80,10 @@ export class UpdateTransferStatusUseCase {
     const eventSeq = 0;
     await this.batchRepo.createEvent({
       batchId: transfer.batchId,
-      eventType: input.status === "COMPLETED" ? "TRANSFER_COMPLETED" : "TRANSFER_CANCELLED",
+      eventType:
+        input.status === "COMPLETED"
+          ? "TRANSFER_COMPLETED"
+          : "TRANSFER_CANCELLED",
       hederaSeq: eventSeq,
       payload: {
         transferId: transfer.id,
@@ -97,6 +106,9 @@ export const updateTransferStatusUseCase = new UpdateTransferStatusUseCase(
 );
 
 // Convenience function
-export async function updateTransferStatus(input: unknown, actor: Actor): Promise<UpdateTransferOutput> {
+export async function updateTransferStatus(
+  input: unknown,
+  actor: Actor
+): Promise<UpdateTransferOutput> {
   return updateTransferStatusUseCase.execute(input, actor);
 }

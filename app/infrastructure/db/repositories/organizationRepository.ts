@@ -1,12 +1,17 @@
 /**
  * Organization Repository
- * 
+ *
  * Handles all database operations related to organizations.
  */
 
 import { prisma } from "@/lib/prisma";
-import type { Organization, Agent, Prisma, OrganizationType } from "@/lib/generated/prisma";
-import { NotFoundError } from "@/app/types/errors";
+import type {
+  Organization,
+  Agent,
+  Prisma,
+  OrganizationType,
+} from "@/lib/generated/prisma";
+import { NotFoundError } from "@/utils/types/errors";
 
 export interface OrganizationWithAgent extends Organization {
   organizationAgent?: Agent | null;
@@ -60,7 +65,9 @@ export class OrganizationRepository {
   /**
    * Find organization with full details
    */
-  async findByIdWithDetails(id: string): Promise<OrganizationWithDetails | null> {
+  async findByIdWithDetails(
+    id: string
+  ): Promise<OrganizationWithDetails | null> {
     return prisma.organization.findUnique({
       where: { id },
       include: {
@@ -96,7 +103,8 @@ export class OrganizationRepository {
     const whereClause: Prisma.OrganizationWhereInput = {};
 
     if (filters?.organizationType) {
-      whereClause.organizationType = filters.organizationType as OrganizationType;
+      whereClause.organizationType =
+        filters.organizationType as OrganizationType;
     }
 
     if (filters?.state) {
@@ -112,7 +120,10 @@ export class OrganizationRepository {
   /**
    * Update organization
    */
-  async update(id: string, data: UpdateOrganizationData): Promise<Organization> {
+  async update(
+    id: string,
+    data: UpdateOrganizationData
+  ): Promise<Organization> {
     return prisma.organization.update({
       where: { id },
       data,

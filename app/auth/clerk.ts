@@ -1,25 +1,25 @@
 /**
  * Clerk Authentication Adapter
- * 
+ *
  * Converts Clerk authentication into Actor model.
  * Loads user from database and extracts organization and permissions.
  */
 
 import { auth as clerkAuth, currentUser } from "@clerk/nextjs/server";
-import { Actor, Permissions } from "@/app/types/actor";
+import { Actor, Permissions } from "@/utils/types/actor";
 import { userRepository } from "@/app/infrastructure/db/repositories";
-import { UnauthorizedError, ForbiddenError } from "@/app/types/errors";
+import { UnauthorizedError, ForbiddenError } from "@/utils/types/errors";
 
 /**
  * Get Actor from Clerk authentication
- * 
+ *
  * @throws {UnauthorizedError} If no user is authenticated
  * @throws {ForbiddenError} If user is not part of any organization
  */
 export async function getActorFromClerk(): Promise<Actor> {
   // Get Clerk user ID
   const { userId } = await clerkAuth();
-  
+
   if (!userId) {
     throw new UnauthorizedError("No authenticated user");
   }

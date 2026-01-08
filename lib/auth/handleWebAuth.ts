@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { UserRole } from "@/lib/generated/prisma";
 import { publicRoutes, authRoutes, orgnaizationRoutes } from "@/utils";
-import type { Actor } from "@/app/types/actor";
+import type { Actor } from "@/utils/types/actor";
 import { userRepository } from "@/app/infrastructure/db/repositories";
 import { getPermissionsForRole } from "@/app/auth/clerk";
 
 export async function handleWebAuth(auth: any, req: Request) {
   const pathname = new URL(req.url).pathname;
 
-  console.log('Incoming pathname in handleWebAuth', pathname)
+  console.log("Incoming pathname in handleWebAuth", pathname);
 
   const { userId, sessionClaims } = await auth();
 
@@ -65,20 +65,20 @@ export async function handleWebAuth(auth: any, req: Request) {
     }
   }
 
-  const permissions = getPermissionsForRole(teamMember.userRole)
+  const permissions = getPermissionsForRole(teamMember.userRole);
 
   // Build normalized actor
   const actor: Actor = {
     type: "human",
     id: userId,
-    metadata: {role: role},
+    metadata: { role: role },
     permissions: permissions, // To be implemented
     organizationId: organizationId!,
   };
 
   //Consumer route authorization
   if (pathname.startsWith("/consumer") && role !== UserRole.CONSUMER) {
-      return NextResponse.redirect(new URL(publicRoutes.unauthorized, req.url));
+    return NextResponse.redirect(new URL(publicRoutes.unauthorized, req.url));
   }
 
   // Dashboard authorization

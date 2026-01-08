@@ -1,13 +1,21 @@
 /**
  * Use Case: Get Batch Details
- * 
+ *
  * Retrieves detailed information about a specific batch
  */
 
-import { Actor, Permissions, requirePermission } from "@/app/types/actor";
-import { GetBatchInput, GetBatchSchema, validateInput } from "@/app/types/validation";
-import { BatchRepository, batchRepository, BatchWithRelations } from "@/app/infrastructure/db/repositories";
-import { ForbiddenError } from "@/app/types/errors";
+import { Actor, Permissions, requirePermission } from "@/utils/types/actor";
+import {
+  GetBatchInput,
+  GetBatchSchema,
+  validateInput,
+} from "@/utils/types/validation";
+import {
+  BatchRepository,
+  batchRepository,
+  BatchWithRelations,
+} from "@/app/infrastructure/db/repositories";
+import { ForbiddenError } from "@/utils/types/errors";
 
 export interface GetBatchOutput {
   batch: BatchWithRelations;
@@ -41,6 +49,9 @@ export class GetBatchUseCase {
 export const getBatchUseCase = new GetBatchUseCase(batchRepository);
 
 // Convenience function
-export async function getBatch(input: unknown, actor: Actor): Promise<GetBatchOutput> {
+export async function getBatch(
+  input: unknown,
+  actor: Actor
+): Promise<GetBatchOutput> {
   return getBatchUseCase.execute(input, actor);
 }

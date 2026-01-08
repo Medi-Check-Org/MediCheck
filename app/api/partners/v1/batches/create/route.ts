@@ -1,6 +1,6 @@
 /**
  * Partner API Route: Create Batch
- * 
+ *
  * Machine-to-machine endpoint with API key authentication.
  * Uses the SAME business logic as web route, different auth only.
  */
@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActorFromApiKey, extractApiKeyFromHeaders } from "@/app/auth";
 import { createBatch } from "@/app/usecases/batches/createBatch";
-import { toErrorResponse, UnauthorizedError } from "@/app/types/errors";
+import { toErrorResponse, UnauthorizedError } from "@/utils/types/errors";
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,6 +42,8 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     // Handle errors uniformly
     const errorResponse = toErrorResponse(error);
-    return NextResponse.json(errorResponse, { status: errorResponse.statusCode });
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }

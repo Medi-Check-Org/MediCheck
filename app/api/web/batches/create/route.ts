@@ -1,6 +1,6 @@
 /**
  * Web API Route: Create Batch
- * 
+ *
  * Frontend-facing endpoint with Clerk authentication.
  * Delegates business logic to use case layer.
  */
@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActorFromClerk } from "@/app/auth";
 import { createBatch } from "@/app/usecases/batches/createBatch";
-import { toErrorResponse } from "@/app/types/errors";
+import { toErrorResponse } from "@/utils/types/errors";
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,6 +32,8 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     // Handle errors uniformly
     const errorResponse = toErrorResponse(error);
-    return NextResponse.json(errorResponse, { status: errorResponse.statusCode });
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }

@@ -1,13 +1,19 @@
 /**
  * Batch Repository
- * 
+ *
  * Handles all database operations related to medication batches.
  * Provides clean abstraction over Prisma for batch operations.
  */
 
 import { prisma } from "@/lib/prisma";
-import type { Prisma, MedicationBatch, MedicationUnit, BatchEvent, BatchStatus } from "@/lib/generated/prisma";
-import { NotFoundError } from "@/app/types/errors";
+import type {
+  Prisma,
+  MedicationBatch,
+  MedicationUnit,
+  BatchEvent,
+  BatchStatus,
+} from "@/lib/generated/prisma";
+import { NotFoundError } from "@/utils/types/errors";
 
 export interface BatchWithRelations extends MedicationBatch {
   organization?: {
@@ -143,7 +149,9 @@ export class BatchRepository {
   /**
    * List batches with filters
    */
-  async list(filters: ListBatchesFilters): Promise<{ batches: BatchWithRelations[]; total: number }> {
+  async list(
+    filters: ListBatchesFilters
+  ): Promise<{ batches: BatchWithRelations[]; total: number }> {
     const whereClause: Prisma.MedicationBatchWhereInput = {};
 
     if (filters.organizationId) {
@@ -203,7 +211,10 @@ export class BatchRepository {
   /**
    * Update batch status
    */
-  async updateStatus(batchId: string, status: BatchStatus): Promise<MedicationBatch> {
+  async updateStatus(
+    batchId: string,
+    status: BatchStatus
+  ): Promise<MedicationBatch> {
     return prisma.medicationBatch.update({
       where: { batchId },
       data: { status },
@@ -213,7 +224,10 @@ export class BatchRepository {
   /**
    * Update batch by database ID
    */
-  async update(id: string, data: Partial<CreateBatchData>): Promise<MedicationBatch> {
+  async update(
+    id: string,
+    data: Partial<CreateBatchData>
+  ): Promise<MedicationBatch> {
     return prisma.medicationBatch.update({
       where: { id },
       data,
@@ -285,7 +299,10 @@ export class BatchRepository {
   /**
    * Update batch organization (for transfers)
    */
-  async updateOrganization(batchId: string, organizationId: string): Promise<MedicationBatch> {
+  async updateOrganization(
+    batchId: string,
+    organizationId: string
+  ): Promise<MedicationBatch> {
     return prisma.medicationBatch.update({
       where: { id: batchId },
       data: { organizationId },
