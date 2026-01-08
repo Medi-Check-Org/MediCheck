@@ -5,6 +5,7 @@
  * Business logic works with Actor, never caring about the authentication method.
  */
 
+
 export type ActorType = "human" | "machine";
 
 export interface Actor {

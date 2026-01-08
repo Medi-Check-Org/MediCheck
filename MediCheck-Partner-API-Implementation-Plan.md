@@ -99,6 +99,7 @@ Allow manufacturers to authenticate programmatically using API keys.
 - Support key expiration and revocation
 - Attach scopes/permissions to keys
 - Track last-used timestamps for auditing
+- include api routes to send keys to manufacturers on the frontend
 
 ### Deliverables
 - Working API key authentication
