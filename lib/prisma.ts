@@ -1,23 +1,20 @@
-import { PrismaClient } from "./generated/prisma";
+import { PrismaClient } from "@prisma/client";
 import { withAccelerate } from "@prisma/extension-accelerate";
 
 // Create the base Prisma client
-const createPrismaClient = () =>
+const createPrismaClient = () => 
   new PrismaClient({
+    accelerateUrl: process.env.DATABASE_URL,
     log: ["query", "info", "warn", "error"],
   }).$extends(withAccelerate());
 
-// Type for the extended Prisma client
-type ExtendedPrismaClient = ReturnType<typeof createPrismaClient>;
-
 declare global {
-  // This ensures `globalThis.prisma` has the correct type
-  var prisma: ExtendedPrismaClient | undefined;
+  var prisma: ReturnType<typeof createPrismaClient> | undefined;
 }
 
 // Create or reuse the Prisma client with Accelerate extension
-export const prisma: ExtendedPrismaClient =
-  global.prisma || createPrismaClient();
+export const prisma =
+  global.prisma ?? (createPrismaClient() as PrismaClient);
 
 if (process.env.NODE_ENV !== "production") {
   global.prisma = prisma; 

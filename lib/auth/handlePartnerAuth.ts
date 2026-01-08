@@ -1,28 +1,27 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import type { Actor } from "../../utils/types/actor";
-import { hashApiKey } from "./hashApiKey";
+import type { Actor } from "@/app/types/actor";
+import { apiKeyRepository } from "@/app/infrastructure/db/repositories/apiKeyRepository";
 
 export async function handlePartnerAuth(req: Request) {
   const authHeader = req.headers.get("authorization");
+  const apiKeyHeader = req.headers.get("x-api-key");
+  let foundHeader;
 
-  if (!authHeader?.startsWith("Bearer ")) {
+  if (authHeader?.startsWith("Bearer ")) {
+    foundHeader = authHeader;
+  } else if (apiKeyHeader) {
+    foundHeader = apiKeyHeader;
+  }
+
+  if (!foundHeader) {
     return NextResponse.json(
       { error: "Missing API key" },
       { status: 401 }
     );
   }
 
-  const rawKey = authHeader.replace("Bearer ", "").trim();
-  const hashedKey = hashApiKey(rawKey);
-
-  const apiKey = await prisma.apiKey.findFirst({
-    where: {
-      hashedKey,
-      revokedAt: null,
-      expiresAt: { gt: new Date() },
-    },
-  });
+  const rawKey = authHeader ? foundHeader.replace("Bearer ", "").trim() : foundHeader.trim();
+  const apiKey = await apiKeyRepository.validateKey(rawKey);
 
   if (!apiKey) {
     return NextResponse.json(
@@ -30,16 +29,13 @@ export async function handlePartnerAuth(req: Request) {
       { status: 401 }
     );
   }
-
   // async usage tracking
-  prisma.apiKey.update({
-    where: { id: apiKey.id },
-    data: { lastUsedAt: new Date() }
-  }).catch(() => {});
+  apiKeyRepository.updateLastUsed(apiKey.id);
 
+  // Build normalized actor
   const actor: Actor = {
     type: "machine",
-    apiKeyId: apiKey.id,
+    id: apiKey.id,
     organizationId: apiKey.organizationId,
     permissions: apiKey.scopes,
   };

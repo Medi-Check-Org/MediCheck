@@ -77,7 +77,7 @@ export async function getActorFromClerkOptional(): Promise<Actor | null> {
  * Map user role to permissions
  * This is a basic implementation - in production, you might load this from database
  */
-function getPermissionsForRole(role: string | null): string[] {
+export function getPermissionsForRole(role: string | null): string[] {
   const rolePermissions: Record<string, string[]> = {
     ADMIN: [Permissions.ALL],
     MANAGER: [

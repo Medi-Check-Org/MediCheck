@@ -8,6 +8,7 @@ export { batchRepository, BatchRepository } from "./batchRepository";
 export { organizationRepository, OrganizationRepository } from "./organizationRepository";
 export { transferRepository, TransferRepository } from "./transferRepository";
 export { userRepository, UserRepository } from "./userRepository";
+export { apiKeyRepository, ApiKeyRepository } from "./apiKeyRepository";
 
 export type * from "./batchRepository";
 export type * from "./organizationRepository";

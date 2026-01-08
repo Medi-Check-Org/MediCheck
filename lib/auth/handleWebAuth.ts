@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { UserRole } from "@/lib/generated/prisma";
 import { publicRoutes, authRoutes, orgnaizationRoutes } from "@/utils";
-import type { Actor } from "../../utils/types/actor";
+import type { Actor } from "@/app/types/actor";
+import { userRepository } from "@/app/infrastructure/db/repositories";
+import { getPermissionsForRole } from "@/app/auth/clerk";
 
 export async function handleWebAuth(auth: any, req: Request) {
   const pathname = new URL(req.url).pathname;
@@ -9,6 +11,8 @@ export async function handleWebAuth(auth: any, req: Request) {
   console.log('Incoming pathname in handleWebAuth', pathname)
 
   const { userId, sessionClaims } = await auth();
+
+  const teamMember = await userRepository.getByClerkIdOrThrow(userId);
 
   if (req.headers.get("authorization")?.startsWith("Bearer ")) {
     return NextResponse.json(
@@ -21,6 +25,15 @@ export async function handleWebAuth(auth: any, req: Request) {
   if (
     Object.values(publicRoutes).includes(pathname) ||
     Object.values(authRoutes).includes(pathname)
+  ) {
+    return NextResponse.next();
+  }
+
+  if (
+    pathname.startsWith("/api/verify") ||
+    pathname.startsWith("/api/hotspots") ||
+    pathname.startsWith("/api/geminiTranslation") ||
+    pathname.startsWith("/api/auth")
   ) {
     return NextResponse.next();
   }
@@ -52,11 +65,14 @@ export async function handleWebAuth(auth: any, req: Request) {
     }
   }
 
+  const permissions = getPermissionsForRole(teamMember.userRole)
+
   // Build normalized actor
   const actor: Actor = {
     type: "human",
-    userId,
-    role,
+    id: userId,
+    metadata: {role: role},
+    permissions: permissions, // To be implemented
     organizationId: organizationId!,
   };
 
