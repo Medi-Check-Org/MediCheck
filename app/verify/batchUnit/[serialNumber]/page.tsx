@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useParams } from "next/navigation";
-import { africanLanguages } from "@/database";
+import { africanLanguages } from "@/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Loader2 } from "lucide-react";
@@ -74,10 +74,12 @@ export default function VerifyUnitPage() {
                     setBatch(data.batch);
                     setAuthenticityResultCheck(data.authenticityResultCheck);
                 }
-            } catch (err) {
+            }
+            catch (err) {
                 setError("Something went wrong during verification");
                 alert(err)
-            } finally {
+            }
+            finally {
                 setLoading(false);
             }
         };

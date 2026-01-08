@@ -1,12 +1,20 @@
 /**
  * Use Case: List Batches
- * 
+ *
  * Retrieves batches accessible to the actor with filtering and pagination
  */
 
-import { Actor, Permissions, requirePermission } from "@/app/types/actor";
-import { ListBatchesInput, ListBatchesSchema, validateInput } from "@/app/types/validation";
-import { BatchRepository, batchRepository, BatchWithRelations } from "@/app/infrastructure/db/repositories";
+import { Actor, Permissions, requirePermission } from "@/utils/types/actor";
+import {
+  ListBatchesInput,
+  ListBatchesSchema,
+  validateInput,
+} from "@/utils/types/validation";
+import {
+  BatchRepository,
+  batchRepository,
+  BatchWithRelations,
+} from "@/app/infrastructure/db/repositories";
 import type { BatchStatus } from "@/lib/generated/prisma";
 
 export interface ListBatchesOutput {
@@ -66,6 +74,9 @@ export class ListBatchesUseCase {
 export const listBatchesUseCase = new ListBatchesUseCase(batchRepository);
 
 // Convenience function
-export async function listBatches(input: unknown, actor: Actor): Promise<ListBatchesOutput> {
+export async function listBatches(
+  input: unknown,
+  actor: Actor
+): Promise<ListBatchesOutput> {
   return listBatchesUseCase.execute(input, actor);
 }

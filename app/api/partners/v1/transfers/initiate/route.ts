@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActorFromApiKey, extractApiKeyFromHeaders } from "@/app/auth";
 import { initiateTransfer } from "@/app/usecases/transfers/initiateTransfer";
-import { toErrorResponse, UnauthorizedError } from "@/app/types/errors";
+import { toErrorResponse, UnauthorizedError } from "@/utils/types/errors";
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,6 +31,8 @@ export async function POST(req: NextRequest) {
     );
   } catch (error: unknown) {
     const errorResponse = toErrorResponse(error);
-    return NextResponse.json(errorResponse, { status: errorResponse.statusCode });
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }

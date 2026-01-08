@@ -1,14 +1,22 @@
 /**
  * Use Case: Verify Batch
- * 
+ *
  * Public endpoint for consumers to verify batch authenticity
  */
 
-import { Actor } from "@/app/types/actor";
-import { VerifyBatchInput, VerifyBatchSchema, validateInput } from "@/app/types/validation";
-import { BatchRepository, batchRepository, BatchWithRelations } from "@/app/infrastructure/db/repositories";
+import { Actor } from "@/utils/types/actor";
+import {
+  VerifyBatchInput,
+  VerifyBatchSchema,
+  validateInput,
+} from "@/utils/types/validation";
+import {
+  BatchRepository,
+  batchRepository,
+  BatchWithRelations,
+} from "@/app/infrastructure/db/repositories";
 import { verifySignature } from "@/lib/verifySignature";
-import { NotFoundError, ValidationError } from "@/app/types/errors";
+import { NotFoundError, ValidationError } from "@/utils/types/errors";
 
 const QR_SECRET = process.env.QR_SECRET || "dev-secret";
 
@@ -86,6 +94,9 @@ export class VerifyBatchUseCase {
 export const verifyBatchUseCase = new VerifyBatchUseCase(batchRepository);
 
 // Convenience function (actor is optional for public verification)
-export async function verifyBatch(input: unknown, actor?: Actor): Promise<VerifyBatchOutput> {
+export async function verifyBatch(
+  input: unknown,
+  actor?: Actor
+): Promise<VerifyBatchOutput> {
   return verifyBatchUseCase.execute(input, actor);
 }

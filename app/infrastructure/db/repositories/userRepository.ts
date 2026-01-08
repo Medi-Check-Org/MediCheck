@@ -1,21 +1,23 @@
 /**
  * User Repository
- * 
+ *
  * Handles all database operations related to users and team members.
  */
 
 import { prisma } from "@/lib/prisma";
 import type { User, TeamMember } from "@/lib/generated/prisma";
-import { NotFoundError } from "@/app/types/errors";
+import { NotFoundError } from "@/utils/types/errors";
 
 export interface UserWithTeamMember extends User {
-  teamMember: (TeamMember & {
-    organization: {
-      id: string;
-      companyName: string;
-      organizationType: string;
-    };
-  }) | null;
+  teamMember:
+    | (TeamMember & {
+        organization: {
+          id: string;
+          companyName: string;
+          organizationType: string;
+        };
+      })
+    | null;
 }
 
 export class UserRepository {

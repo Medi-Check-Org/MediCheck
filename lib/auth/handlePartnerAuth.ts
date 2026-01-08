@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import type { Actor } from "@/app/types/actor";
+import type { Actor } from "@/utils/types/actor";
 import { apiKeyRepository } from "@/app/infrastructure/db/repositories/apiKeyRepository";
 
 export async function handlePartnerAuth(req: Request) {
@@ -14,13 +14,12 @@ export async function handlePartnerAuth(req: Request) {
   }
 
   if (!foundHeader) {
-    return NextResponse.json(
-      { error: "Missing API key" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Missing API key" }, { status: 401 });
   }
 
-  const rawKey = authHeader ? foundHeader.replace("Bearer ", "").trim() : foundHeader.trim();
+  const rawKey = authHeader
+    ? foundHeader.replace("Bearer ", "").trim()
+    : foundHeader.trim();
   const apiKey = await apiKeyRepository.validateKey(rawKey);
 
   if (!apiKey) {

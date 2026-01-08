@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActorFromClerk } from "@/app/auth";
 import { initiateTransfer } from "@/app/usecases/transfers/initiateTransfer";
-import { toErrorResponse } from "@/app/types/errors";
+import { toErrorResponse } from "@/utils/types/errors";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,12 +14,11 @@ export async function POST(req: NextRequest) {
 
     const result = await initiateTransfer(body, actor);
 
-    return NextResponse.json(
-      { success: true, data: result },
-      { status: 201 }
-    );
+    return NextResponse.json({ success: true, data: result }, { status: 201 });
   } catch (error: unknown) {
     const errorResponse = toErrorResponse(error);
-    return NextResponse.json(errorResponse, { status: errorResponse.statusCode });
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }

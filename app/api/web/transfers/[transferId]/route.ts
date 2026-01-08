@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActorFromClerk } from "@/app/auth";
 import { updateTransferStatus } from "@/app/usecases/transfers/updateTransferStatus";
-import { toErrorResponse } from "@/app/types/errors";
+import { toErrorResponse } from "@/utils/types/errors";
 
 interface RouteParams {
   params: Promise<{
@@ -19,14 +19,13 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     const { transferId } = await params;
     const body = await req.json();
 
-    const result = await updateTransferStatus(
-      { transferId, ...body },
-      actor
-    );
+    const result = await updateTransferStatus({ transferId, ...body }, actor);
 
     return NextResponse.json({ success: true, data: result });
   } catch (error: unknown) {
     const errorResponse = toErrorResponse(error);
-    return NextResponse.json(errorResponse, { status: errorResponse.statusCode });
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }

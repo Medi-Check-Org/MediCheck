@@ -1,11 +1,14 @@
 /**
  * Use Case: Initiate Transfer
- * 
+ *
  * Creates a new batch transfer between organizations
  */
 
-import { Actor, Permissions, requirePermission } from "@/app/types/actor";
-import { InitiateTransferSchema, validateInput } from "@/app/types/validation";
+import { Actor, Permissions, requirePermission } from "@/utils/types/actor";
+import {
+  InitiateTransferSchema,
+  validateInput,
+} from "@/utils/types/validation";
 import {
   BatchRepository,
   OrganizationRepository,
@@ -17,7 +20,7 @@ import {
 import {
   ForbiddenError,
   BusinessRuleViolationError,
-} from "@/app/types/errors";
+} from "@/utils/types/errors";
 import { hedera10Client } from "@/lib/hedera10Client";
 import type { OwnershipTransfer } from "@/lib/generated/prisma";
 
@@ -34,7 +37,10 @@ export class InitiateTransferUseCase {
     private readonly orgRepo: OrganizationRepository
   ) {}
 
-  async execute(rawInput: unknown, actor: Actor): Promise<InitiateTransferOutput> {
+  async execute(
+    rawInput: unknown,
+    actor: Actor
+  ): Promise<InitiateTransferOutput> {
     // 1. Validate input
     const input = validateInput(InitiateTransferSchema, rawInput);
 
@@ -46,7 +52,9 @@ export class InitiateTransferUseCase {
 
     // 4. Verify actor has access to source organization
     if (actor.organizationId !== batch.organizationId) {
-      throw new ForbiddenError("Actor does not have access to the source organization");
+      throw new ForbiddenError(
+        "Actor does not have access to the source organization"
+      );
     }
 
     // 5. Check for pending transfers
@@ -127,6 +135,9 @@ export const initiateTransferUseCase = new InitiateTransferUseCase(
 );
 
 // Convenience function
-export async function initiateTransfer(input: unknown, actor: Actor): Promise<InitiateTransferOutput> {
+export async function initiateTransfer(
+  input: unknown,
+  actor: Actor
+): Promise<InitiateTransferOutput> {
   return initiateTransferUseCase.execute(input, actor);
 }

@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActorFromClerk } from "@/app/auth";
 import { getBatch } from "@/app/usecases/batches/getBatch";
-import { toErrorResponse } from "@/app/types/errors";
+import { toErrorResponse } from "@/utils/types/errors";
 
 interface RouteParams {
   params: Promise<{
@@ -23,6 +23,8 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ success: true, data: result });
   } catch (error: unknown) {
     const errorResponse = toErrorResponse(error);
-    return NextResponse.json(errorResponse, { status: errorResponse.statusCode });
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }

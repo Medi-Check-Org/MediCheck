@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActorFromApiKey, extractApiKeyFromHeaders } from "@/app/auth";
 import { listBatches } from "@/app/usecases/batches/listBatches";
-import { toErrorResponse, UnauthorizedError } from "@/app/types/errors";
+import { toErrorResponse, UnauthorizedError } from "@/utils/types/errors";
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,14 +14,18 @@ export async function GET(req: NextRequest) {
       throw new UnauthorizedError("Missing API key");
     }
     const actor = await getActorFromApiKey(apiKey);
-    
+
     // Extract query params
     const { searchParams } = new URL(req.url);
     const input = {
       organizationId: searchParams.get("organizationId") ?? undefined,
       status: searchParams.get("status") ?? undefined,
-      page: searchParams.get("page") ? parseInt(searchParams.get("page")!) : undefined,
-      limit: searchParams.get("limit") ? parseInt(searchParams.get("limit")!) : undefined,
+      page: searchParams.get("page")
+        ? parseInt(searchParams.get("page")!)
+        : undefined,
+      limit: searchParams.get("limit")
+        ? parseInt(searchParams.get("limit")!)
+        : undefined,
     };
 
     const result = await listBatches(input, actor);
@@ -36,6 +40,8 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: unknown) {
     const errorResponse = toErrorResponse(error);
-    return NextResponse.json(errorResponse, { status: errorResponse.statusCode });
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }

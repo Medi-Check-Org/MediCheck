@@ -11,8 +11,8 @@
  * 3. Verify it's active and not expired
  * 4. Return Actor with scoped permissions
  */
-import { Actor } from "@/app/types/actor";
-import { UnauthorizedError } from "@/app/types/errors";
+import { Actor } from "@/utils/types/actor";
+import { UnauthorizedError } from "@/utils/types/errors";
 import { hashApiKey } from "@/lib/auth/hashApiKey";
 import { apiKeyRepository } from "../infrastructure/db/repositories/apiKeyRepository";
 
@@ -31,7 +31,7 @@ export async function getActorFromApiKey(apiKey: string): Promise<Actor> {
   // 1. Hash the API key using crypto
   const apiKeyHash = hashApiKey(apiKey);
   // 2. Look up in ApiKey table
-  const existingKey = await apiKeyRepository.findByHashedKey(apiKeyHash);
+  const existingKey = await apiKeyRepository.findById(apiKeyHash);
   if (!existingKey) {
     throw new UnauthorizedError("Invalid or expired API key");
   }

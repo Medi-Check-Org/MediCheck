@@ -1,12 +1,16 @@
 /**
  * Transfer Repository
- * 
+ *
  * Handles all database operations related to ownership transfers.
  */
 
 import { prisma } from "@/lib/prisma";
-import type { OwnershipTransfer, TransferStatus, Prisma } from "@/lib/generated/prisma";
-import { NotFoundError } from "@/app/types/errors";
+import type {
+  OwnershipTransfer,
+  TransferStatus,
+  Prisma,
+} from "@/lib/generated/prisma";
+import { NotFoundError } from "@/utils/types/errors";
 
 export interface TransferWithRelations extends OwnershipTransfer {
   batch: {
@@ -110,7 +114,9 @@ export class TransferRepository {
   /**
    * Find pending transfer for a batch (any pending transfer)
    */
-  async findPendingTransfer(batchId: string): Promise<OwnershipTransfer | null> {
+  async findPendingTransfer(
+    batchId: string
+  ): Promise<OwnershipTransfer | null> {
     return prisma.ownershipTransfer.findFirst({
       where: {
         batchId,
@@ -182,7 +188,10 @@ export class TransferRepository {
   /**
    * Update transfer
    */
-  async update(id: string, data: UpdateTransferData): Promise<OwnershipTransfer> {
+  async update(
+    id: string,
+    data: UpdateTransferData
+  ): Promise<OwnershipTransfer> {
     return prisma.ownershipTransfer.update({
       where: { id },
       data,
@@ -192,7 +201,10 @@ export class TransferRepository {
   /**
    * Update transfer status
    */
-  async updateStatus(id: string, status: TransferStatus): Promise<OwnershipTransfer> {
+  async updateStatus(
+    id: string,
+    status: TransferStatus
+  ): Promise<OwnershipTransfer> {
     return prisma.ownershipTransfer.update({
       where: { id },
       data: {
@@ -225,14 +237,14 @@ export class TransferRepository {
   /**
    * Verify organization has access to transfer (as sender or receiver)
    */
-  async verifyOrganizationAccess(transferId: string, organizationId: string): Promise<boolean> {
+  async verifyOrganizationAccess(
+    transferId: string,
+    organizationId: string
+  ): Promise<boolean> {
     const count = await prisma.ownershipTransfer.count({
       where: {
         id: transferId,
-        OR: [
-          { fromOrgId: organizationId },
-          { toOrgId: organizationId },
-        ],
+        OR: [{ fromOrgId: organizationId }, { toOrgId: organizationId }],
       },
     });
     return count > 0;
