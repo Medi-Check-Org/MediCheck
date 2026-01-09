@@ -1,7 +1,8 @@
 // app/api/batches/route.ts
 import { NextResponse } from "next/server";
-import { createBatch } from "@/app/usecases/batches";
-import { getActorFromClerk } from "@/app/auth/clerk";
+import { createBatch } from "@/core/usecases/batches";
+import { getActorFromClerk } from "@/core/auth/clerk";
+import { toErrorResponse } from "@/utils/types/errors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,47 +11,26 @@ export async function POST(req: Request) {
   try {
     // Get authenticated actor
     const actor = await getActorFromClerk();
-    if (!actor) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
 
+    // Parse request body
     const body = await req.json();
 
-    const {
-      organizationId,
-      drugName,
-      composition,
-      batchSize,
-      manufacturingDate,
-      expiryDate,
-      storageInstructions,
-    } = body;
+    // Call use case with raw body - validation happens inside the use case
+    const result = await createBatch(body, actor);
 
-    // Call use case
-    const result = await createBatch(
-      {
-        organizationId,
-        drugName,
-        composition,
-        batchSize: parseInt(batchSize, 10),
-        manufacturingDate,
-        expiryDate,
-        storageInstructions,
-      },
-      actor
-    );
-
-    // Return response
-    return NextResponse.json(result, { status: 201 });
-  } catch (error: unknown) {
-    console.error("Error creating batch:", error);
-    const message = error instanceof Error ? error.message : "Failed to create batch";
+    // Return success response
     return NextResponse.json(
-      { error: message },
-      { status: 500 }
+      {
+        success: true,
+        data: result,
+      },
+      { status: 201 }
     );
+  } catch (error: unknown) {
+    // Handle errors uniformly using toErrorResponse
+    const errorResponse = toErrorResponse(error);
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }

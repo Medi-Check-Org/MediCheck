@@ -1,7 +1,7 @@
 // /app/api/transfer/ownership/route.ts
 import { NextResponse } from "next/server";
-import { initiateTransfer, listTransfers } from "@/app/usecases/transfers";
-import { getActorFromClerk } from "@/app/auth/clerk";
+import { initiateTransfer, listTransfers } from "@/core/usecases/transfers";
+import { getActorFromClerk } from "@/core/auth/clerk";
 
 export const runtime = "nodejs";
 

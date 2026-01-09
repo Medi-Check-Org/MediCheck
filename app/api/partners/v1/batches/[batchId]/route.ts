@@ -3,8 +3,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getActorFromApiKey, extractApiKeyFromHeaders } from "@/app/auth";
-import { getBatch } from "@/app/usecases/batches/getBatch";
+import { getActorFromApiKey, extractApiKeyFromHeaders } from "@/core/auth";
+import { getBatch } from "@/core/usecases/batches/getBatch";
 import { toErrorResponse, UnauthorizedError } from "@/utils/types/errors";
 
 interface RouteParams {

@@ -6,6 +6,7 @@
  */
 
 import { z } from "zod";
+import { ValidationError } from "./errors";
 
 // =====================================================
 // Batch Schemas
@@ -13,13 +14,41 @@ import { z } from "zod";
 
 export const CreateBatchSchema = z.object({
   organizationId: z.string().cuid(),
-  drugName: z.string().min(1).max(255),
-  composition: z.string().optional(),
-  batchSize: z.number().int().positive().max(100000),
-  manufacturingDate: z.string().datetime().or(z.date()),
-  expiryDate: z.string().datetime().or(z.date()),
-  storageInstructions: z.string().max(1000).optional(),
-});
+  drugName: z.string().min(1, "Drug name is required").max(255, "Drug name must not exceed 255 characters"),
+  composition: z.string().max(2000, "Composition must not exceed 2000 characters").optional(),
+  batchSize: z.number().int().positive("Batch size must be a positive integer").max(100000, "Batch size must not exceed 100,000 units"),
+  manufacturingDate: z.string().refine(
+    (date) => !isNaN(Date.parse(date)),
+    { message: "Invalid manufacturing date format" }
+  ).or(z.date()),
+  expiryDate: z.string().refine(
+    (date) => !isNaN(Date.parse(date)),
+    { message: "Invalid expiry date format" }
+  ).or(z.date()),
+  storageInstructions: z.string().max(1000, "Storage instructions must not exceed 1000 characters").optional(),
+}).refine(
+  (data) => {
+    const mfgDate = new Date(data.manufacturingDate);
+    const expDate = new Date(data.expiryDate);
+    return expDate > mfgDate;
+  },
+  {
+    message: "Expiry date must be after manufacturing date",
+    path: ["expiryDate"],
+  }
+).refine(
+  (data) => {
+    const mfgDate = new Date(data.manufacturingDate);
+    const now = new Date();
+    // Manufacturing date shouldn't be more than 2 years in the future
+    const twoYearsFromNow = new Date(now.getFullYear() + 2, now.getMonth(), now.getDate());
+    return mfgDate <= twoYearsFromNow;
+  },
+  {
+    message: "Manufacturing date cannot be more than 2 years in the future",
+    path: ["manufacturingDate"],
+  }
+);
 
 export type CreateBatchInput = z.infer<typeof CreateBatchSchema>;
 
@@ -158,14 +187,14 @@ export function validateInput<T>(schema: z.ZodSchema<T>, data: unknown): T {
     const errors: Record<string, string[]> = {};
     
     result.error.errors.forEach((err) => {
-      const path = err.path.join(".");
+      const path = err.path.length > 0 ? err.path.join(".") : "_root";
       if (!errors[path]) {
         errors[path] = [];
       }
       errors[path].push(err.message);
     });
 
-    throw new Error(`Validation failed: ${JSON.stringify(errors)}`);
+    throw new ValidationError("Validation failed", errors);
   }
 
   return result.data;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { listTransfers } from "@/app/usecases/transfers";
-import { getActorFromClerk } from "@/app/auth/clerk";
+import { listTransfers } from "@/core/usecases/transfers";
+import { getActorFromClerk } from "@/core/auth/clerk";
 
 export async function GET(request: NextRequest) {
   try {

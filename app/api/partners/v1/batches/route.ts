@@ -3,8 +3,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getActorFromApiKey, extractApiKeyFromHeaders } from "@/app/auth";
-import { listBatches } from "@/app/usecases/batches/listBatches";
+import { getActorFromApiKey, extractApiKeyFromHeaders } from "@/core/auth";
+import { listBatches } from "@/core/usecases/batches/listBatches";
 import { toErrorResponse, UnauthorizedError } from "@/utils/types/errors";
 
 export async function GET(req: NextRequest) {

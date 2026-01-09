@@ -1,7 +1,7 @@
 // app/api/batches/[orgId]/route.ts
 import { NextResponse } from "next/server";
-import { listBatches } from "@/app/usecases/batches";
-import { getActorFromClerk } from "@/app/auth/clerk";
+import { listBatches } from "@/core/usecases/batches";
+import { getActorFromClerk } from "@/core/auth/clerk";
 
 export const dynamic = 'force-dynamic';
 

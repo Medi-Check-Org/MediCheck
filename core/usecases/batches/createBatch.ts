@@ -16,7 +16,7 @@ import {
   OrganizationRepository,
   batchRepository,
   organizationRepository,
-} from "@/app/infrastructure/db/repositories";
+} from "@/core/infrastructure/db/repositories";
 import {
   ForbiddenError,
   BusinessRuleViolationError,
@@ -89,10 +89,54 @@ export class CreateBatchUseCase {
     // 4. Load organization with agent info
     const org = await this.orgRepo.getByIdOrThrow(input.organizationId);
 
-    // 5. Generate batch ID
+    // 5. Additional business rule validations
+    const mfgDate = new Date(input.manufacturingDate);
+    const expDate = new Date(input.expiryDate);
+    const now = new Date();
+
+    // Check if manufacturing date is too far in the past (more than 10 years)
+    const tenYearsAgo = new Date(now.getFullYear() - 10, now.getMonth(), now.getDate());
+    if (mfgDate < tenYearsAgo) {
+      throw new BusinessRuleViolationError(
+        "Manufacturing date cannot be more than 10 years in the past"
+      );
+    }
+
+    // Check if expiry date is too far in the future (more than 20 years)
+    const twentyYearsFromNow = new Date(now.getFullYear() + 20, now.getMonth(), now.getDate());
+    if (expDate > twentyYearsFromNow) {
+      throw new BusinessRuleViolationError(
+        "Expiry date cannot be more than 20 years in the future"
+      );
+    }
+
+    // Check reasonable shelf life (typically drugs expire within 1-10 years)
+    const shelfLifeYears = (expDate.getTime() - mfgDate.getTime()) / (1000 * 60 * 60 * 24 * 365);
+    if (shelfLifeYears > 20) {
+      throw new BusinessRuleViolationError(
+        "Shelf life exceeds maximum allowed duration (20 years)"
+      );
+    }
+
+    // Check if batch size is reasonable (at least 1, checked by schema, but double-check)
+    if (input.batchSize < 1 || input.batchSize > 100000) {
+      throw new BusinessRuleViolationError(
+        "Batch size must be between 1 and 100,000 units"
+      );
+    }
+
+    // 6. Generate batch ID
     const batchId = `BATCH-${Date.now()}${nanoid(5)}`;
 
-    // 6. Create batch registry on Hedera
+    // 7. Check for duplicate batch ID (extremely rare, but good practice)
+    const existingBatch = await this.batchRepo.findByBatchId(batchId);
+    if (existingBatch) {
+      throw new BusinessRuleViolationError(
+        `Batch ID ${batchId} already exists. Please try again.`
+      );
+    }
+
+    // 8. Create batch registry on Hedera
     interface RegistryResult {
       topicId: string;
       transactionId?: string;

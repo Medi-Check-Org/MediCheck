@@ -6,8 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getActorFromApiKey, extractApiKeyFromHeaders } from "@/app/auth";
-import { createBatch } from "@/app/usecases/batches/createBatch";
+import { getActorFromApiKey, extractApiKeyFromHeaders } from "@/core/auth";
+import { createBatch } from "@/core/usecases/batches/createBatch";
 import { toErrorResponse, UnauthorizedError } from "@/utils/types/errors";
 
 export async function POST(req: NextRequest) {

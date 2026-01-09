@@ -6,8 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getActorFromClerk } from "@/app/auth";
-import { createBatch } from "@/app/usecases/batches/createBatch";
+import { getActorFromClerk } from "@/core/auth";
+import { createBatch } from "@/core/usecases/batches/createBatch";
 import { toErrorResponse } from "@/utils/types/errors";
 
 export async function POST(req: NextRequest) {

@@ -3,8 +3,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getActorFromClerk } from "@/app/auth";
-import { updateTransferStatus } from "@/app/usecases/transfers/updateTransferStatus";
+import { getActorFromClerk } from "@/core/auth";
+import { updateTransferStatus } from "@/core/usecases/transfers/updateTransferStatus";
 import { toErrorResponse } from "@/utils/types/errors";
 
 interface RouteParams {

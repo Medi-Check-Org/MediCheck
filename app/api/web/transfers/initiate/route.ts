@@ -3,8 +3,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getActorFromClerk } from "@/app/auth";
-import { initiateTransfer } from "@/app/usecases/transfers/initiateTransfer";
+import { getActorFromClerk } from "@/core/auth";
+import { initiateTransfer } from "@/core/usecases/transfers/initiateTransfer";
 import { toErrorResponse } from "@/utils/types/errors";
 
 export async function POST(req: NextRequest) {

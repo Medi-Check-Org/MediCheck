@@ -1,7 +1,7 @@
 // /app/api/organizations/route.ts
 import { NextResponse } from "next/server";
-import { listOrganizations } from "@/app/usecases/organizations";
-import { getActorFromClerk } from "@/app/auth/clerk";
+import { listOrganizations } from "@/core/usecases/organizations";
+import { getActorFromClerk } from "@/core/auth/clerk";
 
 export const runtime = "nodejs";
 
