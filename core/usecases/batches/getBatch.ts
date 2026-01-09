@@ -14,7 +14,7 @@ import {
   BatchRepository,
   batchRepository,
   BatchWithRelations,
-} from "@/app/infrastructure/db/repositories";
+} from "@/core/infrastructure/db/repositories";
 import { ForbiddenError } from "@/utils/types/errors";
 
 export interface GetBatchOutput {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getActorFromClerk } from "@/app/auth";
-import { apiKeyRepository } from "@/app/infrastructure/db/repositories";
+import { getActorFromClerk } from "@/core/auth";
+import { apiKeyRepository } from "@/core/infrastructure/db/repositories";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
     // steps:  

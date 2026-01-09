@@ -16,7 +16,7 @@ import {
   batchRepository,
   organizationRepository,
   transferRepository,
-} from "@/app/infrastructure/db/repositories";
+} from "@/core/infrastructure/db/repositories";
 import {
   ForbiddenError,
   BusinessRuleViolationError,

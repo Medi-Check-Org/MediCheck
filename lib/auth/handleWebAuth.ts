@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { UserRole } from "@/lib/generated/prisma";
 import { publicRoutes, authRoutes, orgnaizationRoutes } from "@/utils";
 import type { Actor } from "@/utils/types/actor";
-import { userRepository } from "@/app/infrastructure/db/repositories";
-import { getPermissionsForRole } from "@/app/auth/clerk";
+import { userRepository } from "@/core/infrastructure/db/repositories";
+import { getPermissionsForRole } from "@/core/auth/clerk";
 
 export async function handleWebAuth(auth: any, req: Request) {
   const pathname = new URL(req.url).pathname;

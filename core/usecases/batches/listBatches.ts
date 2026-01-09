@@ -14,7 +14,7 @@ import {
   BatchRepository,
   batchRepository,
   BatchWithRelations,
-} from "@/app/infrastructure/db/repositories";
+} from "@/core/infrastructure/db/repositories";
 import type { BatchStatus } from "@/lib/generated/prisma";
 
 export interface ListBatchesOutput {

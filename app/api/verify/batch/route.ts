@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { verifyBatch } from "@/app/usecases/verification/verifyBatch";
+import { verifyBatch } from "@/core/usecases/verification/verifyBatch";
 import { toErrorResponse } from "@/utils/types/errors";
 
 export async function POST(req: NextRequest) {

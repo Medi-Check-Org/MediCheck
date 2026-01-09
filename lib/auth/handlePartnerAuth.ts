@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { Actor } from "@/utils/types/actor";
-import { apiKeyRepository } from "@/app/infrastructure/db/repositories/apiKeyRepository";
+import { apiKeyRepository } from "@/core/infrastructure/db/repositories/apiKeyRepository";
 
 export async function handlePartnerAuth(req: Request) {
   const authHeader = req.headers.get("authorization");

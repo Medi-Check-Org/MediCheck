@@ -7,7 +7,7 @@
 
 import { auth as clerkAuth, currentUser } from "@clerk/nextjs/server";
 import { Actor, Permissions } from "@/utils/types/actor";
-import { userRepository } from "@/app/infrastructure/db/repositories";
+import { userRepository } from "@/core/infrastructure/db/repositories";
 import { UnauthorizedError, ForbiddenError } from "@/utils/types/errors";
 
 /**

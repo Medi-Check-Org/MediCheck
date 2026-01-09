@@ -14,7 +14,7 @@ import {
   BatchRepository,
   batchRepository,
   BatchWithRelations,
-} from "@/app/infrastructure/db/repositories";
+} from "@/core/infrastructure/db/repositories";
 import { verifySignature } from "@/lib/verifySignature";
 import { NotFoundError, ValidationError } from "@/utils/types/errors";
 

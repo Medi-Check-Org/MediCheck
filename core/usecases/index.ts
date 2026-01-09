@@ -15,3 +15,7 @@ export * from "./verification/verifyBatch";
 // Transfer use cases
 export * from "./transfers/initiateTransfer";
 export * from "./transfers/updateTransferStatus";
+export * from "./transfers/listTransfers";
+
+// Organization use cases
+export * from "./organizations/listOrganizations";

@@ -3,8 +3,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getActorFromClerk } from "@/app/auth";
-import { listBatches } from "@/app/usecases/batches/listBatches";
+import { getActorFromClerk } from "@/core/auth";
+import { listBatches } from "@/core/usecases/batches/listBatches";
 import { toErrorResponse } from "@/utils/types/errors";
 
 export async function GET(req: NextRequest) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getActorFromClerk } from "@/app/auth";
-import { apiKeyRepository } from "@/app/infrastructure/db/repositories";
+import { getActorFromClerk } from "@/core/auth";
+import { apiKeyRepository } from "@/core/infrastructure/db/repositories";
 
 // create an API key
 export async function POST(req: NextRequest) {

@@ -3,8 +3,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getActorFromApiKey, extractApiKeyFromHeaders } from "@/app/auth";
-import { initiateTransfer } from "@/app/usecases/transfers/initiateTransfer";
+import { getActorFromApiKey, extractApiKeyFromHeaders } from "@/core/auth";
+import { initiateTransfer } from "@/core/usecases/transfers/initiateTransfer";
 import { toErrorResponse, UnauthorizedError } from "@/utils/types/errors";
 
 export async function POST(req: NextRequest) {
