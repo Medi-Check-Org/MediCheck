@@ -30,7 +30,7 @@ export async function handleWebAuth(auth: any, req: Request) {
   }
 
   if (
-    pathname.startsWith("/api/verify") ||
+    pathname.startsWith("/api/verify") || // instead of listing them, we can create an object called public route and list them there just like we are doing to routes, makes it cleaner
     pathname.startsWith("/api/hotspots") ||
     pathname.startsWith("/api/geminiTranslation") ||
     pathname.startsWith("/api/auth")

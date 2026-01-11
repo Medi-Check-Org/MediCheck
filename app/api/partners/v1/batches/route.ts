@@ -6,8 +6,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActorFromApiKey, extractApiKeyFromHeaders } from "@/core/auth";
 import { listBatches } from "@/core/usecases/batches/listBatches";
 import { toErrorResponse, UnauthorizedError } from "@/utils/types/errors";
+import { withRateLimit } from "@/lib/rate-limit/withRateLimit";
 
-export async function GET(req: NextRequest) {
+async function getHandler(req: NextRequest) {
   try {
     const apiKey = extractApiKeyFromHeaders(req.headers);
     if (!apiKey) {
@@ -45,3 +46,6 @@ export async function GET(req: NextRequest) {
     });
   }
 }
+
+
+export const GET = withRateLimit(getHandler);

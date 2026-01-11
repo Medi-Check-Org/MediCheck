@@ -403,7 +403,7 @@ const response = await fetch('/api/partners/v1/batches/create', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-API-Key': 'partner_key_abc123',
+    'Medicheck-Api-Key': 'partner_key_abc123',
   },
   body: JSON.stringify({
     organizationId: 'org_456',

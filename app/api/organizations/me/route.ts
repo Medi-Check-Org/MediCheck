@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 
 export async function GET() {
+
   try {
     const { userId } = await auth();
 
@@ -32,25 +33,31 @@ export async function GET() {
 
     // Check if user owns an organization
     if (user.organizations) {
+
       return NextResponse.json({
         organizationId: user.organizations.id,
         organization: user.organizations,
       });
+
     }
 
     // Check if user is a team member of an organization
     if (user.teamMember && user.teamMember.organization) {
+
       return NextResponse.json({
         organizationId: user.teamMember.organization.id,
         organization: user.teamMember.organization,
       });
+
     }
 
     return NextResponse.json(
       { error: "No organization found" },
       { status: 404 }
     );
-  } catch (error) {
+    
+  }
+  catch (error) {
     console.error("Error fetching organization:", error);
     return NextResponse.json(
       { error: "Failed to fetch organization" },

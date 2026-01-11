@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActorFromApiKey, extractApiKeyFromHeaders } from "@/core/auth";
 import { getBatch } from "@/core/usecases/batches/getBatch";
 import { toErrorResponse, UnauthorizedError } from "@/utils/types/errors";
+import { withRateLimit } from "@/lib/rate-limit/withRateLimit";
 
 interface RouteParams {
   params: Promise<{
@@ -13,7 +14,7 @@ interface RouteParams {
   }>;
 }
 
-export async function GET(req: NextRequest, { params }: RouteParams) {
+async function postHandler(req: NextRequest, { params }: RouteParams) {
   try {
     const apiKey = extractApiKeyFromHeaders(req.headers);
     if (!apiKey) {
@@ -39,3 +40,6 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     });
   }
 }
+
+
+export const POST = withRateLimit(postHandler, { strict: true });
