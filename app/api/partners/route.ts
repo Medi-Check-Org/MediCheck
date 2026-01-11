@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { OwnershipTransfer, Organization } from "@prisma/client";
+import { withRateLimit } from "@/lib/rate-limit/withRateLimit";
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -43,7 +45,7 @@ export async function GET(request: NextRequest) {
       { lastTransferDate: Date; transferCount: number }
     >();
 
-    outgoingTransfers.forEach((t) => {
+    outgoingTransfers.forEach((t: OwnershipTransfer) => {
       const existing = partnerData.get(t.toOrgId);
       if (!existing || t.createdAt > existing.lastTransferDate) {
         partnerData.set(t.toOrgId, {
@@ -58,7 +60,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    incomingTransfers.forEach((t) => {
+    incomingTransfers.forEach((t: OwnershipTransfer) => {
       const existing = partnerData.get(t.fromOrgId);
       if (!existing || t.createdAt > existing.lastTransferDate) {
         partnerData.set(t.fromOrgId, {
@@ -94,7 +96,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Combine organization details with transfer data
-    const formattedPartners = partners.map((partner) => {
+    const formattedPartners = partners.map((partner: Organization) => {
       const data = partnerData.get(partner.id)!;
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -114,7 +116,7 @@ export async function GET(request: NextRequest) {
 
     // Sort by last transfer date (most recent first)
     formattedPartners.sort(
-      (a, b) =>
+      (a: { lastTransferDate: { getTime: () => number; }; }, b: { lastTransferDate: { getTime: () => number; }; }) =>
         b.lastTransferDate.getTime() - a.lastTransferDate.getTime()
     );
 
@@ -127,3 +129,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+
+export const GET = withRateLimit(getHandler);
