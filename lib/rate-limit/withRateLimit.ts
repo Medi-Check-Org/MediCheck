@@ -9,7 +9,7 @@ export function withRateLimit<TContext>(
   options?: { strict?: boolean }
 ) {
   return async (req: NextRequest, context: TContext): Promise<NextResponse> => {
-    const apiKey = req.headers.get("x-api-key");
+    const apiKey = req.headers.get("Medicheck-Api-Key");
 
     if (!apiKey) {
       return NextResponse.json({ error: "API key missing" }, { status: 401 });
