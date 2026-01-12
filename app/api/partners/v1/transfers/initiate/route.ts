@@ -6,8 +6,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActorFromApiKey, extractApiKeyFromHeaders } from "@/core/auth";
 import { initiateTransfer } from "@/core/usecases/transfers/initiateTransfer";
 import { toErrorResponse, UnauthorizedError } from "@/utils/types/errors";
+import { withRateLimit } from "@/lib/rate-limit/withRateLimit";
 
-export async function POST(req: NextRequest) {
+
+
+async function postHandler(req: NextRequest) {
   try {
     const apiKey = extractApiKeyFromHeaders(req.headers);
     if (!apiKey) {
@@ -36,3 +39,6 @@ export async function POST(req: NextRequest) {
     });
   }
 }
+
+
+export const POST = withRateLimit(postHandler, { strict: true });

@@ -6,14 +6,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActorFromApiKey, extractApiKeyFromHeaders } from "@/core/auth";
 import { updateTransferStatus } from "@/core/usecases/transfers/updateTransferStatus";
 import { toErrorResponse, UnauthorizedError } from "@/utils/types/errors";
+import { withRateLimit } from "@/lib/rate-limit/withRateLimit";
 
 interface RouteParams {
-  params: Promise<{
-    transferId: string;
-  }>;
+  params: Promise<{transferId: string;}>;
 }
 
-export async function PATCH(req: NextRequest, { params }: RouteParams) {
+export async function patchHandler(req: NextRequest, { params }: RouteParams) {
   try {
     const apiKey = extractApiKeyFromHeaders(req.headers);
     if (!apiKey) {
@@ -40,3 +39,6 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     });
   }
 }
+
+
+export const PATCH = withRateLimit(patchHandler, { strict: true });

@@ -81,6 +81,29 @@ export class ApiKeyRepository {
         return apiKey;
     }
 
+    async findByHashedKey(hashedKey: string): Promise<ApiKeyRecord | null> {
+        const apiKey = await prisma.apiKey.findFirst({
+            where: {
+                hashedKey,
+                revokedAt: null,
+                expiresAt: { gt: new Date() }
+            },
+            select: {
+                id: true,
+                name: true,
+                organizationId: true,
+                scopes: true,
+                createdAt: true,
+                lastUsedAt: true,
+            }
+        });
+        
+        if (!apiKey) {
+            return null;
+        }
+
+        return apiKey;
+    }
 
     async validateKey(rawKey: string): Promise<ApiKeyRecord | null>{
         // steps:

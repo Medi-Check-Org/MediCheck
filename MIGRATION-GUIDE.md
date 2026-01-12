@@ -71,7 +71,7 @@ const response = await fetch('/api/partners/v1/batches/create', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-API-Key': 'your-api-key-here',  // ← New API key auth
+    'Medicheck-Api-Key': 'your-api-key-here',  // ← New API key auth
   },
   body: JSON.stringify(batchData),
 });
@@ -199,7 +199,7 @@ curl -X POST http://localhost:3000/api/web/batches/create \
 # Requires valid API key (Phase 3)
 curl -X POST http://localhost:3000/api/partners/v1/batches/create \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: pk_test_abc123" \
+  -H "Medicheck-Api-Key: pk_test_abc123" \
   -d '{
     "organizationId": "org_456",
     "drugName": "Test Drug",

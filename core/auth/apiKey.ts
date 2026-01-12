@@ -50,7 +50,7 @@ export async function getActorFromApiKey(apiKey: string): Promise<Actor> {
 /**
  * Extract API key from request headers
  *
- * Supports both standard Authorization header and custom X-API-Key header
+ * Supports both standard Authorization header and custom Medicheck-Api-Key header
  */
 export function extractApiKeyFromHeaders(headers: Headers): string | null {
   // Check Authorization header (Bearer format)
@@ -59,8 +59,8 @@ export function extractApiKeyFromHeaders(headers: Headers): string | null {
     return authHeader.substring(7);
   }
 
-  // Check X-API-Key header
-  const apiKeyHeader = headers.get("x-api-key");
+  // Check Medicheck-Api-Key header
+  const apiKeyHeader = headers.get("Medicheck-Api-Key");
   if (apiKeyHeader) {
     return apiKeyHeader;
   }

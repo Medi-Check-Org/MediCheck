@@ -143,7 +143,7 @@ Content-Type: application/json
 **Request**:
 ```http
 POST /api/partners/v1/batches/create
-X-API-Key: pk_live_abc123xyz456
+Medicheck-Api-Key: pk_live_abc123xyz456
 Content-Type: application/json
 
 {

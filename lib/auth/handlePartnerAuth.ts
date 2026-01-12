@@ -3,23 +3,17 @@ import type { Actor } from "@/utils/types/actor";
 import { apiKeyRepository } from "@/core/infrastructure/db/repositories/apiKeyRepository";
 
 export async function handlePartnerAuth(req: Request) {
-  const authHeader = req.headers.get("authorization");
-  const apiKeyHeader = req.headers.get("x-api-key");
-  let foundHeader;
 
-  if (authHeader?.startsWith("Bearer ")) {
-    foundHeader = authHeader;
-  } else if (apiKeyHeader) {
-    foundHeader = apiKeyHeader;
-  }
+  const apiKeyHeader = req.headers.get("Medicheck-Api-Key");
+
+  const foundHeader = apiKeyHeader;
 
   if (!foundHeader) {
     return NextResponse.json({ error: "Missing API key" }, { status: 401 });
   }
 
-  const rawKey = authHeader
-    ? foundHeader.replace("Bearer ", "").trim()
-    : foundHeader.trim();
+  const rawKey = foundHeader.trim();
+
   const apiKey = await apiKeyRepository.validateKey(rawKey);
 
   if (!apiKey) {
@@ -28,6 +22,7 @@ export async function handlePartnerAuth(req: Request) {
       { status: 401 }
     );
   }
+
   // async usage tracking
   apiKeyRepository.updateLastUsed(apiKey.id);
 
@@ -41,6 +36,9 @@ export async function handlePartnerAuth(req: Request) {
 
   // Attach actor
   const res = NextResponse.next();
+
   res.headers.set("x-actor", JSON.stringify(actor));
+
   return res;
+  
 }

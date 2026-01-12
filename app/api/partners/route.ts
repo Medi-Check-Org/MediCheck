@@ -2,46 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 
-/**
- * Type Definitions
- */
-interface PartnerData {
-  lastTransferDate: Date;
-  transferCount: number;
-}
-
-interface TransferRecord {
-  toOrgId: string;
-  createdAt: Date;
-}
-
-interface IncomingTransferRecord {
-  fromOrgId: string;
-  createdAt: Date;
-}
-
-interface OrganizationData {
-  id: string;
-  companyName: string | null;
-  organizationType: string;
-  address: string | null;
-  state: string | null;
-  contactEmail: string | null;
-  contactPhone: string | null;
-}
-
-interface PartnerResponse {
-  id: string;
-  name: string | null;
-  type: string;
-  location: string | null;
-  contactEmail: string | null;
-  contactPhone: string | null;
-  lastTransferDate: Date;
-  totalTransfers: number;
-  status: "Active" | "Inactive";
-}
-
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
@@ -80,8 +40,8 @@ export async function GET(request: NextRequest) {
     // Collect unique partner IDs and their last transfer date
     const partnerData = new Map<string, PartnerData>();
 
-    outgoingTransfers.forEach((t: TransferRecord) => {
-      const existing: PartnerData | undefined = partnerData.get(t.toOrgId);
+    outgoingTransfers.forEach((t) => {
+      const existing = partnerData.get(t.toOrgId);
       if (!existing || t.createdAt > existing.lastTransferDate) {
         partnerData.set(t.toOrgId, {
           lastTransferDate: t.createdAt,
@@ -95,8 +55,8 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    incomingTransfers.forEach((t: IncomingTransferRecord) => {
-      const existing: PartnerData | undefined = partnerData.get(t.fromOrgId);
+    incomingTransfers.forEach((t) => {
+      const existing = partnerData.get(t.fromOrgId);
       if (!existing || t.createdAt > existing.lastTransferDate) {
         partnerData.set(t.fromOrgId, {
           lastTransferDate: t.createdAt,
@@ -131,9 +91,9 @@ export async function GET(request: NextRequest) {
     });
 
     // Combine organization details with transfer data
-    const formattedPartners: PartnerResponse[] = partners.map((partner: OrganizationData) => {
-      const data: PartnerData = partnerData.get(partner.id)!;
-      const thirtyDaysAgo: Date = new Date();
+    const formattedPartners = partners.map((partner) => {
+      const data = partnerData.get(partner.id)!;
+      const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       return {
@@ -151,7 +111,7 @@ export async function GET(request: NextRequest) {
 
     // Sort by last transfer date (most recent first)
     formattedPartners.sort(
-      (a: PartnerResponse, b: PartnerResponse) =>
+      (a, b) =>
         b.lastTransferDate.getTime() - a.lastTransferDate.getTime()
     );
 
