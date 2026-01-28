@@ -97,28 +97,6 @@ model ApiKey {
   @@index([organizationId])
 }
 
-
-model Product {
-  id                String    @id @default(cuid())
-  organizationId    String
-  name              String
-  description       String
-  category          String
-  dosageForm        String?
-  strength          String?
-  activeIngredients String[]
-  nafdacNumber      String?
-  shelfLifeMonths   Int?
-  storageConditions String?
-  isActive          Boolean   @default(true)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@map("products")
-}
-
 model TeamMember {
   id             String   @id @default(cuid())
   userId         String   @unique
@@ -141,9 +119,34 @@ model TeamMember {
   @@map("team_members")
 }
 
+model Product {
+  id                String    @id @default(cuid())
+  organizationId    String
+  name              String
+  description       String
+  category          String
+  dosageForm        String?
+  strength          String?
+  activeIngredients String[]
+  nafdacNumber      String?
+  shelfLifeMonths   Int?
+  storageConditions String?
+  numberOfProductAvailable Int @default(0)
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  medicationUnits   MedicationUnit[]
+  medicationBatch   MedicationBatch[]
+
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("products")
+}
+
 model MedicationBatch {
   id                  String              @id @default(cuid())
   batchId             String              @unique
+  productId           String?
   organizationId      String
   drugName            String
   composition         String?
@@ -162,6 +165,7 @@ model MedicationBatch {
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   counterfeitReports  CounterfeitReport[]
+  product             Product?  @relation(fields: [productId], references: [id])
   organization        Organization        @relation(fields: [organizationId], references: [id])
   ownershipTransfers  OwnershipTransfer[]
   scanHistory         ScanHistory[]
@@ -173,7 +177,8 @@ model MedicationBatch {
 
 model MedicationUnit {
   id               String     @id @default(cuid()) // Primary key
-  batchId          String // FK to MedicationBatch
+  batchId          String? // FK to MedicationBatch
+  productId        String?
   serialNumber     String     @unique // Unique identifier per unit
   qrCode           String? // Optional QR code for scanning
   qrSignature      String?
@@ -188,7 +193,8 @@ model MedicationUnit {
   soldAt           DateTime? 
 
   // Relation back to MedicationBatch
-  batch MedicationBatch @relation(fields: [batchId], references: [id])
+  product          Product?  @relation(fields: [productId], references: [id])
+  batch            MedicationBatch? @relation(fields: [batchId], references: [id])
   scanHistory      ScanHistory[]
 
   @@map("medication_units")

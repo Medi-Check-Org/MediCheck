@@ -61,6 +61,7 @@ async function runInBatches<T>(
   }
 }
 
+
 /**
  * Create Batch Use Case
  *
@@ -331,11 +332,13 @@ export class CreateBatchUseCase {
   }
 }
 
+
 // Create singleton instance with injected dependencies
 export const createBatchUseCase = new CreateBatchUseCase(
   batchRepository,
   organizationRepository
 );
+
 
 // Export convenience function
 export async function createBatch(
@@ -344,3 +347,4 @@ export async function createBatch(
 ): Promise<CreateBatchOutput> {
   return createBatchUseCase.execute(input, actor);
 }
+

@@ -8,36 +8,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { Plus, Package2, Clock, Shield, Search } from "lucide-react";
+import { Plus, Package2, Clock, Shield, Search, Pencil} from "lucide-react";
 import { toast } from "react-toastify";
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  dosageForm?: string;
-  strength?: string;
-  activeIngredients: string[];
-  nafdacNumber?: string;
-  shelfLifeMonths?: number;
-  storageConditions?: string;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { ProductSchema } from "@/utils";
+import UpdateStockModal from "./components/UpdateStock";
 
 interface ManufacturerProductsProps {
   orgId: string;
 }
 
 const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductSchema[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [isUpdateStockModalOpen, setIsUpdateStockModalOpen] = useState(false);
+  const [selectedProductForUpdate, setSelectedProdcutForUpdate] = useState<ProductSchema | null>(null);
 
   const [newProduct, setNewProduct] = useState({
     name: "",
@@ -48,7 +36,8 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
     activeIngredients: "",
     nafdacNumber: "",
     shelfLifeMonths: "",
-    storageConditions: ""
+    storageConditions: "",
+    numberOfProductAvailable: "",
   });
 
   const categories = [
@@ -112,15 +101,17 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
 
     setCreating(true);
     try {
+      const createBody = {
+        ...newProduct,
+        activeIngredients: newProduct.activeIngredients.split(",").map(ingredient => ingredient.trim()),
+          shelfLifeMonths: newProduct.shelfLifeMonths ? parseInt(newProduct.shelfLifeMonths) : null,
+            organizationId: orgId
+      }
+      console.log(createBody);
       const res = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...newProduct,
-          activeIngredients: newProduct.activeIngredients.split(",").map(ingredient => ingredient.trim()),
-          shelfLifeMonths: newProduct.shelfLifeMonths ? parseInt(newProduct.shelfLifeMonths) : null,
-          organizationId: orgId
-        })
+        body: JSON.stringify(createBody)
       });
 
       const data = await res.json();
@@ -137,7 +128,8 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
           activeIngredients: "",
           nafdacNumber: "",
           shelfLifeMonths: "",
-          storageConditions: ""
+          storageConditions: "",
+          numberOfProductAvailable: "",
         });
         loadProducts();
       } else {
@@ -162,6 +154,19 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
     return matchesSearch && matchesCategory;
   });
 
+  const updateStockModal = (productId: string) => {
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      setSelectedProdcutForUpdate(product);
+      setIsUpdateStockModalOpen(true);
+    }
+  };
+
+  const closeUpdateStockModal = () => {
+    setIsUpdateStockModalOpen(false)
+    setSelectedProdcutForUpdate(null);
+  }
+
   if (loading) {
     return (
       <div className="space-y-4 sm:space-y-6">
@@ -174,7 +179,8 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <>
+      <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="font-montserrat font-bold text-2xl sm:text-3xl text-foreground">Product Catalog</h1>
@@ -198,7 +204,7 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
             <form onSubmit={createProduct} className="space-y-3 sm:space-y-4 py-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-1 sm:space-y-2">
-                  <Label htmlFor="name" className="text-sm font-medium">Product Name *</Label>
+                  <Label htmlFor="name" className="text-sm font-medium">Product Name</Label>
                   <Input
                     id="name"
                     value={newProduct.name}
@@ -209,7 +215,7 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
                   />
                 </div>
                 <div className="space-y-1 sm:space-y-2">
-                  <Label htmlFor="category" className="text-sm font-medium">Category *</Label>
+                  <Label htmlFor="category" className="text-sm font-medium">Category</Label>
                   <Select 
                     value={newProduct.category} 
                     onValueChange={(value) => setNewProduct(prev => ({ ...prev, category: value }))}
@@ -229,7 +235,7 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
               </div>
               
               <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="description" className="text-sm font-medium">Description *</Label>
+                <Label htmlFor="description" className="text-sm font-medium">Description</Label>
                 <Textarea
                   id="description"
                   value={newProduct.description}
@@ -278,6 +284,18 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
                   value={newProduct.activeIngredients}
                   onChange={(e) => setNewProduct(prev => ({ ...prev, activeIngredients: e.target.value }))}
                   placeholder="Separate multiple ingredients with commas"
+                  className="h-10 sm:h-11"
+                />
+              </div>
+
+              <div className="space-y-1 sm:space-y-2">
+                <Label htmlFor="activeIngredients" className="text-sm font-medium">Number Of Product available</Label>
+                <Input
+                  id="numberOfProductAvailable"
+                  type="number"
+                  value={newProduct.numberOfProductAvailable}
+                  onChange={(e) => setNewProduct(prev => ({ ...prev, numberOfProductAvailable: e.target.value }))}
+                  placeholder="100, 500, etc"
                   className="h-10 sm:h-11"
                 />
               </div>
@@ -440,7 +458,7 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
             )}
           </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4 sm:gap-6">
           {filteredProducts.map((product) => (
             <Card key={product.id} className="h-full flex flex-col">
               <CardHeader className="pb-3 sm:pb-4">
@@ -449,8 +467,9 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
                   {product.description}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col justify-between">
-                <div className="space-y-2 sm:space-y-3">
+              <CardContent className="flex-1 gap-3 flex flex-col justify-between">
+                {/*  */}
+                <div className="space-y-3 sm:space-y-3">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
                     <span className="text-xs sm:text-sm text-muted-foreground">Category:</span>
                     <Badge variant="secondary" className="text-xs self-start sm:self-auto">
@@ -486,7 +505,7 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
                   )}
                   {product.activeIngredients.length > 0 && (
                     <div className="space-y-1 sm:space-y-2">
-                      <span className="text-xs sm:text-sm text-muted-foreground">Active Ingredients:</span>
+                      <span className="text-xs sm:text-sm text-muted-foreground inline-block mb-2">Active Ingredients:</span>
                       <div className="flex flex-wrap gap-1">
                         {product.activeIngredients.slice(0, 3).map((ingredient, index) => (
                           <Badge key={index} variant="outline" className="text-xs px-2 py-0.5">
@@ -501,36 +520,41 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
                       </div>
                     </div>
                   )}
+
+                  {product.numberOfProductAvailable && (
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
+                      <span className="text-xs sm:text-sm text-muted-foreground">Number Of Product Available:</span>
+                      <span className="text-xs sm:text-sm font-medium font-mono">{product.numberOfProductAvailable}</span>
+                    </div>
+                  )}
                 </div>
+                {/*  */}
                 <div className="flex items-center justify-between pt-3 sm:pt-4 mt-auto border-t">
                   <div className="flex items-center">
                     <Shield className="h-3 w-3 mr-1 text-green-600" />
                     <span className="text-xs text-green-600 font-medium">Active</span>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    <span className="hidden sm:inline">
-                      {new Date(product.createdAt).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                    </span>
-                    <span className="sm:hidden">
-                      {new Date(product.createdAt).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric',
-                        year: '2-digit'
-                      })}
-                    </span>
-                  </span>
+                  <div onClick={() => updateStockModal(product.id)} className="flex items-center cursor-pointer">
+                    <Pencil className="h-3 w-3 mr-1 text-green-600" />
+                    <span className="text-xs text-green-600 font-medium">Edit</span>
+                  </div>
                 </div>
+                {/*  */}
               </CardContent>
             </Card>
           ))}
         </div>
         </>
       )}
-    </div>
+      </div>
+      {selectedProductForUpdate && (
+
+        <div className="bg-black/50 fixed top-0 left-0 h-full w-full flex justify-center items-center">
+          <UpdateStockModal isOpen={isUpdateStockModalOpen} onClose={closeUpdateStockModal} product={selectedProductForUpdate} onSuccess={loadProducts} />
+        </div>
+        
+      )}
+    </>
   );
 };
 

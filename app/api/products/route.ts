@@ -24,14 +24,24 @@ export async function POST(req: Request) {
       nafdacNumber,
       shelfLifeMonths,
       storageConditions,
-      organizationId
+      organizationId,
+      numberOfProductAvailable
     } = body;
 
     // Basic validation
-    if (!name || !description || !category || !organizationId) {
+    if (
+      !name ||
+      !description ||
+      !category ||
+      !organizationId ||
+      !numberOfProductAvailable
+    ) {
       return NextResponse.json(
-        { error: "Missing required fields: name, description, category, organizationId" },
-        { status: 400 }
+        {
+          error:
+            "Missing required fields: name, description, category, organizationId",
+        },
+        { status: 400 },
       );
     }
 
@@ -48,19 +58,26 @@ export async function POST(req: Request) {
       );
     }
 
+    const productRequestBody = {
+      name,
+      description,
+      category,
+      dosageForm,
+      strength,
+      activeIngredients: Array.isArray(activeIngredients)
+        ? activeIngredients
+        : [activeIngredients],
+      nafdacNumber,
+      shelfLifeMonths: shelfLifeMonths ? parseInt(shelfLifeMonths) : null,
+      storageConditions,
+      organizationId,
+      numberOfProductAvailable: numberOfProductAvailable
+        ? parseInt(numberOfProductAvailable)
+        : 0,
+    };
+
     const product = await prisma.product.create({
-      data: {
-        name,
-        description,
-        category,
-        dosageForm,
-        strength,
-        activeIngredients: Array.isArray(activeIngredients) ? activeIngredients : [activeIngredients],
-        nafdacNumber,
-        shelfLifeMonths: shelfLifeMonths ? parseInt(shelfLifeMonths) : null,
-        storageConditions,
-        organizationId
-      }
+      data: productRequestBody
     });
 
     return NextResponse.json({
@@ -69,7 +86,8 @@ export async function POST(req: Request) {
       product
     }, { status: 201 });
 
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Product Creation Error:", error);
     return NextResponse.json(
       { error: "Failed to create product" },
