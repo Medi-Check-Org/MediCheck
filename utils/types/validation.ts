@@ -14,41 +14,17 @@ import { ValidationError } from "./errors";
 
 export const CreateBatchSchema = z.object({
   organizationId: z.string().cuid(),
-  drugName: z.string().min(1, "Drug name is required").max(255, "Drug name must not exceed 255 characters"),
-  composition: z.string().max(2000, "Composition must not exceed 2000 characters").optional(),
-  batchSize: z.number().int().positive("Batch size must be a positive integer").max(100000, "Batch size must not exceed 100,000 units"),
-  manufacturingDate: z.string().refine(
-    (date) => !isNaN(Date.parse(date)),
-    { message: "Invalid manufacturing date format" }
-  ).or(z.date()),
-  expiryDate: z.string().refine(
-    (date) => !isNaN(Date.parse(date)),
-    { message: "Invalid expiry date format" }
-  ).or(z.date()),
-  storageInstructions: z.string().max(1000, "Storage instructions must not exceed 1000 characters").optional(),
-}).refine(
-  (data) => {
-    const mfgDate = new Date(data.manufacturingDate);
-    const expDate = new Date(data.expiryDate);
-    return expDate > mfgDate;
-  },
-  {
-    message: "Expiry date must be after manufacturing date",
-    path: ["expiryDate"],
-  }
-).refine(
-  (data) => {
-    const mfgDate = new Date(data.manufacturingDate);
-    const now = new Date();
-    // Manufacturing date shouldn't be more than 2 years in the future
-    const twoYearsFromNow = new Date(now.getFullYear() + 2, now.getMonth(), now.getDate());
-    return mfgDate <= twoYearsFromNow;
-  },
-  {
-    message: "Manufacturing date cannot be more than 2 years in the future",
-    path: ["manufacturingDate"],
-  }
-);
+  drugName: z
+    .string()
+    .min(1, "Drug name is required")
+    .max(255, "Drug name must not exceed 255 characters"),
+  batchSize: z
+    .number()
+    .int()
+    .positive("Batch size must be a positive integer")
+    .max(100000, "Batch size must not exceed 100,000 units"),
+  productId: z.string().cuid(),
+});
 
 export type CreateBatchInput = z.infer<typeof CreateBatchSchema>;
 

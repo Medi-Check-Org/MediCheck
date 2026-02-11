@@ -35,11 +35,8 @@ export interface CreateBatchData {
   batchId: string;
   organizationId: string;
   drugName: string;
-  composition?: string;
+  productId: string;
   batchSize: number;
-  manufacturingDate: Date;
-  expiryDate: Date;
-  storageInstructions?: string;
   registryTopicId?: string | null;
   qrCodeData?: string;
   qrSignature?: string;

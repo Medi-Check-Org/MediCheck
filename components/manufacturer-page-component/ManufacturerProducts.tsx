@@ -241,7 +241,7 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
                   value={newProduct.description}
                   onChange={(e) => setNewProduct(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Product description and uses"
-                  className="min-h-[80px] sm:min-h-[100px] resize-none"
+                  className="min-h-20 sm:min-h-25 resize-none shadow-md"
                   required
                 />
               </div>
@@ -331,7 +331,7 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
                   value={newProduct.storageConditions}
                   onChange={(e) => setNewProduct(prev => ({ ...prev, storageConditions: e.target.value }))}
                   placeholder="Storage temperature, humidity requirements, etc."
-                  className="min-h-[60px] sm:min-h-[80px] resize-none"
+                  className="min-h-20 sm:min-h-25 resize-none shadow-md"
                 />
               </div>
 

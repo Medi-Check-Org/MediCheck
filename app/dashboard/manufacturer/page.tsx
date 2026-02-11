@@ -41,12 +41,6 @@ export default function ManufacturerDashboard() {
         const res = await fetch("/api/organizations/me");
         const data = await res.json();
         setOrgId(data.organizationId);
-
-
-        console.log(data.organizationId)
-
-
-        
         // Fetch organization info for name
         const infoRes = await fetch(`/api/organizations/info?orgId=${data.organizationId}`);
         if (infoRes.ok) {

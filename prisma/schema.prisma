@@ -149,11 +149,9 @@ model MedicationBatch {
   productId           String?
   organizationId      String
   drugName            String
-  composition         String?
   batchSize           Int
-  manufacturingDate   DateTime
-  expiryDate          DateTime
-  storageInstructions String?
+  fromUnitIdNumber    String?
+  toUnitIdNumber      String?
   currentLocation     String?
   status              BatchStatus         @default(CREATED)
   qrCodeData          String?
@@ -164,9 +162,9 @@ model MedicationBatch {
   registryTopicId     String? // HCS topic ID where all units are registered
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
-  counterfeitReports  CounterfeitReport[]
   product             Product?  @relation(fields: [productId], references: [id])
   organization        Organization        @relation(fields: [organizationId], references: [id])
+  counterfeitReports  CounterfeitReport[]
   ownershipTransfers  OwnershipTransfer[]
   scanHistory         ScanHistory[]
   batchEvents         BatchEvent[]

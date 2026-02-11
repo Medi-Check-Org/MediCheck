@@ -45,11 +45,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
 
     const [newBatch, setNewBatch] = useState({
         drugName: "",
-        composition: "",
         batchSize: "",
-        manufacturingDate: "",
-        expiryDate: "",
-        storageInstructions: "",
     });
 
     const [products, setProducts] = useState<Product[]>([]);
@@ -94,7 +90,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
 
         try {
 
-            if (!newBatch?.drugName || !newBatch?.batchSize || !newBatch.manufacturingDate || !newBatch.expiryDate) {
+            if (!newBatch?.drugName || !newBatch?.batchSize) {
                 toast.info("Please fill in all required fields")
                 return
             };
@@ -102,7 +98,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
             const res = await fetch("/api/batches", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...newBatch, organizationId: orgId }),
+                body: JSON.stringify({ ...newBatch, organizationId: orgId, productId: products.find(p => p.name === newBatch.drugName)?.id  }),
             });
 
             const data = await res.json();
@@ -327,42 +323,6 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                         placeholder="Enter quantity"
                                         value={newBatch.batchSize}
                                         onChange={(e) => setNewBatch({ ...newBatch, batchSize: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="production-date">Production Date</Label>
-                                    <Input
-                                        id="production-date"
-                                        type="date"
-                                        value={newBatch.manufacturingDate}
-                                        onChange={(e) => setNewBatch({ ...newBatch, manufacturingDate: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="expiry-date">Expiry Date</Label>
-                                    <Input
-                                        id="expiry-date"
-                                        type="date"
-                                        value={newBatch.expiryDate}
-                                        onChange={(e) => setNewBatch({ ...newBatch, expiryDate: e.target.value })}
-                                    />
-                                </div>
-                                <div className="sm:col-span-2 space-y-2">
-                                    <Label htmlFor="composition">Composition</Label>
-                                    <Textarea
-                                        id="composition"
-                                        placeholder="Enter composition details"
-                                        value={newBatch.composition}
-                                        onChange={(e) => setNewBatch({ ...newBatch, composition: e.target.value })}
-                                    />
-                                </div>
-                                <div className="sm:col-span-2 space-y-2">
-                                    <Label htmlFor="notes">Storage Instructions</Label>
-                                    <Textarea
-                                        id="notes"
-                                        placeholder="Enter storage requirements"
-                                        value={newBatch.storageInstructions}
-                                        onChange={(e) => setNewBatch({ ...newBatch, storageInstructions: e.target.value })}
                                     />
                                 </div>
                             </div>

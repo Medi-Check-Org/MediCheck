@@ -91,33 +91,7 @@ export class CreateBatchUseCase {
     const org = await this.orgRepo.getByIdOrThrow(input.organizationId);
 
     // 5. Additional business rule validations
-    const mfgDate = new Date(input.manufacturingDate);
-    const expDate = new Date(input.expiryDate);
-    const now = new Date();
 
-    // Check if manufacturing date is too far in the past (more than 10 years)
-    const tenYearsAgo = new Date(now.getFullYear() - 10, now.getMonth(), now.getDate());
-    if (mfgDate < tenYearsAgo) {
-      throw new BusinessRuleViolationError(
-        "Manufacturing date cannot be more than 10 years in the past"
-      );
-    }
-
-    // Check if expiry date is too far in the future (more than 20 years)
-    const twentyYearsFromNow = new Date(now.getFullYear() + 20, now.getMonth(), now.getDate());
-    if (expDate > twentyYearsFromNow) {
-      throw new BusinessRuleViolationError(
-        "Expiry date cannot be more than 20 years in the future"
-      );
-    }
-
-    // Check reasonable shelf life (typically drugs expire within 1-10 years)
-    const shelfLifeYears = (expDate.getTime() - mfgDate.getTime()) / (1000 * 60 * 60 * 24 * 365);
-    if (shelfLifeYears > 20) {
-      throw new BusinessRuleViolationError(
-        "Shelf life exceeds maximum allowed duration (20 years)"
-      );
-    }
 
     // Check if batch size is reasonable (at least 1, checked by schema, but double-check)
     if (input.batchSize < 1 || input.batchSize > 100000) {
@@ -172,11 +146,8 @@ export class CreateBatchUseCase {
       batchId,
       organizationId: input.organizationId,
       drugName: input.drugName,
-      composition: input.composition,
       batchSize: input.batchSize,
-      manufacturingDate: new Date(input.manufacturingDate),
-      expiryDate: new Date(input.expiryDate),
-      storageInstructions: input.storageInstructions,
+      productId: input.productId,
       registryTopicId: registryTopicId.topicId ?? null,
       qrCodeData: qrBatchPayload.url,
       qrSignature: qrBatchPayload.signature,
@@ -191,8 +162,8 @@ export class CreateBatchUseCase {
         organizationId: input.organizationId,
         drugName: input.drugName,
         batchSize: String(input.batchSize),
-        manufacturingDate: new Date(input.manufacturingDate).toISOString(),
-        expiryDate: new Date(input.expiryDate).toISOString(),
+        // manufacturingDate: new Date(input.manufacturingDate).toISOString(), substituute with the priduct manufacture date and expiry date
+        // expiryDate: new Date(input.expiryDate).toISOString(),
       }
     );
 
@@ -206,8 +177,8 @@ export class CreateBatchUseCase {
         organizationId: input.organizationId,
         drugName: input.drugName,
         batchSize: input.batchSize,
-        manufacturingDate: new Date(input.manufacturingDate).toISOString(),
-        expiryDate: new Date(input.expiryDate).toISOString(),
+        // manufacturingDate: new Date(input.manufacturingDate).toISOString(),  substituute with the priduct manufacture date and expiry date
+        // expiryDate: new Date(input.expiryDate).toISOString(),
       },
       region: org?.state ?? "",
     });
