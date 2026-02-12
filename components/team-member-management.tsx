@@ -64,7 +64,7 @@ export function TeamMemberManagement({
   const fetchTeamData = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/team-members?organizationId=${organizationId}`)
+      const response = await fetch(`/api/web/team-members?organizationId=${organizationId}`)
 
       if (response.ok) {
         const data = await response.json()
@@ -88,7 +88,7 @@ export function TeamMemberManagement({
 
     try {
       setLoading(true)
-      const response = await fetch('/api/team-members', {
+      const response = await fetch('/api/web/team-members', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -121,7 +121,7 @@ export function TeamMemberManagement({
 
     try {
       setLoading(true)
-      const response = await fetch(`/api/team-members/${editingMember.id}`, {
+      const response = await fetch(`/api/web/team-members/${editingMember.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -150,7 +150,7 @@ export function TeamMemberManagement({
   const handleRemoveMember = async (memberId: string) => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/team-members/${memberId}`, {
+      const response = await fetch(`/api/web/team-members/${memberId}`, {
         method: 'DELETE'
       })
 

@@ -45,7 +45,7 @@ export default function DrugDistributorDashboard() {
     const loadOrg = async () => {
       setOrgLoading(true);
       try {
-        const res = await fetch("/api/organizations/me");
+        const res = await fetch("/api/web/organizations/me");
         const data = await res.json();
         setOrgId(data.organizationId);
       }
@@ -62,9 +62,9 @@ export default function DrugDistributorDashboard() {
   const loadBatches = async () => {
     setBatchesLoading(true);
     try {
-      const res = await fetch(`/api/batches/${orgId}`);
+      const res = await fetch(`/api/web/batches?organizationId=${orgId}`);
       const data = await res.json();
-      setBatches(data);
+      setBatches(data.data.batches);
       toast.success("Fetched batches");
     }
     catch (err) {

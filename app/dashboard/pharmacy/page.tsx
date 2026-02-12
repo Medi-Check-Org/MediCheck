@@ -25,7 +25,7 @@ export default function PharmacyDashboard() {
     const loadOrg = async () => {
       setOrgLoading(true);
       try {
-        const res = await fetch("/api/organizations/me");
+        const res = await fetch("/api/web/organizations/me");
         const data = await res.json();
         setOrgId(data.organizationId);
       } catch (error) {

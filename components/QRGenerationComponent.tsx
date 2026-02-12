@@ -43,7 +43,7 @@ const QRGenerationComponent = ({ allBatches }: {allBatches: MedicationBatchInfoP
         setIsGenerating(true);
         try {
             // Fetch the units for the selected batch
-            const res = await fetch(`/api/batches/${selectedBatch.id}/units`, { cache: 'no-store' });
+            const res = await fetch(`/api/web/batches/${selectedBatch.id}/units`, { cache: 'no-store' });
             if (!res.ok) throw new Error('Failed to fetch units');
             const data: MedicationUnitProp[] = await res.json();
             setUnits(data);

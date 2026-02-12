@@ -195,6 +195,7 @@ export class BatchRepository {
               contactEmail: true,
             },
           },
+          product: true
         },
         skip,
         take: limit,

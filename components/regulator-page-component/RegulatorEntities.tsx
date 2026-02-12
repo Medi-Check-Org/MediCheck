@@ -38,7 +38,7 @@ const RegulatorEntities = () => {
     useEffect(() => {
         const fetchEntities = async () => {
             try {
-                const response = await fetch('/api/regulator/entities')
+                const response = await fetch('/api/web/regulator/entities')
                 if (response.ok) {
                     const data = await response.json()
                     setEntities(data.entities)
@@ -55,7 +55,7 @@ const RegulatorEntities = () => {
 
     const handleVerifyEntity = async (entityId: string, isVerified: boolean) => {
         try {
-            const response = await fetch(`/api/regulator/entities/${entityId}`, {
+            const response = await fetch(`/api/web/regulator/entities/${entityId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ const RegulatorEntities = () => {
     const handleRegisterEntity = async () => {
         setIsRegistering(true)
         try {
-            const response = await fetch('/api/regulator/entities', {
+            const response = await fetch('/api/web/regulator/entities', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

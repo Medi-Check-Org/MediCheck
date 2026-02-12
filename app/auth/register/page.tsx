@@ -99,7 +99,7 @@ export default function RegisterPage() {
         // 2. Create user in your DB
         
         // Send all form data
-        const res = await fetch("/api/register", {
+        const res = await fetch("/api/web/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

@@ -47,14 +47,14 @@ export default function RegulatorAnalytics() {
 
     // Historical classification data
     const { data: historicalData, error: historicalError } = useSWR<ClassificationPoint[]>(
-        "/api/classification-map?days=30",
+        "/api/web/classification-map?days=30",
         fetcher,
         { refreshInterval: 60000 } // Refresh every minute
     );
 
     // Quick stats for overview
     const { data: quickStats, error: statsError } = useSWR(
-        "/api/hotspots/predict",
+        "/api/web/hotspots/predict",
         fetcher,
         { refreshInterval: 300000 } // Refresh every 5 minutes
     );

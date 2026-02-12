@@ -34,7 +34,7 @@ const HospitalInventory = ({ orgId }: HospitalInventoryProps) => {
             try {
                 setLoading(true);
                 // Fetch batches that have been transferred TO this hospital
-                const response = await fetch(`/api/hospital/inventory?orgId=${orgId}`);
+                const response = await fetch(`/api/web/hospital/inventory?orgId=${orgId}`);
                 if (response.ok) {
                     const data = await response.json();
                     setBatches(data);

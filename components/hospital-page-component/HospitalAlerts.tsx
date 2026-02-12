@@ -65,14 +65,14 @@ const HospitalAlerts = () => {
         const fetchAlertsData = async () => {
             try {
                 // Get organization ID
-                const orgResponse = await fetch("/api/organizations/me");
+                const orgResponse = await fetch("/api/web/organizations/me");
                 if (orgResponse.ok) {
                     const orgResult = await orgResponse.json();
                     const organizationId = orgResult.organizationId;
                     setOrgId(organizationId);
 
                     // Fetch alerts data
-                    const alertsResponse = await fetch(`/api/hospital/alerts?orgId=${organizationId}`);
+                    const alertsResponse = await fetch(`/api/web/hospital/alerts?orgId=${organizationId}`);
                     if (alertsResponse.ok) {
                         const data = await alertsResponse.json();
                         setAlertsData(data);
@@ -97,7 +97,7 @@ const HospitalAlerts = () => {
     const handleRefreshAlerts = async () => {
         setLoading(true);
         try {
-            const alertsResponse = await fetch(`/api/hospital/alerts?orgId=${orgId}`);
+            const alertsResponse = await fetch(`/api/web/hospital/alerts?orgId=${orgId}`);
             if (alertsResponse.ok) {
                 const data = await alertsResponse.json();
                 setAlertsData(data);

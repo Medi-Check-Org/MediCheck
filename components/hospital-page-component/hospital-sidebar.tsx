@@ -44,7 +44,7 @@ export function HospitalSidebar({ activeTab, setActiveTab, orgId, isMobile, onTa
       if (!orgId) return
       
       try {
-        const response = await fetch(`/api/organizations/info?orgId=${orgId}`)
+        const response = await fetch(`/api/web/organizations/info?orgId=${orgId}`)
         if (response.ok) {
           const data = await response.json()
           setOrgName(data.companyName)

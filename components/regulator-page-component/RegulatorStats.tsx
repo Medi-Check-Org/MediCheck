@@ -30,7 +30,7 @@ const RegulatorStats = () => {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/dashboard/regulator-stats`);
+        const response = await fetch(`/api/web/dashboard/regulator-stats`);
         if (response.ok) {
           const data = await response.json();
           setStats(data);

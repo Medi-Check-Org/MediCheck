@@ -20,20 +20,9 @@ import {
     XCircle,
     Zap,
 } from "lucide-react";
-import { MedicationBatchInfoProps } from "@/utils"
+import { MedicationBatchInfoProps } from "@/utils";
+import { Product } from "@prisma/client"
 
-interface Product {
-    id: string;
-    name: string;
-    description: string;
-    category: string;
-    dosageForm?: string;
-    strength?: string;
-    activeIngredients: string[];
-    nafdacNumber?: string;
-    shelfLifeMonths?: number;
-    storageConditions?: string;
-}
 
 const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; allBatches: MedicationBatchInfoProps[]; loadBatches: () => void }) => {
 
@@ -67,7 +56,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
 
     const loadProducts = async () => {
         try {
-            const res = await fetch(`/api/products?organizationId=${orgId}`);
+            const res = await fetch(`/api/web/products?organizationId=${orgId}`);
             const data = await res.json();
             
             if (res.ok) {
@@ -95,15 +84,18 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                 return
             };
 
-            const res = await fetch("/api/batches", {
+            const res = await fetch("/api/web/batches/create", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...newBatch, organizationId: orgId, productId: products.find(p => p.name === newBatch.drugName)?.id  }),
+                body: JSON.stringify({ ...newBatch, organizationId: orgId, batchSize: parseInt(newBatch?.batchSize), productId: products.find(p => p.name === newBatch.drugName)?.id }),
             });
 
-            const data = await res.json();
+            const result = await res.json();
 
-            if (!res.ok) throw new Error(data.error);
+            if (!res.ok) {
+                console.error("API ERROR:", result)
+                throw new Error(result.message || "Something went wrong")
+            }
 
             toast.success("Batch created successfully!");
 
@@ -114,16 +106,17 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
         }
         catch (error) {
             toast.error("Error creating batch. Please try again.")
+            console.log(error)
         }
         finally {
             setIsLoading(false)
         }
     }
 
-    const filteredBatches = batches.filter(batch =>
+    const filteredBatches = batches?.filter(batch =>
         batch.batchId.toLowerCase().includes(searchQuery.toLowerCase()) ||
         batch.drugName.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    ) ?? [];
 
     const [transferForm, setTransferForm] = useState({
         toOrganization: "",
@@ -139,7 +132,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
     // Get organizations for transfer
     const loadOrganizations = async () => {
         try {
-            const res = await fetch("/api/organizations");
+            const res = await fetch("/api/web/organizations");
             if (res.ok) {
                 const data = await res.json();
                 // Filter out the current organization from the list
@@ -181,7 +174,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                 notes: transferForm.notes || "",
             };
 
-            const res = await fetch("/api/transfer/ownership", {
+            const res = await fetch("/api/web/transfers/initiate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(transferData),
@@ -421,12 +414,12 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                             <div>
                                                 <span className="text-muted-foreground">Production:</span>
                                                 <br />
-                                                <span>{new Date(batch.manufacturingDate).toLocaleDateString()}</span>
+                                                <span>{new Date(batch?.product?.manufacturingDate as Date).toLocaleDateString()}</span>
                                             </div>
                                             <div>
                                                 <span className="text-muted-foreground">Expiry:</span>
                                                 <br />
-                                                <span>{new Date(batch.expiryDate).toLocaleDateString()}</span>
+                                                <span>{new Date(batch?.product?.expiryDate as Date).toLocaleDateString()}</span>
                                             </div>
                                             <div>
                                                 <span className="text-muted-foreground">Size:</span>
@@ -481,13 +474,13 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="min-w-[120px]">Batch ID</TableHead>
-                                    <TableHead className="min-w-[150px]">Product</TableHead>
-                                    <TableHead className="min-w-[120px] hidden sm:table-cell">Production Date</TableHead>
-                                    <TableHead className="min-w-[120px] hidden md:table-cell">Expiry Date</TableHead>
-                                    <TableHead className="min-w-[100px] hidden sm:table-cell">Batch Size</TableHead>
-                                    <TableHead className="min-w-[120px]">Status</TableHead>
-                                    <TableHead className="min-w-[140px]">Actions</TableHead>
+                                    <TableHead className="min-w-30">Batch ID</TableHead>
+                                    <TableHead className="min-w-37.5">Product</TableHead>
+                                    <TableHead className="min-w-30 hidden sm:table-cell">Production Date</TableHead>
+                                    <TableHead className="min-w-30 hidden md:table-cell">Expiry Date</TableHead>
+                                    <TableHead className="min-w-25 hidden sm:table-cell">Batch Size</TableHead>
+                                    <TableHead className="min-w-30">Status</TableHead>
+                                    <TableHead className="min-w-35">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -495,8 +488,8 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                     <TableRow key={batch.batchId}>
                                         <TableCell className="font-medium">{batch.batchId}</TableCell>
                                         <TableCell className="font-medium">{batch.drugName}</TableCell>
-                                        <TableCell className="hidden sm:table-cell">{new Date(batch.manufacturingDate).toLocaleDateString()}</TableCell>
-                                        <TableCell className="hidden md:table-cell">{new Date(batch.expiryDate).toLocaleDateString()}</TableCell>
+                                        <TableCell className="hidden sm:table-cell">{new Date(batch?.product?.manufacturingDate as Date).toLocaleDateString()}</TableCell>
+                                        <TableCell className="hidden md:table-cell">{new Date(batch?.product?.expiryDate as Date).toLocaleDateString()}</TableCell>
                                         <TableCell className="hidden sm:table-cell">{batch.batchSize.toLocaleString()}</TableCell>
                                         <TableCell>
                                             <Badge variant={getStatusColor(batch.status)} className="flex items-center gap-1 w-fit">
@@ -580,14 +573,14 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                     <h4 className="font-semibold text-sm">Production Information</h4>
                                     <div className="text-sm">
                                         <span className="text-muted-foreground">Manufacturing Date:</span>
-                                        <div className="font-medium">{new Date(viewingBatch.manufacturingDate).toLocaleDateString()}</div>
+                                        <div className="font-medium">{new Date(viewingBatch?.product?.manufacturingDate as Date).toLocaleDateString()}</div>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
                                     <h4 className="font-semibold text-sm">Expiry Information</h4>
                                     <div className="text-sm">
                                         <span className="text-muted-foreground">Expiry Date:</span>
-                                        <div className="font-medium">{new Date(viewingBatch.expiryDate).toLocaleDateString()}</div>
+                                        <div className="font-medium">{new Date(viewingBatch?.product?.expiryDate as Date).toLocaleDateString()}</div>
                                     </div>
                                 </div>
                             </div>

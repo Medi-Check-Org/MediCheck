@@ -28,7 +28,7 @@ const ManufacturerSettings = () => {
     useEffect(() => {
         const fetchOrgData = async () => {
             try {
-                const response = await fetch('/api/organizations/me');
+                const response = await fetch('/api/web/organizations/me');
                 if (response.ok) {
                     const data = await response.json();
                     setOrgData(data.organization);

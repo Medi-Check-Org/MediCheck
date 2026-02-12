@@ -15,7 +15,8 @@ export async function POST(req: NextRequest) {
     const result = await initiateTransfer(body, actor);
 
     return NextResponse.json({ success: true, data: result }, { status: 201 });
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     const errorResponse = toErrorResponse(error);
     return NextResponse.json(errorResponse, {
       status: errorResponse.statusCode,

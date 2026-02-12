@@ -26,7 +26,7 @@ const UpdateStockModal = ({ product, isOpen, onClose, onSuccess }: { product: Pr
         setIsSubmitting(true);
 
         try {
-            const response = await fetch(`/api/products/${product.id}`, {
+            const response = await fetch(`/api/web/products/${product.id}`, {
                 method: 'PATCH',
                 body: JSON.stringify({
                     numberOfProductAvailable: quantity,

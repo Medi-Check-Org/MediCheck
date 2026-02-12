@@ -78,6 +78,7 @@ export async function getActorFromClerkOptional(): Promise<Actor | null> {
  * This is a basic implementation - in production, you might load this from database
  */
 export function getPermissionsForRole(role: string | null): string[] {
+
   const rolePermissions: Record<string, string[]> = {
     ADMIN: [Permissions.ALL],
     MANAGER: [
@@ -110,5 +111,5 @@ export function getPermissionsForRole(role: string | null): string[] {
     ],
   };
 
-  return rolePermissions[role ?? "MEMBER"] ?? rolePermissions.MEMBER;
+  return rolePermissions[role?.toUpperCase() ?? "MEMBER"];
 }

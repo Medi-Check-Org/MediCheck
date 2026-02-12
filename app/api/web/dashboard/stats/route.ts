@@ -27,8 +27,10 @@ export async function GET(request: NextRequest) {
     const activeBatches = await prisma.medicationBatch.count({
       where: {
         organizationId: orgId,
-        expiryDate: {
-          gt: new Date(), // Not expired
+        product: {
+          expiryDate: {
+            gt: new Date(), // Not expired
+          },
         },
         status: {
           in: ['CREATED', 'IN_TRANSIT', 'DELIVERED'],
@@ -46,6 +48,7 @@ export async function GET(request: NextRequest) {
 
     // Get recent transfers count (last 30 days)
     const thirtyDaysAgo = new Date();
+
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const recentTransfers = await prisma.ownershipTransfer.count({
@@ -65,8 +68,8 @@ export async function GET(request: NextRequest) {
     };
 
     return NextResponse.json(stats);
-  } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
+  }
+  catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch dashboard stats' },
       { status: 500 }

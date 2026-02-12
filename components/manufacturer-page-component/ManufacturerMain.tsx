@@ -45,7 +45,7 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
     const fetchRecentActivity = async () => {
         try {
             setLoadingActivity(true);
-            const response = await fetch(`/api/dashboard/recent-activity?orgId=${orgId}`);
+            const response = await fetch(`/api/web/dashboard/recent-activity?orgId=${orgId}`);
             if (response.ok) {
                 const data = await response.json();
                 setRecentActivity(data);
@@ -60,7 +60,7 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
     // Fetch dashboard stats from database
     const fetchStats = async () => {
         try {
-            const response = await fetch(`/api/dashboard/stats?orgId=${orgId}`);
+            const response = await fetch(`/api/web/dashboard/stats?orgId=${orgId}`);
             if (response.ok) {
                 const data = await response.json();
                 setStats(data);

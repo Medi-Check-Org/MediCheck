@@ -34,7 +34,7 @@ export default function TeamMemberLoginPage() {
 
     try {
       // First check if the user exists in our system
-      const response = await fetch("/api/auth/team-member-login", {
+      const response = await fetch("/api/web/auth/team-member-login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

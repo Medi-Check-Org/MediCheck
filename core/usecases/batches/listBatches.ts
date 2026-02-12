@@ -34,6 +34,8 @@ export class ListBatchesUseCase {
     // 1. Validate input
     const input = validateInput(ListBatchesSchema, rawInput);
 
+    console.log(input)
+
     // 2. Check permissions
     requirePermission(actor, Permissions.BATCHES_READ);
 

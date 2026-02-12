@@ -25,7 +25,9 @@ export async function POST(req: Request) {
       shelfLifeMonths,
       storageConditions,
       organizationId,
-      numberOfProductAvailable
+      numberOfProductAvailable,
+      manufacturingDate,
+      expiryDate
     } = body;
 
     // Basic validation
@@ -34,7 +36,7 @@ export async function POST(req: Request) {
       !description ||
       !category ||
       !organizationId ||
-      !numberOfProductAvailable
+      !numberOfProductAvailable // all fields are needed.
     ) {
       return NextResponse.json(
         {
@@ -74,6 +76,8 @@ export async function POST(req: Request) {
       numberOfProductAvailable: numberOfProductAvailable
         ? parseInt(numberOfProductAvailable)
         : 0,
+      manufacturingDate: new Date(manufacturingDate).toISOString(),
+      expiryDate: new Date(expiryDate).toISOString(),
     };
 
     const product = await prisma.product.create({

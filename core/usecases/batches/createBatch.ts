@@ -21,6 +21,7 @@ import {
   ForbiddenError,
   BusinessRuleViolationError,
   ExternalServiceError,
+  DomainError,
 } from "@/utils/types/errors";
 import { nanoid } from "nanoid";
 import {
@@ -30,15 +31,15 @@ import {
 } from "@/lib/hedera";
 import { generateQRPayload, generateBatchQRPayload } from "@/lib/qrPayload";
 import { hedera10Client } from "@/lib/hedera10Client";
+import { prisma } from "@/lib/prisma";
+import type { MedicationBatch } from "@/lib/generated/prisma";
+import { Product } from "@/lib/generated/prisma";
 
 const QR_SECRET = process.env.QR_SECRET || "dev-secret";
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-const UNIT_REG_CONCURRENCY = parseInt(
-  process.env.UNIT_REG_CONCURRENCY || "10",
-  10
-);
 
-import type { MedicationBatch } from "@/lib/generated/prisma";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+const UNIT_REG_CONCURRENCY = parseInt(process.env.UNIT_REG_CONCURRENCY || "10", 10);
 
 export interface CreateBatchOutput {
   batch: MedicationBatch;
@@ -68,12 +69,14 @@ async function runInBatches<T>(
  * Dependencies injected for testability and loose coupling
  */
 export class CreateBatchUseCase {
+
   constructor(
     private readonly batchRepo: BatchRepository,
     private readonly orgRepo: OrganizationRepository
   ) {}
 
   async execute(rawInput: unknown, actor: Actor): Promise<CreateBatchOutput> {
+
     // 1. Validate input
     const input = validateInput(CreateBatchSchema, rawInput);
 
@@ -91,7 +94,6 @@ export class CreateBatchUseCase {
     const org = await this.orgRepo.getByIdOrThrow(input.organizationId);
 
     // 5. Additional business rule validations
-
 
     // Check if batch size is reasonable (at least 1, checked by schema, but double-check)
     if (input.batchSize < 1 || input.batchSize > 100000) {
@@ -118,6 +120,7 @@ export class CreateBatchUseCase {
     }
 
     let registryTopicId: RegistryResult;
+
     try {
       registryTopicId = (await createBatchRegistry(
         batchId,
@@ -131,6 +134,19 @@ export class CreateBatchUseCase {
         "Hedera",
         `Failed to create batch registry: ${errorMessage}`
       );
+    }
+
+    // Product validity check
+    const product = await prisma.product.findUnique({
+      where: {
+        id: input.productId,
+      },
+    });
+
+    console.log(product)
+
+    if (!product) {
+      throw new DomainError("Product does not exist", "PRODUCT_NOT_FOUND", 404);
     }
 
     // 7. Generate batch QR payload
@@ -162,9 +178,9 @@ export class CreateBatchUseCase {
         organizationId: input.organizationId,
         drugName: input.drugName,
         batchSize: String(input.batchSize),
-        // manufacturingDate: new Date(input.manufacturingDate).toISOString(), substituute with the priduct manufacture date and expiry date
-        // expiryDate: new Date(input.expiryDate).toISOString(),
-      }
+        manufacturingDate: new Date(product.manufacturingDate).toISOString(),
+        expiryDate: new Date(product.expiryDate).toISOString(),
+      },
     );
 
     // 10. Store off-chain event record
@@ -177,8 +193,8 @@ export class CreateBatchUseCase {
         organizationId: input.organizationId,
         drugName: input.drugName,
         batchSize: input.batchSize,
-        // manufacturingDate: new Date(input.manufacturingDate).toISOString(),  substituute with the priduct manufacture date and expiry date
-        // expiryDate: new Date(input.expiryDate).toISOString(),
+        manufacturingDate: new Date(product.manufacturingDate).toISOString(),
+        expiryDate: new Date(product.expiryDate).toISOString(),
       },
       region: org?.state ?? "",
     });
@@ -242,6 +258,7 @@ export class CreateBatchUseCase {
         batchId: newBatch.id,
         registrySequence: seq,
         qrCode: qrUnitPayload.url,
+        productId: input.productId,
         qrSignature: qrUnitPayload.signature,
       });
     });

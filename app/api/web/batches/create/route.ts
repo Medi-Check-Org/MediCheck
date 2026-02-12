@@ -5,12 +5,12 @@
  * Delegates business logic to use case layer.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getActorFromClerk } from "@/core/auth";
 import { createBatch } from "@/core/usecases/batches/createBatch";
 import { toErrorResponse } from "@/utils/types/errors";
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     // 1. Authenticate with Clerk
     const actor = await getActorFromClerk();
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
         success: true,
         data: result,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: unknown) {
     // Handle errors uniformly

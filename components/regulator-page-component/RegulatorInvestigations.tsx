@@ -28,7 +28,7 @@ const RegulatorInvestigations = () => {
     useEffect(() => {
         const fetchInvestigations = async () => {
             try {
-                const response = await fetch('/api/regulator/investigations')
+                const response = await fetch('/api/web/regulator/investigations')
                 if (response.ok) {
                     const data = await response.json()
                     setInvestigations(data.investigations)
@@ -46,7 +46,7 @@ const RegulatorInvestigations = () => {
     const handleCreateInvestigation = async () => {
         try {
             console.log('Creating investigation with data:', newInvestigation);
-            const response = await fetch('/api/regulator/investigations', {
+            const response = await fetch('/api/web/regulator/investigations', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -83,7 +83,7 @@ const RegulatorInvestigations = () => {
 
     const handleUpdateStatus = async (investigationId: string, status: string, resolution?: string) => {
         try {
-            const response = await fetch(`/api/regulator/investigations/${investigationId}`, {
+            const response = await fetch(`/api/web/regulator/investigations/${investigationId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

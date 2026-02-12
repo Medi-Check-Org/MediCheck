@@ -50,7 +50,7 @@ const RegulatorSettings = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch('/api/regulator/settings');
+        const response = await fetch('/api/web/regulator/settings');
 
         if (response.ok) {
           const data = await response.json();
@@ -116,7 +116,7 @@ const RegulatorSettings = () => {
       setError(null);
       setSuccessMessage(null);
 
-      const response = await fetch('/api/regulator/settings', {
+      const response = await fetch('/api/web/regulator/settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

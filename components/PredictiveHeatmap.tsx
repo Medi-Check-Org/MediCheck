@@ -83,7 +83,7 @@ export default function PredictiveHeatmap({
     setError(null);
 
     try {
-      const response = await fetch('/api/hotspots/predict', {
+      const response = await fetch('/api/web/hotspots/predict', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

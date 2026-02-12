@@ -34,7 +34,7 @@ const DistributorInventory = ({ orgId }: DistributorInventoryProps) => {
             try {
                 setLoading(true);
                 // Fetch batches that have been transferred TO this distributor
-                const response = await fetch(`/api/hospital/inventory?orgId=${orgId}`);
+                const response = await fetch(`/api/web/hospital/inventory?orgId=${orgId}`);
                 if (response.ok) {
                     const data = await response.json();
                     setBatches(data);

@@ -40,7 +40,7 @@ export function RegulatorSidebar({ activeTab, setActiveTab, isOpen = false, onCl
   useEffect(() => {
     async function fetchOrgName() {
       try {
-        const res = await fetch("/api/organization"); // Update endpoint as needed
+        const res = await fetch("/api/web/organization"); // Update endpoint as needed
         const data = await res.json();
         setOrgName(data.name || "Regulator Org");
       } catch {

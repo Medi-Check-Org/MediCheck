@@ -33,9 +33,10 @@ const DistributorMain = ({ setActiveTab, orgId }: {
             
             try {
                 setLoading(true);
-                const response = await fetch(`/api/batches/${orgId}`);
+                const response = await fetch(`/api/web/batches?organizationId=${orgId}`); 
                 if (response.ok) {
-                    const batches = await response.json();
+                    const result = await response.json();
+                    const batches = result.data.batches;
                     const totalBatchUnits = batches.reduce((sum: number, batch: any) => sum + (batch.quantity || 0), 0);
                     
                     // Calculate active shipments (batches in transit)
@@ -65,7 +66,7 @@ const DistributorMain = ({ setActiveTab, orgId }: {
         const fetchDistributorName = async () => {
             if (!orgId) return;
             try {
-                const response = await fetch(`/api/organizations/info?orgId=${orgId}`);
+                const response = await fetch(`/api/web/organizations/info?orgId=${orgId}`);
                 if (response.ok) {
                     const data = await response.json();
                     setDistributorName(data.companyName);

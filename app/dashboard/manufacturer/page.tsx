@@ -38,11 +38,11 @@ export default function ManufacturerDashboard() {
     const loadOrg = async () => {
       setOrgLoading(true);
       try {
-        const res = await fetch("/api/organizations/me");
+        const res = await fetch("/api/web/organizations/me");
         const data = await res.json();
         setOrgId(data.organizationId);
         // Fetch organization info for name
-        const infoRes = await fetch(`/api/organizations/info?orgId=${data.organizationId}`);
+        const infoRes = await fetch(`/api/web/organizations/info?orgId=${data.organizationId}`);
         if (infoRes.ok) {
           const infoData = await infoRes.json();
           setOrgName(infoData.companyName);
@@ -64,9 +64,9 @@ export default function ManufacturerDashboard() {
 
     setBatchesLoading(true);
     try {
-      const res = await fetch(`/api/batches/${orgId}`);
+      const res = await fetch(`/api/web/batches?organizationId=${orgId}`);
       const data = await res.json();
-      setBatches(data);
+      setBatches(data.data.batches); // note to extract the pagination as well.
       toast.success("Fetched batches");
     }
     catch (err) {

@@ -63,7 +63,7 @@ const RegulatorAlerts = () => {
         try {
             setLoading(true)
             setError(null)
-            const response = await fetch('/api/regulator/alerts')
+            const response = await fetch('/api/web/regulator/alerts')
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`)

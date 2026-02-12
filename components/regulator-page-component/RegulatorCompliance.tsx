@@ -62,7 +62,7 @@ const RegulatorCompliance = () => {
         try {
             setLoading(true)
             setError(null)
-            const response = await fetch('/api/regulator/compliance')
+            const response = await fetch('/api/web/regulator/compliance')
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`)
@@ -96,7 +96,7 @@ const RegulatorCompliance = () => {
 
     const handleApproveTransfer = async (transferId: string, status: 'COMPLETED' | 'FAILED', notes?: string) => {
         try {
-            const response = await fetch('/api/regulator/compliance', {
+            const response = await fetch('/api/web/regulator/compliance', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

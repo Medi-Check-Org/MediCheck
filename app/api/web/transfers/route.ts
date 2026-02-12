@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { listTransfers } from "@/core/usecases/transfers";
 import { getActorFromClerk } from "@/core/auth/clerk";
 
+type directionProps = "all" | "outgoing" | "incoming";
+
 export async function GET(request: NextRequest) {
   try {
     // Get authenticated actor
@@ -12,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const orgId = searchParams.get("orgId");
-    const direction = searchParams.get("direction") || "all"; // outgoing, incoming, all
+    const direction: directionProps = searchParams.get("direction") as directionProps; // outgoing, incoming, all
 
     if (!orgId) {
       return NextResponse.json(

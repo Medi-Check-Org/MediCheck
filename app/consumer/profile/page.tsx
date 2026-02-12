@@ -95,7 +95,7 @@ export default function ConsumerProfile() {
     const fetchUserProfile = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/consumer/profile');
+        const response = await fetch('/api/web/consumer/profile');
         if (response.ok) {
           const profileData = await response.json();
           setUserProfile(profileData);
@@ -134,7 +134,7 @@ export default function ConsumerProfile() {
   // Update profile function
   const updateProfile = async () => {
     try {
-      const response = await fetch('/api/consumer/profile', {
+      const response = await fetch('/api/web/consumer/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -168,7 +168,7 @@ export default function ConsumerProfile() {
   const saveProfileChanges = async () => {
     try {
       setIsProfileSaving(true);
-      const response = await fetch('/api/consumer/profile', {
+      const response = await fetch('/api/web/consumer/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -245,7 +245,7 @@ export default function ConsumerProfile() {
   const fetchScanHistory = async () => {
     try {
       setIsScanHistoryLoading(true);
-      const response = await fetch('/api/consumer/scan-history');
+      const response = await fetch('/api/web/consumer/scan-history');
       if (response.ok) {
         const historyData = await response.json();
         setScanHistory(historyData);
@@ -389,7 +389,7 @@ export default function ConsumerProfile() {
     setIsAILoading(true)
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/web/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

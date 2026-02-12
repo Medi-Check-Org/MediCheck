@@ -126,6 +126,8 @@ model Product {
   description       String
   category          String
   dosageForm        String?
+  manufacturingDate   DateTime?
+  expiryDate          DateTime?
   strength          String?
   activeIngredients String[]
   nafdacNumber      String?
@@ -134,7 +136,8 @@ model Product {
   numberOfProductAvailable Int @default(0)
   isActive          Boolean   @default(true)
   createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  updatedAt         DateTime  @updatedAt 
+
   medicationUnits   MedicationUnit[]
   medicationBatch   MedicationBatch[]
 
@@ -158,10 +161,11 @@ model MedicationBatch {
   qrSignature         String?
   secretKey           String?
   blockchainHash      String?
-  // ✅ Hedera registry for this batch
+  // Hedera registry for this batch
   registryTopicId     String? // HCS topic ID where all units are registered
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
+  // Relation part
   product             Product?  @relation(fields: [productId], references: [id])
   organization        Organization        @relation(fields: [organizationId], references: [id])
   counterfeitReports  CounterfeitReport[]
@@ -182,15 +186,12 @@ model MedicationUnit {
   qrSignature      String?
   currentLocation  String? // Where the unit currently is
   status           UnitStatus @default(IN_STOCK) // Enum for tracking unit state
-  blockchainHash   String? // Optional for blockchain verification
   createdAt        DateTime   @default(now()) // Auto set on creation
-  // ✅ On-chain footprint for this specific unit
-  registrySequence Int? // sequence number of the unit’s registration on-chain
-  updatedAt        DateTime   @updatedAt // Auto updated on changes
-  //
   soldAt           DateTime? 
-
-  // Relation back to MedicationBatch
+  updatedAt        DateTime   @updatedAt // Auto updated on changes
+  // On-chain footprint for this specific unit attched to a unit.
+  registrySequence Int? // sequence number of the unit’s registration on-chain
+  // Relationship
   product          Product?  @relation(fields: [productId], references: [id])
   batch            MedicationBatch? @relation(fields: [batchId], references: [id])
   scanHistory      ScanHistory[]

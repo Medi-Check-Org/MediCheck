@@ -159,7 +159,7 @@ export function AnalyticsDashboard({
         type: dashboardType
       })
       
-      const response = await fetch(`/api/analytics?${params}`)
+      const response = await fetch(`/api/web/analytics?${params}`)
       
       if (!response.ok) {
         const errorData = await response.json()

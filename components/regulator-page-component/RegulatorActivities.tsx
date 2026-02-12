@@ -21,7 +21,7 @@ const RegulatorActivities = () => {
     const fetchActivities = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/dashboard/regulator-activities`);
+        const response = await fetch(`/api/web/dashboard/regulator-activities`);
         if (response.ok) {
           const data = await response.json();
           setActivities(data);

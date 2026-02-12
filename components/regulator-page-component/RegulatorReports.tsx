@@ -60,7 +60,7 @@ const RegulatorReports = () => {
         try {
             setLoading(true)
             setError(null)
-            const response = await fetch('/api/regulator/analytics')
+            const response = await fetch('/api/web/regulator/analytics')
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`)
@@ -80,7 +80,7 @@ const RegulatorReports = () => {
     const generateReport = async (reportType: string) => {
         try {
             setGeneratingReport(reportType);
-            const response = await fetch(`/api/regulator/reports?type=${reportType}`);
+            const response = await fetch(`/api/web/regulator/reports?type=${reportType}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             // Get PDF blob

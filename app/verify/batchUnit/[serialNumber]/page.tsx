@@ -37,7 +37,7 @@ export default function VerifyUnitPage() {
         if (authenticityResultCheck) {
             setAiTranslation(undefined);
             const getComprehensiveInfoFromGemini = async () => {
-                const res = await fetch("/api/geminiTranslation", {
+                const res = await fetch("/api/web/geminiTranslation", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -62,7 +62,7 @@ export default function VerifyUnitPage() {
             try {
                 console.log("Verifying unit:", serialNumber, "with sig:", sig, "at location:", latitude, longitude);
 
-                const res = await fetch(`/api/verify/unit/${serialNumber}?sig=${sig}&lat=${latitude}&long=${longitude}`);
+                const res = await fetch(`/api/web/verify/unit/${serialNumber}?sig=${sig}&lat=${latitude}&long=${longitude}`);
 
                 const data = await res.json();
                 

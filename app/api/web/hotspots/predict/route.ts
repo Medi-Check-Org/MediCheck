@@ -1,6 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 import * as ort from "onnxruntime-node";
-import { prisma } from "../../../../lib/prisma";
+import { prisma } from "../../../../../lib/prisma";
 import path from "path";
 
 interface HotspotInput {
@@ -26,49 +26,83 @@ interface Prediction {
 
 // Nigerian regions (37 states + FCT)
 const NIGERIAN_REGIONS = [
-  'Abia', 'Adamawa', 'Akwa Ibom', 'Anambra', 'Bauchi', 'Bayelsa', 'Benue', 'Borno',
-  'Cross River', 'Delta', 'Ebonyi', 'Edo', 'Ekiti', 'Enugu', 'Gombe', 'Imo', 'Jigawa',
-  'Kaduna', 'Kano', 'Katsina', 'Kebbi', 'Kogi', 'Kwara', 'Lagos', 'Nasarawa', 'Niger',
-  'Ogun', 'Ondo', 'Osun', 'Oyo', 'Plateau', 'Rivers', 'Sokoto', 'Taraba', 'Yobe', 'Zamfara',
-  'Abuja'
+  "Abia",
+  "Adamawa",
+  "Akwa Ibom",
+  "Anambra",
+  "Bauchi",
+  "Bayelsa",
+  "Benue",
+  "Borno",
+  "Cross River",
+  "Delta",
+  "Ebonyi",
+  "Edo",
+  "Ekiti",
+  "Enugu",
+  "Gombe",
+  "Imo",
+  "Jigawa",
+  "Kaduna",
+  "Kano",
+  "Katsina",
+  "Kebbi",
+  "Kogi",
+  "Kwara",
+  "Lagos",
+  "Nasarawa",
+  "Niger",
+  "Ogun",
+  "Ondo",
+  "Osun",
+  "Oyo",
+  "Plateau",
+  "Rivers",
+  "Sokoto",
+  "Taraba",
+  "Yobe",
+  "Zamfara",
+  "Abuja",
 ];
 
-const TIME_OF_DAY = ['afternoon', 'evening', 'morning', 'night'];
-const DAYS_OF_WEEK = ['Fri', 'Mon', 'Sat', 'Sun', 'Thu', 'Tue', 'Wed'];
+const TIME_OF_DAY = ["afternoon", "evening", "morning", "night"];
+const DAYS_OF_WEEK = ["Fri", "Mon", "Sat", "Sun", "Thu", "Tue", "Wed"];
 
 // Encode features exactly like the training data
 function encodeHotspotFeatures(input: HotspotInput): number[] {
   const features: number[] = [];
-  
+
   // Base features (4 features)
   features.push(input.latitude);
   features.push(input.longitude);
   features.push(input.pastIncidentRate);
   features.push(input.userFlag);
-  
+
   // Region encoding (37 features - one-hot)
-  NIGERIAN_REGIONS.forEach(region => {
+  NIGERIAN_REGIONS.forEach((region) => {
     features.push(input.region === region ? 1 : 0);
   });
-  
+
   // Time of day encoding (4 features - one-hot, alphabetical order)
-  TIME_OF_DAY.forEach(time => {
+  TIME_OF_DAY.forEach((time) => {
     features.push(input.timeOfDay === time ? 1 : 0);
   });
-  
+
   // Day of week encoding (7 features - one-hot, alphabetical order)
-  DAYS_OF_WEEK.forEach(day => {
+  DAYS_OF_WEEK.forEach((day) => {
     features.push(input.dayOfWeek === day ? 1 : 0);
   });
-  
-  console.log(`Generated ${features.length} features for region ${input.region}`);
+
+  console.log(
+    `Generated ${features.length} features for region ${input.region}`,
+  );
   return features;
 }
 
 // Get geographic areas for analysis
 async function getGeographicAreas() {
   const areas = await prisma.scanHistory.groupBy({
-    by: ['region'],
+    by: ["region"],
     where: {
       latitude: { not: null },
       longitude: { not: null },
@@ -98,16 +132,16 @@ async function getRegionHistoricalData(region: string) {
   const suspicious = await prisma.scanHistory.count({
     where: {
       region,
-      scanResult: 'SUSPICIOUS',
-      scanDate: { gte: thirtyDaysAgo }
-    }
+      scanResult: "SUSPICIOUS",
+      scanDate: { gte: thirtyDaysAgo },
+    },
   });
 
   const total = await prisma.scanHistory.count({
     where: {
       region,
-      scanDate: { gte: thirtyDaysAgo }
-    }
+      scanDate: { gte: thirtyDaysAgo },
+    },
   });
 
   return {
@@ -118,9 +152,12 @@ async function getRegionHistoricalData(region: string) {
 }
 
 // Calculate risk factors based on analysis
-function calculateRiskFactors(riskScore: number, historicalData: any): string[] {
+function calculateRiskFactors(
+  riskScore: number,
+  historicalData: any,
+): string[] {
   const factors = [];
-  
+
   if (riskScore > 0.7) {
     factors.push("High historical counterfeit activity");
   }
@@ -133,7 +170,7 @@ function calculateRiskFactors(riskScore: number, historicalData: any): string[] 
   if (historicalData.suspiciousCount > 10) {
     factors.push("Multiple counterfeit reports");
   }
-  
+
   factors.push("AI model prediction confidence");
   return factors;
 }
@@ -149,7 +186,11 @@ function getPredictedTimeframe(riskScore: number): string {
 export async function POST(request: Request) {
   try {
     console.log("=== LOADING ONNX MODEL ===");
-    const modelPath = path.join(process.cwd(), 'models', 'hotspot_predictor.onnx');
+    const modelPath = path.join(
+      process.cwd(),
+      "models",
+      "hotspot_predictor.onnx",
+    );
     const session = await ort.InferenceSession.create(modelPath);
     console.log("✅ Model loaded successfully");
     console.log("Model inputs:", session.inputNames);
@@ -169,24 +210,33 @@ export async function POST(request: Request) {
           totalAreasAnalyzed: 0,
           dataPoints: 0,
           predictionDate: new Date().toISOString(),
-          status: "No geographic areas found with sufficient data"
-        }
+          status: "No geographic areas found with sufficient data",
+        },
       });
     }
 
     const predictions: Prediction[] = [];
     const now = new Date();
     const currentHour = now.getHours();
-    const timeOfDay = currentHour < 6 ? 'night' : 
-                     currentHour < 12 ? 'morning' : 
-                     currentHour < 18 ? 'afternoon' : 'evening';
-    const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][now.getDay()];
+    const timeOfDay =
+      currentHour < 6
+        ? "night"
+        : currentHour < 12
+          ? "morning"
+          : currentHour < 18
+            ? "afternoon"
+            : "evening";
+    const dayOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
+      now.getDay()
+    ];
 
     console.log(`Current time context: ${timeOfDay}, ${dayOfWeek}`);
 
     for (let i = 0; i < areas.length; i++) {
       const area = areas[i];
-      console.log(`=== PROCESSING AREA ${i + 1}/${areas.length}: ${area.region} ===`);
+      console.log(
+        `=== PROCESSING AREA ${i + 1}/${areas.length}: ${area.region} ===`,
+      );
 
       try {
         // Get historical data for this region
@@ -207,16 +257,22 @@ export async function POST(request: Request) {
         // Generate features
         console.log("Generating features...");
         const features = encodeHotspotFeatures(hotspotInput);
-        
+
         if (features.length !== 52) {
-          console.log(`❌ Feature count mismatch: got ${features.length}, expected 52`);
+          console.log(
+            `❌ Feature count mismatch: got ${features.length}, expected 52`,
+          );
           continue;
         }
 
         console.log("✅ Features prepared: 52 features");
 
         // Create input tensor
-        const inputTensor = new ort.Tensor('float32', new Float32Array(features), [1, 52]);
+        const inputTensor = new ort.Tensor(
+          "float32",
+          new Float32Array(features),
+          [1, 52],
+        );
         const feeds = { [session.inputNames[0]]: inputTensor };
 
         console.log("Running model inference...");
@@ -225,17 +281,17 @@ export async function POST(request: Request) {
 
         // Extract prediction
         let riskScore = 0;
-        
-        if (results['probabilities']) {
+
+        if (results["probabilities"]) {
           // Use probability output (preferred)
-          const probData = results['probabilities'].data as Float32Array;
+          const probData = results["probabilities"].data as Float32Array;
           console.log("Probability output data:", Array.from(probData));
-          
+
           // For binary classification, take probability of positive class
           riskScore = probData.length > 1 ? probData[1] : probData[0];
-        } else if (results['label']) {
+        } else if (results["label"]) {
           // Fallback to label output
-          const labelData = results['label'].data;
+          const labelData = results["label"].data;
           const label = Number(labelData[0]);
           riskScore = label === 1 ? 0.8 : 0.2; // Convert binary to probability-like score
           console.log("Using label output:", label, "→ risk score:", riskScore);
@@ -259,11 +315,14 @@ export async function POST(request: Request) {
           };
 
           predictions.push(prediction);
-          console.log(`✅ Added prediction for ${area.region} with ${(riskScore * 100).toFixed(1)}% risk`);
+          console.log(
+            `✅ Added prediction for ${area.region} with ${(riskScore * 100).toFixed(1)}% risk`,
+          );
         } else {
-          console.log(`⚠️ Risk score ${riskScore} below threshold for ${area.region}`);
+          console.log(
+            `⚠️ Risk score ${riskScore} below threshold for ${area.region}`,
+          );
         }
-
       } catch (error) {
         console.log(`❌ Error processing ${area.region}:`, error);
         continue;
@@ -275,13 +334,24 @@ export async function POST(request: Request) {
 
     console.log("=== PREDICTION RESULTS ===");
     console.log(`✅ Generated ${predictions.length} predictions`);
-    console.log("Top predictions:", predictions.slice(0, 3).map(p => `${p.region}: ${(p.riskScore * 100).toFixed(1)}%`));
+    console.log(
+      "Top predictions:",
+      predictions
+        .slice(0, 3)
+        .map((p) => `${p.region}: ${(p.riskScore * 100).toFixed(1)}%`),
+    );
 
     // Calculate metadata
-    const totalDataPoints = areas.reduce((sum: number, area: { scanCount: number }) => sum + area.scanCount, 0);
-    const avgRisk = predictions.length > 0 ? 
-      predictions.reduce((sum, p) => sum + p.riskScore, 0) / predictions.length : 0;
-    const highRiskCount = predictions.filter(p => p.riskScore > 0.7).length;
+    const totalDataPoints = areas.reduce(
+      (sum: number, area: { scanCount: number }) => sum + area.scanCount,
+      0,
+    );
+    const avgRisk =
+      predictions.length > 0
+        ? predictions.reduce((sum, p) => sum + p.riskScore, 0) /
+          predictions.length
+        : 0;
+    const highRiskCount = predictions.filter((p) => p.riskScore > 0.7).length;
 
     return NextResponse.json({
       success: true,
@@ -295,19 +365,18 @@ export async function POST(request: Request) {
         modelAccuracy: Math.min(avgRisk + 0.1, 0.95), // Simulated accuracy
         highRiskAreas: highRiskCount,
         averageRisk: avgRisk,
-        status: `Generated ${predictions.length} AI predictions using ONNX model`
-      }
+        status: `Generated ${predictions.length} AI predictions using ONNX model`,
+      },
     });
-
   } catch (error) {
     console.error("Hotspot Prediction Error:", error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "Failed to generate predictions",
-        details: error instanceof Error ? error.message : "Unknown error" 
+        details: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -318,6 +387,6 @@ export async function GET() {
     message: "Hotspot Prediction API",
     endpoints: ["POST /api/hotspots/predict"],
     model: "hotspot_prediction_model.onnx",
-    status: "Ready for AI predictions"
+    status: "Ready for AI predictions",
   });
 }

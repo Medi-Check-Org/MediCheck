@@ -32,9 +32,9 @@ const RegulatorMain = ({ setActiveTab }: {
         const fetchData = async () => {
             try {
                 const [statsResponse, activitiesResponse, alertsResponse] = await Promise.all([
-                    fetch('/api/dashboard/regulator-stats'),
-                    fetch('/api/dashboard/regulator-activities'),
-                    fetch('/api/regulator/alerts')
+                    fetch('/api/web/dashboard/regulator-stats'),
+                    fetch('/api/web/dashboard/regulator-activities'),
+                    fetch('/api/web/regulator/alerts')
                 ])
 
                 if (statsResponse.ok) {

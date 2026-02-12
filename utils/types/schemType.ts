@@ -1,3 +1,5 @@
+import { Product } from "@prisma/client";
+
 export enum UserRoleEnum {
   ORGANIZATION_MEMBER = "ORGANIZATION_MEMBER",
   CONSUMER = "CONSUMER",
@@ -139,8 +141,6 @@ export interface MedicationBatchProp {
   drugName: string;
   composition?: string | null;
   batchSize: number;
-  manufacturingDate: Date;
-  expiryDate: Date;
   storageInstructions?: string | null;
   currentLocation?: string | null;
   status: BatchStatusEnum;
@@ -158,6 +158,7 @@ export interface MedicationBatchProp {
     route: string;
     lastUpdate: Date;
   };
+  product?: Product;
 }
 export interface MedicationUnitProp {
   id: string;

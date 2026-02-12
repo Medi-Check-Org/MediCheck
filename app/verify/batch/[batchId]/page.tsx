@@ -33,7 +33,7 @@ export default function VerifyBatchPage() {
         return;
       }
       try {
-        const res = await fetch(`/api/verify/batch/${batchId}?sig=${sig}&lat=${latitude}&long=${longitude}`);
+        const res = await fetch(`/api/web/verify/batch/${batchId}?sig=${sig}&lat=${latitude}&long=${longitude}`);
         const data = await res.json();
         if (!res.ok) {
           setError(data.error || "Verification failed");

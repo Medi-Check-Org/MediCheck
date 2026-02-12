@@ -36,7 +36,7 @@ const HospitalSettings = () => {
     useEffect(() => {
         const fetchOrgData = async () => {
             try {
-                const orgResponse = await fetch('/api/organizations/me');
+                const orgResponse = await fetch('/api/web/organizations/me');
                 if (orgResponse.ok) {
                     const orgResult = await orgResponse.json();
                     console.log('Organization data:', orgResult); // Debug log
@@ -78,7 +78,7 @@ const HospitalSettings = () => {
 
         setSaving(true);
         try {
-            const response = await fetch('/api/organizations/update', {
+            const response = await fetch('/api/web/organizations/update', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

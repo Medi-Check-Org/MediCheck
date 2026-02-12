@@ -9,10 +9,12 @@ import { toErrorResponse } from "@/utils/types/errors";
 
 export async function GET(req: NextRequest) {
   try {
+    
     const actor = await getActorFromClerk();
 
     // Extract query params
     const { searchParams } = new URL(req.url);
+
     const input = {
       organizationId: searchParams.get("organizationId") ?? undefined,
       status: searchParams.get("status") ?? undefined,
@@ -27,7 +29,9 @@ export async function GET(req: NextRequest) {
     const result = await listBatches(input, actor);
 
     return NextResponse.json({ success: true, data: result });
-  } catch (error: unknown) {
+
+  }
+  catch (error: unknown) {
     const errorResponse = toErrorResponse(error);
     return NextResponse.json(errorResponse, {
       status: errorResponse.statusCode,

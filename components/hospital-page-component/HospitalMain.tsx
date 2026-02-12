@@ -37,7 +37,7 @@ const HospitalMain = ({ setActiveTab, orgId }: {
             
             try {
                 setLoading(true);
-                const response = await fetch(`/api/dashboard/hospital-stats?orgId=${orgId}`);
+                const response = await fetch(`/api/web/dashboard/hospital-stats?orgId=${orgId}`);
                 if (response.ok) {
                     const data = await response.json();
                     setStats(data);
@@ -52,7 +52,7 @@ const HospitalMain = ({ setActiveTab, orgId }: {
         const fetchHospitalName = async () => {
             if (!orgId) return;
             try {
-                const response = await fetch(`/api/organizations/info?orgId=${orgId}`);
+                const response = await fetch(`/api/web/organizations/info?orgId=${orgId}`);
                 if (response.ok) {
                     const data = await response.json();
                     setHospitalName(data.companyName);

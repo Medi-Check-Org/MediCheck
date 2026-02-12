@@ -16,12 +16,18 @@ interface RouteParams {
 export async function GET(req: NextRequest, { params }: RouteParams) {
   try {
     const actor = await getActorFromClerk();
+
+    if (!actor) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    
     const { batchId } = await params;
 
     const result = await getBatch({ batchId }, actor);
 
     return NextResponse.json({ success: true, data: result });
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     const errorResponse = toErrorResponse(error);
     return NextResponse.json(errorResponse, {
       status: errorResponse.statusCode,

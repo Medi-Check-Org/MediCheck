@@ -70,7 +70,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/transfer/ownership?organizationId=${currentOrgId}`);
+      const res = await fetch(`/api/web/transfers?orgId=${currentOrgId}`);
 
       const data = await res.json();
 
@@ -90,7 +90,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
   };
 
   const getAllOrganization = async () => {
-    const res = await fetch(`/api/organizations`);
+    const res = await fetch(`/api/web/organizations`);
     const data = await res.json();
     console.log(data)
     setOrganizations(data)
@@ -118,7 +118,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
     setCreating(true);
 
     try {
-      const res = await fetch("/api/transfer/ownership", {
+      const res = await fetch("/api/web/transfers/initiate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -154,8 +154,8 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
   const updateTransferStatus = async (transferId: string, status: string, notes?: string) => {
     setUpdating(transferId);
     try {
-      const res = await fetch(`/api/transfer/ownership/${transferId}`, {
-        method: "PUT",
+      const res = await fetch(`/api/web/transfers/${transferId}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           organizationId: currentOrgId,

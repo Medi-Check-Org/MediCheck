@@ -27,10 +27,10 @@ export async function GET(req: Request) {
 
     const points = rows
       .filter(
-        (r) =>
+        (r: any) =>
           r.scanHistory.latitude !== null && r.scanHistory.longitude !== null
       )
-      .map((r) => ({
+      .map((r: any) => ({
         lat: r.scanHistory.latitude as number,
         lon: r.scanHistory.longitude as number,
         region: r.scanHistory.region ?? "Unknown",
