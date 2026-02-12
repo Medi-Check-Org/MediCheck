@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+<url><loc>https://getmedicheck.com/auth/forgot-password</loc><lastmod>2026-01-28T16:17:41.978Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/auth/login</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/auth/register</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/auth/reset-password</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/auth/team-member-login</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/consumer/profile</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/consumer/scan</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/contact</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/dashboard/drug-distributor</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/dashboard/hospital</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/dashboard/manufacturer</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/dashboard/pharmacy</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/dashboard/regulator</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/dashboard/scan</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/dashboard/team-member</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/demo/qr-scanner</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/docs</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/privacy-policy</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/scan</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/terms-of-service</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://getmedicheck.com/unauthorized</loc><lastmod>2026-01-28T16:17:42.032Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+</urlset>

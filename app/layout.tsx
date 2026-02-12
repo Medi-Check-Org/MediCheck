@@ -31,7 +31,24 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "MediCheck - Blockchain Medication Verification",
   description: "Professional blockchain-powered medication verification and traceability system",
-  generator: "v0.app",
+  generator: "medicheck team",
+  icons: {
+    icon: [
+      {
+        url: "/logo.jpeg",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/logo.jpeg",
+        media: "(prefers-color-scheme: dark)",
+      },
+      {
+        url: "/logo.jpeg",
+        type: "image/svg+xml",
+      },
+    ],
+    apple: "/logo.jpeg",
+  },
 }
 
 export default function RootLayout({
@@ -41,6 +58,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="google-site-verification" content="MdKCxuNz8IeVLvxgoKA0ryl6ECyYivLhleKS2N9dGt8" />
+      </head>
       <body className={`${inter.variable} ${playfair.variable} ${jetbrainsMono.variable} min-h-screen bg-background font-sans antialiased theme-transition`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <ClerkWrapper>
@@ -52,6 +72,5 @@ export default function RootLayout({
         </ThemeProvider>
       </body>
     </html>
-
   )
 }

@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://getmedicheck.com
+
+# Sitemaps
+Sitemap: https://getmedicheck.com/sitemap.xml

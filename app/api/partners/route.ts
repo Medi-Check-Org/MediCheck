@@ -1,10 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { OwnershipTransfer, Organization } from "@prisma/client";
-import { withRateLimit } from "@/lib/rate-limit/withRateLimit";
 
-async function getHandler(request: NextRequest) {
+/**
+ * Type Definitions
+ */
+interface PartnerData {
+  lastTransferDate: Date;
+  transferCount: number;
+}
+
+interface TransferRecord {
+  toOrgId: string;
+  createdAt: Date;
+}
+
+interface IncomingTransferRecord {
+  fromOrgId: string;
+  createdAt: Date;
+}
+
+interface OrganizationData {
+  id: string;
+  companyName: string | null;
+  organizationType: string;
+  address: string | null;
+  state: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+}
+
+interface PartnerResponse {
+  id: string;
+  name: string | null;
+  type: string;
+  location: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  lastTransferDate: Date;
+  totalTransfers: number;
+  status: "Active" | "Inactive";
+}
+
+export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -12,7 +50,7 @@ async function getHandler(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const orgId = searchParams.get("orgId");
+    const orgId: string | null = searchParams.get("orgId");
 
     if (!orgId) {
       return NextResponse.json(
@@ -22,7 +60,7 @@ async function getHandler(request: NextRequest) {
     }
 
     // Get all outgoing transfers
-    const outgoingTransfers = await prisma.ownershipTransfer.findMany({
+    const outgoingTransfers: TransferRecord[] = await prisma.ownershipTransfer.findMany({
       where: { fromOrgId: orgId },
       select: {
         toOrgId: true,
@@ -31,7 +69,7 @@ async function getHandler(request: NextRequest) {
     });
 
     // Get all incoming transfers
-    const incomingTransfers = await prisma.ownershipTransfer.findMany({
+    const incomingTransfers: IncomingTransferRecord[] = await prisma.ownershipTransfer.findMany({
       where: { toOrgId: orgId },
       select: {
         fromOrgId: true,
@@ -40,13 +78,10 @@ async function getHandler(request: NextRequest) {
     });
 
     // Collect unique partner IDs and their last transfer date
-    const partnerData = new Map<
-      string,
-      { lastTransferDate: Date; transferCount: number }
-    >();
+    const partnerData = new Map<string, PartnerData>();
 
-    outgoingTransfers.forEach((t: OwnershipTransfer) => {
-      const existing = partnerData.get(t.toOrgId);
+    outgoingTransfers.forEach((t: TransferRecord) => {
+      const existing: PartnerData | undefined = partnerData.get(t.toOrgId);
       if (!existing || t.createdAt > existing.lastTransferDate) {
         partnerData.set(t.toOrgId, {
           lastTransferDate: t.createdAt,
@@ -60,8 +95,8 @@ async function getHandler(request: NextRequest) {
       }
     });
 
-    incomingTransfers.forEach((t: OwnershipTransfer) => {
-      const existing = partnerData.get(t.fromOrgId);
+    incomingTransfers.forEach((t: IncomingTransferRecord) => {
+      const existing: PartnerData | undefined = partnerData.get(t.fromOrgId);
       if (!existing || t.createdAt > existing.lastTransferDate) {
         partnerData.set(t.fromOrgId, {
           lastTransferDate: t.createdAt,
@@ -76,9 +111,9 @@ async function getHandler(request: NextRequest) {
     });
 
     // Fetch organization details for all partners
-    const partnerIds = Array.from(partnerData.keys());
+    const partnerIds: string[] = Array.from(partnerData.keys());
 
-    const partners = await prisma.organization.findMany({
+    const partners: OrganizationData[] = await prisma.organization.findMany({
       where: {
         id: {
           in: partnerIds,
@@ -96,9 +131,9 @@ async function getHandler(request: NextRequest) {
     });
 
     // Combine organization details with transfer data
-    const formattedPartners = partners.map((partner: Organization) => {
-      const data = partnerData.get(partner.id)!;
-      const thirtyDaysAgo = new Date();
+    const formattedPartners: PartnerResponse[] = partners.map((partner: OrganizationData) => {
+      const data: PartnerData = partnerData.get(partner.id)!;
+      const thirtyDaysAgo: Date = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       return {
@@ -116,12 +151,12 @@ async function getHandler(request: NextRequest) {
 
     // Sort by last transfer date (most recent first)
     formattedPartners.sort(
-      (a: { lastTransferDate: { getTime: () => number; }; }, b: { lastTransferDate: { getTime: () => number; }; }) =>
+      (a: PartnerResponse, b: PartnerResponse) =>
         b.lastTransferDate.getTime() - a.lastTransferDate.getTime()
     );
 
     return NextResponse.json({ partners: formattedPartners });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching partners:", error);
     return NextResponse.json(
       { error: "Failed to fetch partners" },
@@ -129,6 +164,3 @@ async function getHandler(request: NextRequest) {
     );
   }
 }
-
-
-export const GET = withRateLimit(getHandler);
