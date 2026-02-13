@@ -1,0 +1,23 @@
+[
+  {
+    "id": "5a48d360-e99b-4b5a-974b-2e35fa076f32",
+    "title": "New Conversation",
+    "status": "active",
+    "messageCount": 0,
+    "totalTokens": 0,
+    "totalCost": 0,
+    "lastMessageAt": "2026-02-13T15:31:09.411Z",
+    "tags": [],
+    "metadata": {
+      "projectId": "default-project",
+      "model": "free-trial-model-with-daily-limit",
+      "mode": "debugging",
+      "connectedCodebasePath": "c:\\Users\\SUKUNA\\Desktop\\PROJECTS\\MediCheck"
+    },
+    "codeContextIds": [],
+    "previous_session_intent": "pure_discussion",
+    "pinnedFilePaths": [],
+    "createdAt": "2026-02-13T15:31:09.411Z",
+    "updatedAt": "2026-02-13T15:31:09.411Z"
+  }
+]
