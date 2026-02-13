@@ -81,7 +81,13 @@ export default function HospitalDashboard() {
     try {
       const res = await fetch(`/api/web/batches?organizationId=${orgId}`);
       const data = await res.json();
-      setBatches(data.data.batches);
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to fetch batches");
+      }
+
+      // Align with new batches API shape: { batches, total }
+      setBatches(data.batches || []);
       toast.success("Fetched batches");
     }
     catch (err) {
