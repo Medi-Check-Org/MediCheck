@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
     // Combine and format the data
     const activities = [
       // Format batches
-      ...recentBatches.map((batch) => ({
+      ...recentBatches.map((batch: Prisma.MedicationBatchGetPayload<{}>) => ({
         id: `batch-${batch.id}`,
         type: 'batch' as const,
         batchId: batch.batchId,
@@ -58,7 +59,12 @@ export async function GET(request: NextRequest) {
         createdAt: batch.createdAt.toISOString(),
       })),
       // Format transfers
-      ...recentTransfers.map((transfer) => ({
+      ...recentTransfers.map((transfer: Prisma.OwnershipTransferGetPayload<{
+        include: {
+          batch: true,
+          toOrg: { select: { companyName: true } }
+        }
+      }>) => ({
         id: `transfer-${transfer.id}`,
         type: 'transfer' as const,
         batchId: transfer.batch.batchId,
@@ -74,10 +80,11 @@ export async function GET(request: NextRequest) {
       .slice(0, 10);
 
     return NextResponse.json(activities);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching recent activity:', error);
+    const message = error instanceof Error ? error.message : 'Failed to fetch recent activity';
     return NextResponse.json(
-      { error: 'Failed to fetch recent activity' },
+      { error: message },
       { status: 500 }
     );
   }
