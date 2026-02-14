@@ -70,10 +70,10 @@ export async function PATCH(
     }, { status: 200 });
 
   }
-  catch (error) {
-    console.error("Product Creation Error:", error);
+  catch (error: unknown) {
+    console.error("Product Update Error:", error);
     return NextResponse.json(
-      { error: "Failed to create product" },
+      { error: "Failed to update product" },
       { status: 500 }
     );
   }
