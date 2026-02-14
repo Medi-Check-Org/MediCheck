@@ -11,6 +11,8 @@ export interface ProductSchema {
     storageConditions?: string;
     numberOfProductAvailable: number;
     isActive: boolean;
+    manufacturingDate?: Date | string | null;
+    expiryDate?: Date | string | null;
     createdAt: Date;
     updatedAt: Date;
 }

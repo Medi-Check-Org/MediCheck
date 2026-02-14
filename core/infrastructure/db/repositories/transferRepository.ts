@@ -18,10 +18,12 @@ export interface TransferWithRelations extends OwnershipTransfer {
     batchId: string;
     drugName: string;
     batchSize: number;
-    manufacturingDate: Date;
-    expiryDate: Date;
     organizationId: string;
     registryTopicId?: string | null;
+    product?: {
+      manufacturingDate: Date | null;
+      expiryDate: Date | null;
+    } | null;
   };
   fromOrg: {
     id: string;
@@ -79,14 +81,16 @@ export class TransferRepository {
             id: true,
             batchId: true,
             drugName: true,
-            composition: true,
             batchSize: true,
-            manufacturingDate: true,
-            expiryDate: true,
-            storageInstructions: true,
             status: true,
             organizationId: true,
             registryTopicId: true,
+            product: {
+              select: {
+                manufacturingDate: true,
+                expiryDate: true,
+              },
+            },
           },
         },
         fromOrg: {
@@ -158,10 +162,14 @@ export class TransferRepository {
             batchId: true,
             drugName: true,
             batchSize: true,
-            manufacturingDate: true,
-            expiryDate: true,
             organizationId: true,
             registryTopicId: true,
+            product: {
+              select: {
+                manufacturingDate: true,
+                expiryDate: true,
+              },
+            },
           },
         },
         fromOrg: {
