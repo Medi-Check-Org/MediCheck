@@ -50,12 +50,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ error: "No organization or team member data found" }, { status: 404 });
 
-  }
-
-  catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching regulator settings:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error", details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: message, details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -122,11 +121,11 @@ export async function PUT(request: NextRequest) {
       { error: "No organization or team member found to update" },
       { status: 404 }
     );
-  }
-  catch (error) {
+  } catch (error: unknown) {
     console.error("Error updating regulator settings:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error", details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: message, details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

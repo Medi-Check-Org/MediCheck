@@ -93,10 +93,11 @@ export async function PUT(request: NextRequest) {
       organization: updatedOrganization
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error updating organization settings:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }

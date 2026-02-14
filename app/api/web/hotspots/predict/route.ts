@@ -368,7 +368,7 @@ export async function POST(request: Request) {
         status: `Generated ${predictions.length} AI predictions using ONNX model`,
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Hotspot Prediction Error:", error);
     return NextResponse.json(
       {

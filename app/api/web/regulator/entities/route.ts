@@ -8,8 +8,10 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json({ entities });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch entities" }, { status: 500 });
+  } catch (error: unknown) {
+    console.error("Error fetching entities:", error);
+    const message = error instanceof Error ? error.message : "Failed to fetch entities";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -53,8 +55,9 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ entity }, { status: 201 });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Failed to create entity" }, { status: 500 });
+  } catch (error: unknown) {
+    console.error("Error creating entity:", error);
+    const message = error instanceof Error ? error.message : "Failed to create entity";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
