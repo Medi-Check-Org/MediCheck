@@ -11,9 +11,9 @@ interface BatchData {
     batchId: string;
     drugName: string;
     batchSize: number;
-    expiryDate: string;
+    expiryDate: string | null;
     status: string;
-    manufacturingDate: string;
+    manufacturingDate: string | null;
     transferDate: string;
     receivedFrom: string;
     fromOrgType: string;
@@ -51,8 +51,10 @@ const HospitalInventory = ({ orgId }: HospitalInventoryProps) => {
         fetchBatches();
     }, [orgId]);
 
-    const getStatus = (expiryDate: string) => {
+    const getStatus = (expiryDate: string | null) => {
+        if (!expiryDate) return "—";
         const expiry = new Date(expiryDate);
+        if (isNaN(expiry.getTime())) return "—";
         const today = new Date();
         const tenDaysFromNow = new Date();
         tenDaysFromNow.setDate(today.getDate() + 10);
@@ -66,8 +68,10 @@ const HospitalInventory = ({ orgId }: HospitalInventoryProps) => {
         }
     };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
+    const formatDate = (dateString: string | null) => {
+        if (!dateString) return "—";
+        const d = new Date(dateString);
+        return isNaN(d.getTime()) ? "—" : d.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric'
