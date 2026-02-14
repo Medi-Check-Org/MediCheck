@@ -2,6 +2,18 @@
 import { prisma } from "@/lib/prisma";
 import { OrganizationType } from "@/lib/generated/prisma";
 
+/**
+ * Shape of the batch returned by the findUnique query in validateTransfer
+ * (includes medicationUnits from include, and product for expiry)
+ */
+export interface BatchForValidation {
+  organizationId: string;
+  status: string;
+  batchSize: number;
+  product?: { expiryDate: Date | null } | null;
+  medicationUnits?: unknown[];
+}
+
 export interface TransferValidationResult {
   isValid: boolean;
   errors: string[];
@@ -180,14 +192,16 @@ export async function validateTransfer(
       errors.push(`Batch cannot be transferred. Current status: ${batch.status}`);
     }
 
-    // Check expiry
+    // Check expiry (expiryDate is on Product in schema)
     const now = new Date();
-    if (new Date(batch.expiryDate) <= now) {
+    const batchForValidation = batch as BatchForValidation;
+    const expiryDate = batchForValidation.product?.expiryDate ?? undefined;
+    if (expiryDate && new Date(expiryDate) <= now) {
       errors.push("Cannot transfer expired batch");
     }
 
-    // Validate quantity - safely access medicationUnits
-    const availableUnits = (batch as any).medicationUnits?.length || batch.batchSize;
+    // Validate quantity - safely access medicationUnits (included from findUnique)
+    const availableUnits = batchForValidation.medicationUnits?.length ?? batch.batchSize;
     if (quantity && quantity > availableUnits) {
       errors.push(`Insufficient units. Available: ${availableUnits}, Requested: ${quantity}`);
     }
@@ -215,10 +229,13 @@ export async function validateTransfer(
       errors.push("Batch has pending transfers that must be completed first");
     }
 
-    // Warning for near expiry
-    const daysToExpiry = Math.floor((new Date(batch.expiryDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    if (daysToExpiry <= 30) {
-      warnings.push(`Batch expires in ${daysToExpiry} days`);
+    // Warning for near expiry (expiryDate is on batch.product)
+    const exp = expiryDate ?? batchForValidation.product?.expiryDate;
+    if (exp) {
+      const daysToExpiry = Math.floor((new Date(exp).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysToExpiry <= 30) {
+        warnings.push(`Batch expires in ${daysToExpiry} days`);
+      }
     }
 
     // Warning for large quantity transfers
