@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
@@ -36,9 +38,13 @@ export async function GET(request: NextRequest) {
             batchId: true,
             drugName: true,
             batchSize: true,
-            expiryDate: true,
             status: true,
-            manufacturingDate: true,
+            product: {
+              select: {
+                manufacturingDate: true,
+                expiryDate: true,
+              },
+            },
           },
         },
         fromOrg: {
@@ -54,27 +60,48 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform the data to match the expected format
+    type TransferWithBatch = Prisma.OwnershipTransferGetPayload<{
+      include: {
+        batch: {
+          include: {
+            product: {
+              select: {
+                expiryDate: true,
+                manufacturingDate: true
+              }
+            }
+          }
+        },
+        fromOrg: { select: { companyName: true, organizationType: true } }
+      }
+    }>;
+
     const inventory = transfers
-      .filter(transfer => transfer.batch) // Only include transfers with valid batches
-      .map(transfer => ({
-        id: transfer.batch!.id,
-        batchId: transfer.batch!.batchId,
-        drugName: transfer.batch!.drugName,
-        batchSize: transfer.batch!.batchSize,
-        expiryDate: transfer.batch!.expiryDate.toISOString(),
-        status: transfer.batch!.status,
-        manufacturingDate: transfer.batch!.manufacturingDate.toISOString(),
-        transferDate: transfer.transferDate.toISOString(),
-        receivedFrom: transfer.fromOrg.companyName,
-        fromOrgType: transfer.fromOrg.organizationType
-      }));
+      .filter((transfer: TransferWithBatch) => transfer.batch)
+      .map((transfer: TransferWithBatch) => {
+        const batch = transfer.batch!;
+        const product = batch.product;
+        return {
+          id: batch.id,
+          batchId: batch.batchId,
+          drugName: batch.drugName,
+          batchSize: batch.batchSize,
+          expiryDate: product?.expiryDate?.toISOString() ?? null,
+          status: batch.status,
+          manufacturingDate: product?.manufacturingDate?.toISOString() ?? null,
+          transferDate: transfer.transferDate.toISOString(),
+          receivedFrom: transfer.fromOrg.companyName,
+          fromOrgType: transfer.fromOrg.organizationType
+        };
+      });
 
     return NextResponse.json(inventory);
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching hospital inventory:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }

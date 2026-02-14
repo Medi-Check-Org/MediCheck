@@ -55,10 +55,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(settings);
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching hospital settings:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }
@@ -159,10 +160,11 @@ export async function PUT(request: NextRequest) {
       settings
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error updating hospital settings:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }
