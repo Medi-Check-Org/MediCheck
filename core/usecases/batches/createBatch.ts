@@ -178,8 +178,8 @@ export class CreateBatchUseCase {
         organizationId: input.organizationId,
         drugName: input.drugName,
         batchSize: String(input.batchSize),
-        manufacturingDate: new Date(product.manufacturingDate).toISOString(),
-        expiryDate: new Date(product.expiryDate).toISOString(),
+        manufacturingDate: product.manufacturingDate ? new Date(product.manufacturingDate).toISOString() : "",
+        expiryDate: product.expiryDate ? new Date(product.expiryDate).toISOString() : "",
       },
     );
 
@@ -193,8 +193,8 @@ export class CreateBatchUseCase {
         organizationId: input.organizationId,
         drugName: input.drugName,
         batchSize: input.batchSize,
-        manufacturingDate: new Date(product.manufacturingDate).toISOString(),
-        expiryDate: new Date(product.expiryDate).toISOString(),
+        manufacturingDate: product.manufacturingDate ? new Date(product.manufacturingDate).toISOString() : "",
+        expiryDate: product.expiryDate ? new Date(product.expiryDate).toISOString() : "",
       },
       region: org?.state ?? "",
     });

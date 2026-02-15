@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
@@ -93,7 +94,20 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform counterfeit reports to alerts
-    counterfeitAlerts.forEach((report: any) => {
+    type CounterfeitReportWithRelations = Prisma.CounterfeitReportGetPayload<{
+      include: {
+        batch: {
+          select: {
+            batchId: true,
+            drugName: true,
+            organization: { select: { companyName: true } }
+          }
+        },
+        consumers: { select: { fullName: true, address: true } }
+      }
+    }>;
+
+    counterfeitAlerts.forEach((report: CounterfeitReportWithRelations) => {
       alerts.push({
         id: `CF_${report.id}`,
         type: 'counterfeit_report',
@@ -132,7 +146,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Get batch details for suspicious scans
-    for (const scan of suspiciousScans as any[]) {
+    for (const scan of suspiciousScans) {
       if (scan.batchId) {
         const batch = await prisma.medicationBatch.findUnique({
           where: { id: scan.batchId },
@@ -194,7 +208,15 @@ export async function GET(request: NextRequest) {
       take: 3
     });
 
-    failedTransfers.forEach(transfer => {
+    type TransferWithRelations = Prisma.OwnershipTransferGetPayload<{
+      include: {
+        batch: { select: { batchId: true, drugName: true } },
+        fromOrg: { select: { companyName: true } },
+        toOrg: { select: { companyName: true } }
+      }
+    }>;
+
+    failedTransfers.forEach((transfer: TransferWithRelations) => {
       alerts.push({
         id: `TF_${transfer.id}`,
         type: 'failed_transfer',
@@ -231,7 +253,16 @@ export async function GET(request: NextRequest) {
       take: 3
     });
 
-    expiringOrgs.forEach(org => {
+    type OrganizationBasic = Prisma.OrganizationGetPayload<{
+      select: {
+        id: true,
+        companyName: true,
+        organizationType: true,
+        updatedAt: true
+      }
+    }>;
+
+    expiringOrgs.forEach((org: OrganizationBasic) => {
       alerts.push({
         id: `EXP_${org.id}`,
         type: 'license_expiring',
@@ -257,10 +288,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ alerts: alerts.slice(0, 10) }); // Return top 10 alerts
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching alerts:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }

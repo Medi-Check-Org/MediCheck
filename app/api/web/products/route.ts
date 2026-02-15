@@ -4,6 +4,23 @@ import { auth } from "@clerk/nextjs/server";
 
 export const runtime = "nodejs";
 
+/** Request body for POST /api/web/products */
+interface CreateProductBody {
+  name?: string;
+  description?: string;
+  category?: string;
+  dosageForm?: string;
+  strength?: string;
+  activeIngredients?: string[] | string;
+  nafdacNumber?: string;
+  shelfLifeMonths?: number | string;
+  storageConditions?: string;
+  organizationId?: string;
+  numberOfProductAvailable?: number | string;
+  manufacturingDate?: string;
+  expiryDate?: string;
+}
+
 // POST - Create new product
 export async function POST(req: Request) {
   try {
@@ -13,7 +30,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
+    const body = await req.json() as CreateProductBody;
     const {
       name,
       description,
@@ -70,14 +87,14 @@ export async function POST(req: Request) {
         ? activeIngredients
         : [activeIngredients],
       nafdacNumber,
-      shelfLifeMonths: shelfLifeMonths ? parseInt(shelfLifeMonths) : null,
+      shelfLifeMonths: shelfLifeMonths != null ? parseInt(String(shelfLifeMonths), 10) : null,
       storageConditions,
       organizationId,
-      numberOfProductAvailable: numberOfProductAvailable
-        ? parseInt(numberOfProductAvailable)
+      numberOfProductAvailable: numberOfProductAvailable != null
+        ? parseInt(String(numberOfProductAvailable), 10)
         : 0,
-      manufacturingDate: new Date(manufacturingDate).toISOString(),
-      expiryDate: new Date(expiryDate).toISOString(),
+      manufacturingDate: manufacturingDate ? new Date(manufacturingDate) : null,
+      expiryDate: expiryDate ? new Date(expiryDate) : null,
     };
 
     const product = await prisma.product.create({
@@ -91,7 +108,7 @@ export async function POST(req: Request) {
     }, { status: 201 });
 
   }
-  catch (error) {
+  catch (error: unknown) {
     console.error("Product Creation Error:", error);
     return NextResponse.json(
       { error: "Failed to create product" },
@@ -122,7 +139,7 @@ export async function GET(req: Request) {
       products
     }, { status: 200 });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Get Products Error:", error);
     return NextResponse.json(
       { error: "Failed to retrieve products" },

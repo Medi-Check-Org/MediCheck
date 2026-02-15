@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
+
+/** Prisma groupBy result for status-like fields (batch, unit, transfer) */
+interface StatusGroupCount {
+  status: string;
+  _count: { status: number };
+}
+
+/** Prisma groupBy result for scanResult */
+interface ScanResultGroupCount {
+  scanResult: string;
+  _count: { scanResult: number };
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -247,13 +260,15 @@ export async function GET(request: NextRequest) {
             _avg: { batchSize: true },
           }),
 
-          // Batches expiring in the next 90 days
+          // Batches whose product expires in the next 90 days (expiryDate is on Product)
           prisma.medicationBatch.count({
             where: {
               organizationId,
-              expiryDate: {
-                gte: new Date(),
-                lte: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
+              product: {
+                expiryDate: {
+                  gte: new Date(),
+                  lte: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
+                },
               },
             },
           }),
@@ -341,26 +356,35 @@ export async function GET(request: NextRequest) {
         counterfeitReports: counterfeitReports || 0,
       },
       distributions: {
-        batchStatus: (batchStatusStats || []).map((stat: any) => ({
+        batchStatus: (batchStatusStats || []).map((stat: StatusGroupCount) => ({
           status: stat.status,
-          count: stat._count?.status || 0,
+          count: stat._count?.status ?? 0,
         })),
-        unitStatus: (unitStatusStats || []).map((stat: any) => ({
+        unitStatus: (unitStatusStats || []).map((stat: StatusGroupCount) => ({
           status: stat.status,
-          count: stat._count?.status || 0,
+          count: stat._count?.status ?? 0,
         })),
-        scanResults: (scanStats || []).map((stat: any) => ({
+        scanResults: (scanStats || []).map((stat: ScanResultGroupCount) => ({
           result: stat.scanResult,
-          count: stat._count?.scanResult || 0,
+          count: stat._count?.scanResult ?? 0,
         })),
-        transferStatus: (transferStats || []).map((stat: any) => ({
+        transferStatus: (transferStats || []).map((stat: StatusGroupCount) => ({
           status: stat.status,
-          count: stat._count?.status || 0,
+          count: stat._count?.status ?? 0,
         })),
       },
       trends: {
         dailyActivity: processedDailyActivity || [],
-        recentBatches: (recentBatches || []).map((batch) => ({
+        recentBatches: (recentBatches || []).map((batch: Prisma.MedicationBatchGetPayload<{
+          include: {
+            _count: {
+              select: {
+                medicationUnits: true,
+                scanHistory: true
+              }
+            }
+          }
+        }>) => ({
           id: batch.id,
           batchId: batch.batchId,
           drugName: batch.drugName,
@@ -371,7 +395,22 @@ export async function GET(request: NextRequest) {
         })),
       },
       transfers: {
-        recent: (recentTransfers || []).map((transfer) => ({
+        recent: (recentTransfers || []).map((transfer: Prisma.OwnershipTransferGetPayload<{
+          include: {
+            batch: {
+              select: {
+                batchId: true,
+                drugName: true
+              }
+            },
+            fromOrg: {
+              select: { companyName: true }
+            },
+            toOrg: {
+              select: { companyName: true }
+            }
+          }
+        }>) => ({
           id: transfer.id,
           batchId: transfer.batch?.batchId || "N/A",
           drugName: transfer.batch?.drugName || "Unknown",
@@ -388,10 +427,11 @@ export async function GET(request: NextRequest) {
     };
 
     return NextResponse.json(analytics);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching analytics:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }

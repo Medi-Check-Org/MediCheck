@@ -12,6 +12,7 @@ import type {
   MedicationUnit,
   BatchEvent,
   BatchStatus,
+  Product,
 } from "@/lib/generated/prisma";
 import { NotFoundError } from "@/utils/types/errors";
 
@@ -29,6 +30,10 @@ export interface BatchWithRelations extends MedicationBatch {
     registrySequence: number | null;
   }>;
   batchEvents?: BatchEvent[];
+  product?: Product | null;
+  _count?: {
+    medicationUnits: number;
+  };
 }
 
 export interface CreateBatchData {
@@ -86,6 +91,7 @@ export class BatchRepository {
             contactEmail: true,
           },
         },
+        product: true,
       },
     });
   }
@@ -105,6 +111,7 @@ export class BatchRepository {
             contactEmail: true,
           },
         },
+        product: true,
       },
     });
   }
@@ -139,6 +146,7 @@ export class BatchRepository {
           },
           take: 20, // Limit events returned
         },
+        product: true,
       },
     });
   }
@@ -166,14 +174,14 @@ export class BatchRepository {
       };
     }
 
+    // manufacturingDate & expiryDate live on Product in schema, not MedicationBatch
     if (filters.startDate || filters.endDate) {
-      whereClause.manufacturingDate = {};
-      if (filters.startDate) {
-        whereClause.manufacturingDate.gte = filters.startDate;
-      }
-      if (filters.endDate) {
-        whereClause.manufacturingDate.lte = filters.endDate;
-      }
+      whereClause.product = {
+        manufacturingDate: {
+          ...(filters.startDate && { gte: filters.startDate }),
+          ...(filters.endDate && { lte: filters.endDate }),
+        },
+      };
     }
 
     const page = filters.page ?? 1;
@@ -195,7 +203,12 @@ export class BatchRepository {
               contactEmail: true,
             },
           },
-          product: true
+          product: true,
+          _count: {
+            select: {
+              medicationUnits: true,
+            },
+          },
         },
         skip,
         take: limit,

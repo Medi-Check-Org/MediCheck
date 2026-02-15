@@ -1,0 +1,23 @@
+{
+  "id": "project-settings",
+  "projectId": "default-project",
+  "projectName": "Untitled Project",
+  "rawProjectDetailContent": "",
+  "digestedProjectDetailContent": "",
+  "defaultModel": "gpt-4o",
+  "defaultMode": "default",
+  "customPrompts": {},
+  "projectSpecificConfig": {
+    "codeAnalysisEnabled": true,
+    "autoSpecGeneration": true,
+    "memoryRetentionDays": 30,
+    "maxTokensPerRequest": 4096
+  },
+  "theme": "auto",
+  "autoSave": true,
+  "primaryLLMModel": "free-trial-model-with-daily-limit",
+  "currentSessionId": "5a48d360-e99b-4b5a-974b-2e35fa076f32",
+  "metadata": {},
+  "createdAt": "2026-02-13T10:47:49.019Z",
+  "updatedAt": "2026-02-13T15:31:09.746Z"
+}

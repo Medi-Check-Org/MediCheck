@@ -3,13 +3,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifySignature } from "@/lib/verifySignature";
 import { getBatchEventLogs } from "@/lib/hedera";
-import { runAllUnitAuthenticityChecks } from "@/lib/safetyChecks";
+import { runAllUnitAuthenticityChecks, HederaEvent } from "@/lib/safetyChecks";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { encodeFeatures } from "@/lib/formatModelInput";
 import * as ort from "onnxruntime-node";
 import { promises as fs } from "fs";
 import path from "path";
 import { safeSendHcs10 } from "@/lib/hcs10";
+import type { Prisma } from "@prisma/client";
 
 const QR_SECRET = process.env.QR_SECRET || "dev-secret";
 
@@ -21,11 +22,8 @@ export async function GET(
 
   const { userId } = await auth();
 
-  let loggedInUser = null;
-
-  if (userId) {
-    loggedInUser = await currentUser();
-  }
+  // No need for redundant loggedInUser from currentUser()
+  // We'll use the prisma 'user' record fetched later
 
   const { serialNumber } = await context.params;
 
@@ -92,19 +90,35 @@ export async function GET(
 
   const topicId = unit.batch.registryTopicId ?? "";
   const logEntries = await getBatchEventLogs(topicId);
-  const logEntriesMessages = logEntries.map((entry) => entry.message);
 
-  // Parse only EVENT_LOG entries
-  const eventLogs = logEntriesMessages
+  interface HederaLogEntry {
+    metadata?: string;
+    message?: string;
+    [key: string]: unknown;
+  }
+
+  // Parse entries safely, handling both 'metadata' and 'message' fields which might contain the JSON
+  const eventLogs = (logEntries as unknown as HederaLogEntry[])
     .map((entry) => {
       try {
-        const parsed = JSON.parse(entry.metadata || "");
-        return parsed;
+        const content = entry.metadata || entry.message || "";
+        const parsed = JSON.parse(content);
+        // Ensure topicId is present in children events
+        return {
+          ...parsed,
+          topicId
+        };
       } catch {
         return null;
       }
     })
-    .filter((entry) => entry && entry.type === "EVENT_LOG");
+    .filter((entry): entry is HederaEvent => 
+      entry !== null && 
+      typeof entry === "object" && 
+      "type" in entry && 
+      entry.type === "EVENT_LOG" &&
+      "eventType" in entry
+    );
 
   // AUTHENTICITY CHECKS
   const authenticityResultCheck = await runAllUnitAuthenticityChecks(
@@ -134,8 +148,8 @@ export async function GET(
   const savedScan = await prisma.scanHistory.create({
     data: {
       unitId: unit.id,
-      consumerId: loggedInUser ? consumer?.id : null,
-      isAnonymous: loggedInUser ? false : true,
+      consumerId: user ? consumer?.id : null,
+      isAnonymous: !user,
       region: organizationInformation?.state,
       scanResult: authenticityScanResult,
       latitude: latitude ? parseFloat(latitude) : null,
@@ -174,7 +188,7 @@ export async function GET(
       batchId: unit.batch.batchId,
       registryTopic: topicId,
       scanId: savedScan.id,
-      scanner: loggedInUser
+      scanner: user
         ? { type: "CONSUMER", id: consumer?.id ?? null }
         : { type: "ANONYMOUS" },
       result: authenticityResultCheck?.status ?? "UNKNOWN",
@@ -182,7 +196,12 @@ export async function GET(
       timestamp: new Date().toISOString(),
     };
 
-    const sendResults: Array<any> = [];
+    interface Hcs10SendResult {
+      target: string;
+      result: unknown;
+    }
+
+    const sendResults: Hcs10SendResult[] = [];
 
     // 1) Send to owner's managed registry (if present) for global visibility
     if (ownerOrg?.managedRegistry) {
@@ -213,8 +232,16 @@ export async function GET(
       // Log outbound message to AgentMessage table (if agent exists)
       try {
         // attempt to extract a sequence number from the Hedera send result (best-effort)
-        // Ensure we have a numeric sequence, default to 0 if not available
-        const seq = typeof response === 'number' ? response : 0;
+        // Hedera receipts usually have topicSequenceNumber
+        let seq = 0;
+        if (response && typeof response === 'object' && 'topicSequenceNumber' in response) {
+          const rawSeq = (response as { topicSequenceNumber: unknown }).topicSequenceNumber;
+          if (typeof rawSeq === 'number') {
+            seq = rawSeq;
+          } else if (typeof rawSeq === 'string') {
+            seq = parseInt(rawSeq, 10) || 0;
+          }
+        }
 
         await prisma.agentMessage.create({
           data: {
@@ -250,8 +277,9 @@ export async function GET(
     // you can remove this from production responses if you prefer
     console.log("HCS-10 sendResults:", sendResults);
   }
-  catch (commError) {
-    console.warn("HCS-10 communication failed (non-fatal):", commError);
+  catch (commError: unknown) {
+    const message = commError instanceof Error ? commError.message : String(commError);
+    console.warn("HCS-10 communication failed (non-fatal):", message);
   }
 
 
@@ -400,10 +428,11 @@ export async function GET(
       },
     });
   }
-  catch (onnxError) {
-    console.error("ONNX Runtime Error:", onnxError);
+  catch (onnxError: unknown) {
+    const errorMessage = onnxError instanceof Error ? onnxError.message : String(onnxError);
+    console.error("ONNX Runtime Error:", errorMessage);
     return NextResponse.json(
-      { valid: false, error: "ONNX Runtime Error", onnxError },
+      { valid: false, error: "ONNX Runtime Error", message: errorMessage },
       { status: 400 }
     );
   }

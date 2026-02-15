@@ -31,7 +31,7 @@ export type CreateBatchInput = z.infer<typeof CreateBatchSchema>;
 export const ListBatchesSchema = z.object({
   organizationId: z.string().cuid(),
   filters: z.object({
-    status: z.string().optional(),
+    status: z.nativeEnum(BatchStatus).optional(),
     drugName: z.string().optional(),
     startDate: z.date().optional(),
     endDate: z.date().optional(),
@@ -61,9 +61,11 @@ export const InitiateTransferSchema = z.object({
 
 export type InitiateTransferInput = z.infer<typeof InitiateTransferSchema>;
 
+import { TransferStatus, BatchStatus, OrganizationType } from "@/lib/generated/prisma";
+
 export const ListTransfersSchema = z.object({
   organizationId: z.string().cuid(),
-  status: z.string().optional(),
+  status: z.nativeEnum(TransferStatus).optional(),
   direction: z.enum(["OUTGOING", "INCOMING", "ALL"]).optional().default("ALL"),
 });
 
@@ -72,7 +74,7 @@ export type ListTransfersInput = z.infer<typeof ListTransfersSchema>;
 export const UpdateTransferStatusSchema = z.object({
   transferId: z.string().cuid(),
   organizationId: z.string().cuid(),
-  status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED", "FAILED", "CANCELLED"]),
+  status: z.nativeEnum(TransferStatus),
   notes: z.string().max(1000).optional(),
 });
 
@@ -126,7 +128,7 @@ export type GetOrganizationInput = z.infer<typeof GetOrganizationSchema>;
 
 export const ListOrganizationsSchema = z.object({
   filters: z.object({
-    organizationType: z.string().optional(),
+    organizationType: z.nativeEnum(OrganizationType).optional(),
     state: z.string().optional(),
   }).optional(),
 });

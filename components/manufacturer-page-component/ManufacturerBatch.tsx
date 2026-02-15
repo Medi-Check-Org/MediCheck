@@ -21,8 +21,16 @@ import {
     Zap,
 } from "lucide-react";
 import { MedicationBatchInfoProps } from "@/utils";
+import { OrganizationProp } from "@/utils/types/schemType";
 import { Product } from "@prisma/client"
 
+
+// Safe date display: avoid "Invalid Date" when product or date is null
+const formatProductDate = (date: Date | string | null | undefined): string => {
+    if (date == null) return "—";
+    const d = new Date(date);
+    return isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+};
 
 const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; allBatches: MedicationBatchInfoProps[]; loadBatches: () => void }) => {
 
@@ -45,7 +53,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
 
     const [selectedBatch, setSelectedBatch] = useState<any>(null);
 
-    const [organizations, setOrganizations] = useState<any[]>([]);
+    const [organizations, setOrganizations] = useState<OrganizationProp[]>([]);
 
     useEffect(() => {
         setBatches(allBatches);
@@ -136,7 +144,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
             if (res.ok) {
                 const data = await res.json();
                 // Filter out the current organization from the list
-                const otherOrgs = data.filter((org: any) => org.id !== orgId);
+                const otherOrgs = data.filter((org: OrganizationProp) => org.id !== orgId);
                 setOrganizations(otherOrgs);
             }
         } catch (error) {
@@ -414,12 +422,12 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                             <div>
                                                 <span className="text-muted-foreground">Production:</span>
                                                 <br />
-                                                <span>{new Date(batch?.product?.manufacturingDate as Date).toLocaleDateString()}</span>
+                                                <span>{formatProductDate(batch?.product?.manufacturingDate)}</span>
                                             </div>
                                             <div>
                                                 <span className="text-muted-foreground">Expiry:</span>
                                                 <br />
-                                                <span>{new Date(batch?.product?.expiryDate as Date).toLocaleDateString()}</span>
+                                                <span>{formatProductDate(batch?.product?.expiryDate)}</span>
                                             </div>
                                             <div>
                                                 <span className="text-muted-foreground">Size:</span>
@@ -488,8 +496,8 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                     <TableRow key={batch.batchId}>
                                         <TableCell className="font-medium">{batch.batchId}</TableCell>
                                         <TableCell className="font-medium">{batch.drugName}</TableCell>
-                                        <TableCell className="hidden sm:table-cell">{new Date(batch?.product?.manufacturingDate as Date).toLocaleDateString()}</TableCell>
-                                        <TableCell className="hidden md:table-cell">{new Date(batch?.product?.expiryDate as Date).toLocaleDateString()}</TableCell>
+                                        <TableCell className="hidden sm:table-cell">{formatProductDate(batch?.product?.manufacturingDate)}</TableCell>
+                                        <TableCell className="hidden md:table-cell">{formatProductDate(batch?.product?.expiryDate)}</TableCell>
                                         <TableCell className="hidden sm:table-cell">{batch.batchSize.toLocaleString()}</TableCell>
                                         <TableCell>
                                             <Badge variant={getStatusColor(batch.status)} className="flex items-center gap-1 w-fit">
@@ -573,14 +581,14 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                     <h4 className="font-semibold text-sm">Production Information</h4>
                                     <div className="text-sm">
                                         <span className="text-muted-foreground">Manufacturing Date:</span>
-                                        <div className="font-medium">{new Date(viewingBatch?.product?.manufacturingDate as Date).toLocaleDateString()}</div>
+                                        <div className="font-medium">{formatProductDate(viewingBatch?.product?.manufacturingDate)}</div>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
                                     <h4 className="font-semibold text-sm">Expiry Information</h4>
                                     <div className="text-sm">
                                         <span className="text-muted-foreground">Expiry Date:</span>
-                                        <div className="font-medium">{new Date(viewingBatch?.product?.expiryDate as Date).toLocaleDateString()}</div>
+                                        <div className="font-medium">{formatProductDate(viewingBatch?.product?.expiryDate)}</div>
                                     </div>
                                 </div>
                             </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
@@ -110,7 +111,12 @@ export async function GET(request: NextRequest) {
     const response = {
       monthlyStats,
       growthPercentage,
-      recentReports: recentReports.map(report => ({
+      recentReports: recentReports.map((report: Prisma.CounterfeitReportGetPayload<{
+        include: {
+          batch: { select: { batchId: true, drugName: true } },
+          consumers: { select: { fullName: true } }
+        }
+      }>) => ({
         id: report.id,
         batchId: report.batch?.batchId || "Unknown",
         drugName: report.batch?.drugName || "Unknown",
@@ -125,10 +131,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching hospital reports:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }
@@ -184,10 +191,11 @@ export async function POST(request: NextRequest) {
       reportId: report.id
     }, { status: 201 });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error submitting counterfeit report:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }

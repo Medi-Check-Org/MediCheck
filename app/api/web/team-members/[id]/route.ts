@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth, clerkClient } from '@clerk/nextjs/server'
+import type { Prisma } from '@prisma/client'
 
 export async function PUT(
   request: NextRequest,
@@ -72,9 +73,10 @@ export async function PUT(
       teamMember: updatedMember
     })
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error updating team member:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
@@ -142,7 +144,7 @@ export async function DELETE(
     }
 
     // Delete team member and associated user from database
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Delete team member first (due to foreign key constraints)
       await tx.teamMember.delete({
         where: { id: teamMemberId }
@@ -156,8 +158,9 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Team member removed successfully' })
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error deleting team member:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

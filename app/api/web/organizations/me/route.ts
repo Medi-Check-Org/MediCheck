@@ -56,11 +56,11 @@ export async function GET() {
       { status: 404 }
     );
     
-  }
-  catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching organization:", error);
+    const message = error instanceof Error ? error.message : "Failed to fetch organization";
     return NextResponse.json(
-      { error: "Failed to fetch organization" },
+      { error: message },
       { status: 500 }
     );
   }

@@ -49,7 +49,7 @@ export class ListBatchesUseCase {
     // 4. Fetch batches
     const { batches, total } = await this.batchRepo.list({
       organizationId,
-      status: input.filters?.status as BatchStatus | undefined,
+      status: input.filters?.status,
       drugName: input.filters?.drugName,
       startDate: input.filters?.startDate,
       endDate: input.filters?.endDate,

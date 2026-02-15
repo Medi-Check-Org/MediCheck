@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,13 +25,15 @@ export async function GET(request: NextRequest) {
     const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const tenDaysFromNow = new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000);
 
-    // Get expiring medication batches
-    const expiringMedications = await prisma.medicationBatch.findMany({
+    // Expiry is on Product; get batches whose product expires in the window
+    const expiringBatches = await prisma.medicationBatch.findMany({
       where: {
         organizationId: orgId,
-        expiryDate: {
-          lte: thirtyDaysFromNow,
-          gte: now
+        product: {
+          expiryDate: {
+            lte: thirtyDaysFromNow,
+            gte: now
+          }
         },
         status: {
           in: ["DELIVERED", "IN_TRANSIT", "CREATED"]
@@ -40,40 +43,54 @@ export async function GET(request: NextRequest) {
         id: true,
         batchId: true,
         drugName: true,
-        expiryDate: true,
-        batchSize: true
-      },
-      orderBy: {
-        expiryDate: "asc"
+        batchSize: true,
+        product: {
+          select: { expiryDate: true }
+        }
       }
     });
 
-    const expiringWithin10Days = expiringMedications.filter(batch =>
-      new Date(batch.expiryDate) <= tenDaysFromNow
-    );
-    const expiringWithin30Days = expiringMedications.filter(batch =>
-      new Date(batch.expiryDate) > tenDaysFromNow
-    );
+    const getExpiry = (batch: { product: { expiryDate: Date | null } | null }) =>
+      batch.product?.expiryDate ? new Date(batch.product.expiryDate) : null;
+
+    type BatchWithProduct = Prisma.MedicationBatchGetPayload<{
+      include: { product: { select: { expiryDate: true } } }
+    }>;
+
+    const expiringWithin10Days = expiringBatches.filter((batch: BatchWithProduct) => {
+      const exp = getExpiry(batch);
+      return exp != null && exp <= tenDaysFromNow;
+    });
+    const expiringWithin30Days = expiringBatches.filter((batch: BatchWithProduct) => {
+      const exp = getExpiry(batch);
+      return exp != null && exp > tenDaysFromNow;
+    });
 
     const response = {
       criticalAlerts: [],
       expiryWarnings: {
-        urgent: expiringWithin10Days.map(batch => ({
-          id: batch.id,
-          type: "expiry_urgent",
-          title: "Medication expiring within 10 days",
-          description: `${batch.drugName} (Batch: ${batch.batchId}) - ${batch.batchSize} units`,
-          expiryDate: batch.expiryDate,
-          daysUntilExpiry: Math.ceil((new Date(batch.expiryDate).getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
-        })),
-        warning: expiringWithin30Days.map(batch => ({
-          id: batch.id,
-          type: "expiry_warning",
-          title: "Medication expiring within 30 days",
-          description: `${batch.drugName} (Batch: ${batch.batchId}) - ${batch.batchSize} units`,
-          expiryDate: batch.expiryDate,
-          daysUntilExpiry: Math.ceil((new Date(batch.expiryDate).getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
-        }))
+        urgent: expiringWithin10Days.map((batch: BatchWithProduct) => {
+          const exp = getExpiry(batch)!;
+          return {
+            id: batch.id,
+            type: "expiry_urgent",
+            title: "Medication expiring within 10 days",
+            description: `${batch.drugName} (Batch: ${batch.batchId}) - ${batch.batchSize} units`,
+            expiryDate: exp.toISOString(),
+            daysUntilExpiry: Math.ceil((exp.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+          };
+        }),
+        warning: expiringWithin30Days.map((batch: BatchWithProduct) => {
+          const exp = getExpiry(batch)!;
+          return {
+            id: batch.id,
+            type: "expiry_warning",
+            title: "Medication expiring within 30 days",
+            description: `${batch.drugName} (Batch: ${batch.batchId}) - ${batch.batchSize} units`,
+            expiryDate: exp.toISOString(),
+            daysUntilExpiry: Math.ceil((exp.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
+          };
+        })
       },
       systemNotifications: [],
       suspiciousActivity: []
@@ -81,10 +98,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching hospital alerts:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }

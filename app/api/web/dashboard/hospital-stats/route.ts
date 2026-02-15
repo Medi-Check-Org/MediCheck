@@ -1,6 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+/** Batch fragment from completed-transfers include (expiry on Product) */
+interface CompletedTransferBatchFragment {
+  batchSize: number;
+  status: string;
+  product?: { expiryDate: Date | null } | null;
+}
+
+/** One row from completedTransfers findMany (batch fragment only) */
+interface CompletedTransferWithBatch {
+  batch: CompletedTransferBatchFragment | null;
+}
+
+/** Response shape for GET /api/web/dashboard/hospital-stats */
+interface HospitalStatsResponse {
+  totalMedications: number;
+  medicationGrowth: number;
+  verifiedToday: number;
+  verificationDifference: number;
+  pendingVerifications: number;
+  alerts: number;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -35,20 +57,26 @@ export async function GET(request: NextRequest) {
         batch: {
           select: {
             batchSize: true,
-            expiryDate: true,
-            status: true
+            status: true,
+            product: { select: { expiryDate: true } }
           }
         }
       }
     });
-  
+
+    const batchNotExpired = (batch: CompletedTransferBatchFragment): boolean =>
+      batch.status !== "EXPIRED" && (!batch.product?.expiryDate || new Date(batch.product.expiryDate) > now);
+
     // Count total units from completed transfers (excluding expired batches)
-    const totalMedications = completedTransfers.reduce((total, transfer) => {
-      if (transfer.batch && transfer.batch.expiryDate > now && transfer.batch.status !== "EXPIRED") {
-        return total + transfer.batch.batchSize;
-      }
-      return total;
-    }, 0);
+    const totalMedications = completedTransfers.reduce(
+      (total: number, transfer: CompletedTransferWithBatch) => {
+        if (transfer.batch && batchNotExpired(transfer.batch)) {
+          return total + transfer.batch.batchSize;
+        }
+        return total;
+      },
+      0
+    );
 
     // Calculate medication growth (transfers completed this month vs last month)
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -112,15 +140,13 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // 4. Active alerts (expiring medications from hospital inventory)
-    const hospitalBatches = completedTransfers
-      .filter(transfer => transfer.batch && transfer.batch.expiryDate > now)
-      .map(transfer => transfer.batch);
-
-    // Count medications expiring within 30 days
+    // 4. Active alerts (expiring medications from hospital inventory; expiry is on Product)
     const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-    const expiringMedications = hospitalBatches.filter(batch =>
-      batch && batch.expiryDate <= thirtyDaysFromNow
+    const expiringMedications = completedTransfers.filter(
+      (transfer: CompletedTransferWithBatch) => {
+        const exp = transfer.batch?.product?.expiryDate;
+        return transfer.batch && exp != null && new Date(exp) > now && new Date(exp) <= thirtyDaysFromNow;
+      }
     ).length;
 
     // Count critical counterfeit reports for batches in hospital inventory
@@ -145,7 +171,7 @@ export async function GET(request: NextRequest) {
 
     const alerts = expiringMedications + criticalReports;
 
-    const stats = {
+    const stats: HospitalStatsResponse = {
       totalMedications,
       medicationGrowth,
       verifiedToday,
@@ -156,7 +182,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(stats);
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching hospital stats:", error);
     return NextResponse.json(
       { error: "Internal server error" },
