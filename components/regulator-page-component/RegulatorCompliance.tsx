@@ -19,8 +19,10 @@ interface TransferData {
     batch: {
         batchId: string;
         drugName: string;
-        manufacturingDate: string;
-        expiryDate: string;
+        product: {
+            manufacturingDate: string;
+            expiryDate: string;
+        }
     };
     fromOrg: {
         companyName: string;
@@ -316,7 +318,7 @@ const RegulatorCompliance = () => {
                                         <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-x-2">
                                             <span>Batch: {transfer.batch.batchId}</span>
                                             <span>Transfer: {formatDate(transfer.transferDate)}</span>
-                                            {isExpiringSoon(transfer.batch.expiryDate) && (
+                                            {isExpiringSoon(transfer.batch.product.expiryDate) && (
                                                 <span className="text-orange-600 ml-2">⚠️ Expires Soon</span>
                                             )}
                                         </div>
@@ -394,9 +396,9 @@ const RegulatorCompliance = () => {
                                                             Batch: {transfer.batch.batchId}
                                                         </div>
                                                         <div className="text-xs text-muted-foreground">
-                                                            Mfg: {formatDate(transfer.batch.manufacturingDate)} | 
-                                                            Exp: {formatDate(transfer.batch.expiryDate)}
-                                                            {isExpiringSoon(transfer.batch.expiryDate) && (
+                                                            Mfg: {formatDate(transfer.batch.product.manufacturingDate)} | 
+                                                            Exp: {formatDate(transfer.batch.product.expiryDate)}
+                                                            {isExpiringSoon(transfer.batch.product.expiryDate) && (
                                                                 <span className="text-orange-600 ml-1">⚠️</span>
                                                             )}
                                                         </div>
@@ -502,8 +504,8 @@ const RegulatorCompliance = () => {
                                             </div>
                                         </div>
                                         <div className="text-xs text-muted-foreground mt-1">
-                                            Mfg: {formatDate(transfer.batch.manufacturingDate)} | Exp: {formatDate(transfer.batch.expiryDate)}
-                                            {isExpiringSoon(transfer.batch.expiryDate) && (
+                                            Mfg: {formatDate(transfer.batch.product.manufacturingDate)} | Exp: {formatDate(transfer.batch.product.expiryDate)}
+                                            {isExpiringSoon(transfer.batch.product.expiryDate) && (
                                                 <span className="text-orange-600 ml-1">⚠️</span>
                                             )}
                                         </div>

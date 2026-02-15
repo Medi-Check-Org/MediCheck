@@ -7,12 +7,11 @@
 
 import { prisma } from "@/lib/prisma";
 import type {
-  Prisma,
   MedicationBatch,
-  MedicationUnit,
   BatchEvent,
   BatchStatus,
 } from "@/lib/generated/prisma";
+import { Prisma } from "@prisma/client"; // proper prisma type import
 import { NotFoundError } from "@/utils/types/errors";
 
 export interface BatchWithRelations extends MedicationBatch {
@@ -167,12 +166,16 @@ export class BatchRepository {
     }
 
     if (filters.startDate || filters.endDate) {
-      whereClause.manufacturingDate = {};
+
+      if (!whereClause.product) {
+        whereClause.product = {};
+      }
+      whereClause.product.manufacturingDate  = {};
       if (filters.startDate) {
-        whereClause.manufacturingDate.gte = filters.startDate;
+        whereClause.product.manufacturingDate.gte = filters.startDate;
       }
       if (filters.endDate) {
-        whereClause.manufacturingDate.lte = filters.endDate;
+        whereClause.product.manufacturingDate.lte = filters.endDate;
       }
     }
 
@@ -195,7 +198,10 @@ export class BatchRepository {
               contactEmail: true,
             },
           },
-          product: true
+          product: true,
+          _count: {
+            select: { medicationUnits: true },
+          },
         },
         skip,
         take: limit,

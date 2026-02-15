@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
 import QRCodeLib from 'qrcode';
 import { jsPDF } from 'jspdf';
@@ -8,13 +8,10 @@ import { QrCode, Download, Check, Upload } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { toast } from 'react-toastify';
 import { MedicationBatchInfoProps, MedicationUnitProp } from '@/utils';
-import { useTheme } from 'next-themes';
 
 const QRGenerationComponent = ({ allBatches }: {allBatches: MedicationBatchInfoProps[] }) => {
 
-    const { resolvedTheme } = useTheme();
-
-    const [batches, setBatches] = useState<MedicationBatchInfoProps[]>(allBatches);
+    const [batches] = useState<MedicationBatchInfoProps[]>(allBatches);
 
     const [selectedBatchId, setSelectedBatchId] = useState('');
 
@@ -32,6 +29,7 @@ const QRGenerationComponent = ({ allBatches }: {allBatches: MedicationBatchInfoP
 
     useEffect(() => {
         console.log(selectedBatchId)
+        console.log(batches.find(b => b.id === selectedBatchId))
         setQuantity(batches.find(b => b.id === selectedBatchId)?._count.medicationUnits || 0);
         setSelectedBatch(batches.find(b => b.id === selectedBatchId) || null);
     }, [selectedBatchId])

@@ -182,7 +182,7 @@ export async function validateTransfer(
 
     // Check expiry
     const now = new Date();
-    if (new Date(batch.expiryDate) <= now) {
+    if (new Date(batch.product.expiryDate) <= now) {
       errors.push("Cannot transfer expired batch");
     }
 
@@ -216,7 +216,7 @@ export async function validateTransfer(
     }
 
     // Warning for near expiry
-    const daysToExpiry = Math.floor((new Date(batch.expiryDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const daysToExpiry = Math.floor((new Date(batch.product.expiryDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     if (daysToExpiry <= 30) {
       warnings.push(`Batch expires in ${daysToExpiry} days`);
     }

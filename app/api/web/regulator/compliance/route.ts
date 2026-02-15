@@ -62,28 +62,32 @@ export async function GET(request: NextRequest) {
           select: {
             batchId: true,
             drugName: true,
-            manufacturingDate: true,
-            expiryDate: true
-          }
+            product: {
+              select: {
+                manufacturingDate: true,
+                expiryDate: true,
+              },
+            },
+          },
         },
         fromOrg: {
           select: {
             companyName: true,
             organizationType: true,
-            contactEmail: true
-          }
+            contactEmail: true,
+          },
         },
         toOrg: {
           select: {
             companyName: true,
             organizationType: true,
-            contactEmail: true
-          }
-        }
+            contactEmail: true,
+          },
+        },
       },
       orderBy: {
-        transferDate: "desc"
-      }
+        transferDate: "desc",
+      },
     });
 
     return NextResponse.json({ transfers });

@@ -6,6 +6,11 @@ datasource db {
   provider  = "postgresql"
 }
 
+generator models {
+  provider = "prisma-generator-typescript" 
+  output   = "../lib/generated/prisma"
+}
+
 model User {
   id          String   @id @default(cuid())
   userRole    UserRole

@@ -36,9 +36,13 @@ export async function GET(request: NextRequest) {
             batchId: true,
             drugName: true,
             batchSize: true,
-            expiryDate: true,
             status: true,
-            manufacturingDate: true,
+            product: {
+              select: {
+                manufacturingDate: true,
+                expiryDate: true,
+              },
+            },
           },
         },
         fromOrg: {
@@ -61,9 +65,9 @@ export async function GET(request: NextRequest) {
         batchId: transfer.batch!.batchId,
         drugName: transfer.batch!.drugName,
         batchSize: transfer.batch!.batchSize,
-        expiryDate: transfer.batch!.expiryDate.toISOString(),
+        expiryDate: transfer.batch.product.expiryDate.toISOString(),
         status: transfer.batch!.status,
-        manufacturingDate: transfer.batch!.manufacturingDate.toISOString(),
+        manufacturingDate: transfer.batch.product.manufacturingDate.toISOString(),
         transferDate: transfer.transferDate.toISOString(),
         receivedFrom: transfer.fromOrg.companyName,
         fromOrgType: transfer.fromOrg.organizationType

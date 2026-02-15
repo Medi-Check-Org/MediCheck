@@ -484,8 +484,12 @@ async function generateComplianceReport(startDate: Date) {
         select: {
           batchId: true,
           drugName: true,
-          manufacturingDate: true,
-          expiryDate: true
+          product: {
+            select: {
+              manufacturingDate: true,
+              expiryDate: true,
+            },
+          },
         }
       },
       fromOrg: {

@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
+
   try {
+
     const { userId } = await auth();
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
+
     const timeRange = searchParams.get("timeRange") || "30"; // days
+
     const dashboardType = searchParams.get("type") || "manufacturer";
 
     console.log("Analytics API: Processing request for user:", userId);
@@ -251,9 +257,11 @@ export async function GET(request: NextRequest) {
           prisma.medicationBatch.count({
             where: {
               organizationId,
-              expiryDate: {
-                gte: new Date(),
-                lte: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
+              product: {
+                expiryDate: {
+                  gte: new Date(),
+                  lte: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
+                },
               },
             },
           }),

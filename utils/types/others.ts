@@ -43,8 +43,10 @@ export interface TransferProps {
     batchId: string;
     drugName: string;
     batchSize: number;
-    manufacturingDate: string;
-    expiryDate: string;
+    product: {
+      manufacturingDate: string;
+      expiryDate: string;
+    };
   };
   fromOrg: {
     companyName: string;
