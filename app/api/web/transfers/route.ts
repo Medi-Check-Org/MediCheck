@@ -61,11 +61,7 @@ export async function GET(request: NextRequest) {
       batchId: transfer.batch.batchId,
       medicationName: transfer.batch.drugName,
       quantity: transfer.batch.batchSize,
-<<<<<<< HEAD
-      expiryDate: transfer.batch.product.expiryDate,
-=======
       expiryDate: transfer.batch.product?.expiryDate ?? null,
->>>>>>> 841d174e04b6c8afbb0c45238d9b751ea33fc7d9
       fromOrganization: {
         name: transfer.fromOrg.companyName,
         type: transfer.fromOrg.organizationType,
