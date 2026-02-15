@@ -56,10 +56,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ investigations });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching investigations:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }
@@ -120,10 +121,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ investigation });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error creating investigation:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }

@@ -40,10 +40,11 @@ export async function GET(req: Request) {
       }));
 
     return NextResponse.json(points);
-  } catch (err) {
+  } catch (err: unknown) {
     console.error(err);
+    const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }

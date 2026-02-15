@@ -213,8 +213,7 @@ export async function GET(
             { type: "BATCH_RECEIVED", ...payload },
             "Receiver registry log"
           );
-      }
-      catch (e) {
+      } catch (e: unknown) {
         console.warn("Non-fatal registry broadcast error:", e);
       }
 
@@ -276,8 +275,7 @@ export async function GET(
             "Batch flagged (agent outbound)"
           );
         }
-      }
-      catch (e) {
+      } catch (e: unknown) {
         console.warn(
           "Non-fatal: failed to announce flag to sender channels",
           e
@@ -433,12 +431,11 @@ export async function GET(
           scanType: "BATCH",
         },
       });
-    }
-    catch (onnxError) {
+    } catch (onnxError: unknown) {
       console.error("ONNX Runtime Error:", onnxError);
       // Do not fail the endpoint on model error — return a useful response
       return NextResponse.json(
-        { valid: false, error: "ONNX Runtime Error", onnxError },
+        { valid: false, error: "ONNX Runtime Error", details: onnxError instanceof Error ? onnxError.message : "Unknown error" },
         { status: 400 }
       );
     }
@@ -451,7 +448,7 @@ export async function GET(
     });
 
   }
-  catch (err: any) {
+  catch (err: unknown) {
     console.error("VerifyBatch API Error:", err);
     return NextResponse.json(
       { valid: false, error: "Internal server error" },

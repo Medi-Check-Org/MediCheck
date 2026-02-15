@@ -80,9 +80,7 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
 
-  }
-  
-  catch (error) {
+  } catch (error: unknown) {
     console.error('Error calling Gemini API:', error);
     
     // More detailed error logging
@@ -91,9 +89,11 @@ export async function POST(request: NextRequest) {
       console.error('Error stack:', error.stack);
     }
     
+    const message = error instanceof Error ? error.message : "I'm sorry, I'm having trouble connecting right now. Please consult your healthcare provider or pharmacist for medication guidance.";
+
     // Return a fallback response if the API fails
     return NextResponse.json({
-      message: "I'm sorry, I'm having trouble connecting right now. Please consult your healthcare provider or pharmacist for medication guidance.",
+      message,
       timestamp: new Date().toISOString(),
       debug: process.env.NODE_ENV === 'development' ? error instanceof Error ? error.message : 'Unknown error' : undefined
     }, { status: 500 });

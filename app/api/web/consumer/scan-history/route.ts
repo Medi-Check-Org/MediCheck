@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,6 +35,9 @@ export async function GET(request: NextRequest) {
             batch: {
               include: {
                 organization: true,
+                product: {
+                  select: { expiryDate: true },
+                },
               },
             },
           },
@@ -46,26 +50,46 @@ export async function GET(request: NextRequest) {
     });
 
     // Format the response to match the existing UI structure
-    const formattedHistory = scanHistory.map((scan) => ({
+    type ScanWithRelations = Prisma.ScanHistoryGetPayload<{
+      include: {
+        medicationUnit: {
+          include: {
+            batch: {
+              include: {
+                organization: true,
+                product: {
+                  select: { expiryDate: true }
+                }
+              }
+            }
+          }
+        }
+      }
+    }>;
+
+    const formattedHistory = scanHistory.map((scan: ScanWithRelations) => ({
       id: scan.id,
-      batchId: scan?.medicationUnit?.batch.batchId,
-      drugName: scan?.medicationUnit?.batch.drugName,
-      manufacturer: scan?.medicationUnit?.batch.organization.companyName,
+      batchId: scan.medicationUnit?.batch?.batchId,
+      drugName: scan.medicationUnit?.batch?.drugName,
+      manufacturer: scan.medicationUnit?.batch?.organization?.companyName,
       scanDate: scan.timestamp.toISOString().split("T")[0],
       location:
         scan.latitude && scan.longitude
           ? `${scan.latitude.toFixed(4)}, ${scan.longitude.toFixed(4)}`
           : "Unknown",
       result: scan.scanResult,
-      expiryDate: scan.medicationUnit?.batch.expiryDate
-        .toISOString()
-        .split("T")[0],
+      expiryDate: scan.medicationUnit?.batch?.product?.expiryDate
+        ? scan.medicationUnit.batch.product.expiryDate.toISOString().split("T")[0]
+        : null,
       serialNumber: scan.medicationUnit?.serialNumber,
       scanStatus: scan.scanResult,
-      // Check if approaching expiry (within 30 days)
-      warning: (scan.medicationUnit?.batch?.expiryDate ?? Infinity) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  ? "Approaching expiry date"
-  : null,
+      warning: (() => {
+        const exp = scan.medicationUnit?.batch?.product?.expiryDate;
+        if (!exp) return null;
+        return new Date(exp) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          ? "Approaching expiry date"
+          : null;
+      })(),
     }));
 
     return NextResponse.json(formattedHistory);

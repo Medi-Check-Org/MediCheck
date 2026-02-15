@@ -24,13 +24,12 @@ export interface OrganizationWithDetails extends Organization {
     inboundTopic: string;
     outboundTopic: string;
   } | null;
-  medicationBatches?: {
-    id: string;
-    batchId: string;
-    drugName: string;
-    status: string;
-    createdAt: Date;
-  }[];
+  medicationBatches?: (any & {
+    product?: any | null;
+    _count?: {
+      medicationUnits: number;
+    };
+  })[];
 }
 
 export interface ListOrganizationsFilters {
@@ -80,12 +79,13 @@ export class OrganizationRepository {
           },
         },
         medicationBatches: {
-          select: {
-            id: true,
-            batchId: true,
-            drugName: true,
-            status: true,
-            createdAt: true,
+          include: {
+            product: true,
+            _count: {
+              select: {
+                medicationUnits: true,
+              },
+            },
           },
           take: 10,
           orderBy: {

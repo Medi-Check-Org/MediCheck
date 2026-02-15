@@ -63,7 +63,7 @@ export class UpdateTransferStatusUseCase {
     // 6. Update transfer status
     const updatedTransfer = await this.transferRepo.updateStatus(
       transfer.id,
-      input.status as TransferStatus
+      input.status
     );
 
     // 7. If completed, update batch ownership

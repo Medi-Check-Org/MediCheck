@@ -1,7 +1,7 @@
 import { prisma } from "./prisma";
 import { autoFlagBatch } from "./autoFlagBatch";
-interface HederaEvent {
-  eventType: "BATCH_CREATED" | "BATCH_OWNERSHIP" | "BATCH_FLAG";
+export interface HederaEvent {
+  eventType: "BATCH_CREATED" | "BATCH_OWNERSHIP" | "BATCH_FLAG" | "BATCH_UNITS_REGISTERED";
   timestamp: string;
   batchId: string;
   topicId: string;

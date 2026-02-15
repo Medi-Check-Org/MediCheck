@@ -1,15 +1,13 @@
-/**
- * Web API: List Batches
- */
-
 import { NextRequest, NextResponse } from "next/server";
 import { getActorFromClerk } from "@/core/auth";
 import { listBatches } from "@/core/usecases/batches/listBatches";
 import { toErrorResponse } from "@/utils/types/errors";
 
+/**
+ * Web API: List Batches
+ */
 export async function GET(req: NextRequest) {
   try {
-    
     const actor = await getActorFromClerk();
 
     // Extract query params
@@ -28,7 +26,11 @@ export async function GET(req: NextRequest) {
 
     const result = await listBatches(input, actor);
 
-    return NextResponse.json({ success: true, data: result });
+    // Flatten the response to match frontend expectations
+    return NextResponse.json({
+      success: true,
+      ...result
+    });
 
   }
   catch (error: unknown) {

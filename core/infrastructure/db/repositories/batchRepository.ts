@@ -10,6 +10,7 @@ import type {
   MedicationBatch,
   BatchEvent,
   BatchStatus,
+  Product,
 } from "@/lib/generated/prisma";
 import { Prisma } from "@prisma/client"; // proper prisma type import
 import { NotFoundError } from "@/utils/types/errors";
@@ -28,6 +29,10 @@ export interface BatchWithRelations extends MedicationBatch {
     registrySequence: number | null;
   }>;
   batchEvents?: BatchEvent[];
+  product?: Product | null;
+  _count?: {
+    medicationUnits: number;
+  };
 }
 
 export interface CreateBatchData {
@@ -85,6 +90,7 @@ export class BatchRepository {
             contactEmail: true,
           },
         },
+        product: true,
       },
     });
   }
@@ -104,6 +110,7 @@ export class BatchRepository {
             contactEmail: true,
           },
         },
+        product: true,
       },
     });
   }
@@ -138,6 +145,7 @@ export class BatchRepository {
           },
           take: 20, // Limit events returned
         },
+        product: true,
       },
     });
   }
@@ -165,18 +173,14 @@ export class BatchRepository {
       };
     }
 
+    // manufacturingDate & expiryDate live on Product in schema, not MedicationBatch
     if (filters.startDate || filters.endDate) {
-
-      if (!whereClause.product) {
-        whereClause.product = {};
-      }
-      whereClause.product.manufacturingDate  = {};
-      if (filters.startDate) {
-        whereClause.product.manufacturingDate.gte = filters.startDate;
-      }
-      if (filters.endDate) {
-        whereClause.product.manufacturingDate.lte = filters.endDate;
-      }
+      whereClause.product = {
+        manufacturingDate: {
+          ...(filters.startDate && { gte: filters.startDate }),
+          ...(filters.endDate && { lte: filters.endDate }),
+        },
+      };
     }
 
     const page = filters.page ?? 1;
@@ -200,7 +204,9 @@ export class BatchRepository {
           },
           product: true,
           _count: {
-            select: { medicationUnits: true },
+            select: {
+              medicationUnits: true,
+            },
           },
         },
         skip,

@@ -1,208 +1,137 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
+import { Prisma } from "@/lib/generated/prisma";
+
+export type ActivityType = "BATCH_CREATED" | "TRANSFER" | "COUNTERFEIT_REPORT";
+
+export interface BaseActivity {
+  id: string;
+  type: ActivityType;
+  description: string;
+  timestamp: Date;
+  status: string | null;
+}
+
+export interface BatchActivity extends BaseActivity {
+  type: "BATCH_CREATED";
+}
+
+export interface TransferActivity extends BaseActivity {
+  type: "TRANSFER";
+}
+
+export interface ReportActivity extends BaseActivity {
+  type: "COUNTERFEIT_REPORT";
+}
+
+export type RegulatorActivity = BatchActivity | TransferActivity | ReportActivity;
+type BatchResult = Prisma.MedicationBatchGetPayload<{
+  include: { organization: { select: { companyName: true } } }
+}>;
+
+type TransferResult = Prisma.OwnershipTransferGetPayload<{
+  include: {
+    fromOrg: { select: { companyName: true } },
+    toOrg: { select: { companyName: true } },
+    batch: { select: { drugName: true } }
+  }
+}>;
+
+type ReportResult = Prisma.CounterfeitReportGetPayload<{
+  include: { batch: { select: { drugName: true } } }
+}>;
 
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
-
+    
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Ensure user exists
-    let user = await prisma.user.findFirst({
-      where: { clerkUserId: userId }
-    });
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          clerkUserId: userId,
-          userRole: "CONSUMER"
-        }
-      });
-    }
-
     // Find the regulator organization for this user
-    let organization = await prisma.organization.findFirst({
+    const organization = await prisma.organization.findFirst({
       where: {
         organizationType: "REGULATOR",
         OR: [
-          { adminId: user.id },
-          { teamMembers: { some: { userId: user.id } } }
+          { adminId: userId },
+          { teamMembers: { some: { userId: userId } } }
         ]
       }
     });
 
     if (!organization) {
-      // Auto-create a regulator organization for this user
-      organization = await prisma.organization.create({
-        data: {
-          adminId: user.id,
-          organizationType: "REGULATOR",
-          companyName: "NAFDAC Regulatory Authority",
-          contactEmail: "regulator@nafdac.gov.ng",
-          contactPhone: "+234-1-234-5678",
-          address: "NAFDAC Headquarters, Abuja",
-          country: "Nigeria",
-          state: "FCT",
-          isVerified: true
-        }
-      });
+      return NextResponse.json({ error: "Regulator organization not found or access denied" }, { status: 403 });
     }
 
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-    // Get recent counterfeit reports
-    const recentReports = await prisma.counterfeitReport.findMany({
-      where: { createdAt: { gte: sevenDaysAgo } },
-      include: {
-        batch: {
-          include: {
-            organization: { select: { companyName: true } }
-          }
-        },
-        consumers: { select: { fullName: true } }
-      },
+    // Fetch batch creations with explicit payload typing
+    const batches: BatchResult[] = await prisma.medicationBatch.findMany({
       orderBy: { createdAt: "desc" },
-      take: 5
-    });
-
-    // Get recent ownership transfers
-    const recentTransfers = await prisma.ownershipTransfer.findMany({
-      where: { transferDate: { gte: sevenDaysAgo } },
+      take: 20,
       include: {
-        batch: { select: { batchId: true, drugName: true } },
-        fromOrg: { select: { companyName: true } },
-        toOrg: { select: { companyName: true } }
-      },
-      orderBy: { transferDate: "desc" },
-      take: 5
-    });
-
-    // Get recent scan history
-    const recentScans = await prisma.scanHistory.findMany({
-      where: { scanDate: { gte: sevenDaysAgo } },
-      include: {
-        batch: {
-          include: {
-            organization: { select: { companyName: true } }
-          }
-        },
-        teamMember: {
-          include: {
-            organization: { select: { companyName: true } }
-          }
+        organization: {
+          select: { companyName: true }
         }
-      },
-      orderBy: { scanDate: "desc" },
-      take: 3
-    });
-
-    // Format activities into a unified structure
-    const activities: Array<{
-      id: string;
-      type: string;
-      target: string;
-      status: string;
-      priority: string;
-      time: string;
-      inspector: string;
-      findings: string;
-      date: Date;
-    }> = [];
-
-    // Add counterfeit reports as investigations
-    recentReports.forEach(report => {
-      const timeDiff = now.getTime() - report.createdAt.getTime();
-      const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
-      const timeText = hoursAgo < 24 ? `${hoursAgo} hours ago` : `${Math.floor(hoursAgo / 24)} days ago`;
-
-      // Defensive: Try to show org, then drug, then batchId, then fallback
-      let target = "Unknown Organization";
-      if (report.batch?.organization?.companyName) {
-        target = report.batch.organization.companyName;
-      } else if (report.batch?.drugName) {
-        target = report.batch.drugName;
-      } else if (report.batch?.batchId) {
-        target = `Batch ${report.batch.batchId}`;
       }
-
-      activities.push({
-        id: `REP-${report.id}`,
-        type: "Investigation",
-        target,
-        status: report.status.toLowerCase(),
-        priority: report.severity === "CRITICAL" ? "high" : report.severity === "HIGH" ? "medium" : "low",
-        time: timeText,
-        inspector: report.consumers?.fullName || "System",
-        findings: `${report.batch?.drugName || "Unknown Drug"} - ${report.description}`,
-        date: report.createdAt
-      });
     });
 
-    // Add transfers as compliance reviews
-    recentTransfers.forEach(transfer => {
-      const timeDiff = now.getTime() - transfer.transferDate.getTime();
-      const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
-      const timeText = hoursAgo < 24 ? `${hoursAgo} hours ago` : `${Math.floor(hoursAgo / 24)} days ago`;
-
-      // Defensive: Show both orgs, fallback to "Unknown"
-      const fromOrg = transfer.fromOrg?.companyName || "Unknown";
-      const toOrg = transfer.toOrg?.companyName || "Unknown";
-
-      activities.push({
-        id: `TRF-${transfer.id}`,
-        type: "Compliance Review",
-        target: `${fromOrg} → ${toOrg}`,
-        status: transfer.status.toLowerCase(),
-        priority: "medium",
-        time: timeText,
-        inspector: "System Review",
-        findings: `Transfer of ${transfer.batch?.drugName || "medication"}`,
-        date: transfer.transferDate
-      });
+    // Fetch ownership transfers with explicit payload typing
+    const transfers: TransferResult[] = await prisma.ownershipTransfer.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      include: {
+        fromOrg: { select: { companyName: true } },
+        toOrg: { select: { companyName: true } },
+        batch: { select: { drugName: true } }
+      }
     });
 
-    // Add scans as inspections
-    recentScans.forEach(scan => {
-      const timeDiff = now.getTime() - scan.scanDate.getTime();
-      const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
-      const timeText = hoursAgo < 24 ? `${hoursAgo} hours ago` : `${Math.floor(hoursAgo / 24)} days ago`;
-
-      // Always prefer team member's org, then batch org, then fallback
-      let target =
-        scan.teamMember?.organization?.companyName ||
-        scan.batch?.organization?.companyName ||
-        scan.batch?.drugName ||
-        scan.batch?.batchId ||
-        "Unknown Organization";
-
-      activities.push({
-        id: `SCN-${scan.id}`,
-        type: "Inspection",
-        target,
-        status: scan.scanResult === "GENUINE" ? "completed" : "flagged",
-        priority: scan.scanResult === "SUSPICIOUS" ? "high" : "low",
-        time: timeText,
-        inspector: scan.teamMember?.organization?.companyName || "Inspector",
-        findings: `${scan.batch?.drugName || "Drug"} verification - ${scan.scanResult}`,
-        date: scan.scanDate
-      });
+    // Fetch counterfeit reports with explicit payload typing
+    const reports: ReportResult[] = await prisma.counterfeitReport.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      include: {
+        batch: { select: { drugName: true } }
+      }
     });
 
-    // Sort all activities by date and take the most recent ones
+    // Transform raw results into domain-specific RegulatorActivity items
+    const activities: RegulatorActivity[] = [
+      ...batches.map((batch: BatchResult): BatchActivity => ({
+        id: `batch-${batch.id}`,
+        type: "BATCH_CREATED",
+        description: `${batch.organization.companyName} created batch ${batch.batchId} (${batch.drugName})`,
+        timestamp: batch.createdAt,
+        status: String(batch.status)
+      })),
+      ...transfers.map((transfer: TransferResult): TransferActivity => ({
+        id: `transfer-${transfer.id}`,
+        type: "TRANSFER",
+        description: `Transfer from ${transfer.fromOrg.companyName} to ${transfer.toOrg.companyName} for ${transfer.batch.drugName}`,
+        timestamp: transfer.createdAt,
+        status: String(transfer.status)
+      })),
+      ...reports.map((report: ReportResult): ReportActivity => ({
+        id: `report-${report.id}`,
+        type: "COUNTERFEIT_REPORT",
+        description: `New ${report.reportType} report ${report.batch ? `for ${report.batch.drugName}` : ''} - Severity: ${report.severity}`,
+        timestamp: report.createdAt,
+        status: String(report.status)
+      }))
+    ];
+
     const sortedActivities = activities
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 8);
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, 50);
 
-    return NextResponse.json(sortedActivities);
+    return NextResponse.json<RegulatorActivity[]>(sortedActivities);
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching regulator activities:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }

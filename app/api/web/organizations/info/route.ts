@@ -42,10 +42,11 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(organization);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching organization info:', error);
+    const message = error instanceof Error ? error.message : 'Failed to fetch organization information';
     return NextResponse.json(
-      { error: 'Failed to fetch organization information' },
+      { error: message },
       { status: 500 }
     );
   }

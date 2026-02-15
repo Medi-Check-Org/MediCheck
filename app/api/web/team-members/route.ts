@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth, clerkClient } from '@clerk/nextjs/server'
+import type { Prisma } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -64,7 +65,9 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    const formattedMembers = teamMembers.map(member => ({
+    const formattedMembers = teamMembers.map((member: Prisma.TeamMemberGetPayload<{
+      include: { user: true }
+    }>) => ({
       id: member.id,
       name: member.name,
       email: member.email,
@@ -79,9 +82,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ teamMembers: formattedMembers })
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching team members:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
@@ -156,18 +160,16 @@ export async function POST(request: NextRequest) {
         },
         skipPasswordRequirement: true // This enables magic link authentication
       })
-    } catch (clerkError: any) {
-      console.error('Clerk user creation error:', {
-        error: clerkError,
-        errors: clerkError.errors,
-        status: clerkError.status,
-        clerkTraceId: clerkError.clerkTraceId
-      })
+    } catch (clerkError: unknown) {
+      console.error('Clerk user creation error:', clerkError);
       
-      if (clerkError.status === 422) {
+      const status = (clerkError as { status?: number }).status;
+      const errors = (clerkError as { errors?: unknown }).errors;
+
+      if (status === 422) {
         return NextResponse.json({ 
           error: 'Unable to create user account. The email may already be in use or invalid.', 
-          details: clerkError.errors 
+          details: errors 
         }, { status: 400 })
       }
       
@@ -206,8 +208,9 @@ export async function POST(request: NextRequest) {
       }
     })
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error creating team member:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

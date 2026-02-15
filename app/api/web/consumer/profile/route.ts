@@ -1,3 +1,4 @@
+// /app/api/web/consumer/profile/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
@@ -9,7 +10,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Find the user and their consumer profile
     const user = await prisma.user.findUnique({
       where: {
         clerkUserId: userId,
@@ -23,32 +23,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Consumer profile not found' }, { status: 404 });
     }
 
-    // Get total scans count
-    const totalScans = await prisma.scanHistory.count({
-      where: {
-        consumerId: user.consumer.id,
-      },
-    });
-
-    // Format the response
     const profile = {
-      name: user.consumer.fullName,
-      email: user.consumer.phoneNumber || 'N/A', // You might want to get email from Clerk
-      joinDate: user.createdAt.toISOString().split('T')[0],
-      totalScans,
-      dateOfBirth: user.consumer.dateOfBirth?.toISOString().split('T')[0] || null,
+      id: user.consumer.id,
+      fullName: user.consumer.fullName,
+      email: user.consumer.phoneNumber, // Using phoneNumber if email not explicitly in consumer
       phoneNumber: user.consumer.phoneNumber,
-      address: user.consumer.address,
-      country: user.consumer.country,
-      state: user.consumer.state,
-      language: 'English', // Default for now, we'll add this field later
+      dateOfBirth: user.consumer.dateOfBirth?.toISOString().split('T')[0] || '',
+      address: user.consumer.address || '',
+      state: user.consumer.state || '',
+      country: user.consumer.country || '',
     };
 
     return NextResponse.json(profile);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching consumer profile:', error);
+    const message = error instanceof Error ? error.message : 'Failed to fetch consumer profile';
     return NextResponse.json(
-      { error: 'Failed to fetch consumer profile' },
+      { error: message },
       { status: 500 }
     );
   }
@@ -62,9 +53,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { language, fullName, phoneNumber, address, country, state, dateOfBirth } = body;
+    const { fullName, phoneNumber, dateOfBirth, address, state, country } = body;
 
-    // Find the user
     const user = await prisma.user.findUnique({
       where: {
         clerkUserId: userId,
@@ -78,32 +68,29 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Consumer profile not found' }, { status: 404 });
     }
 
-    // Update consumer profile
     const updatedConsumer = await prisma.consumer.update({
       where: {
         id: user.consumer.id,
       },
       data: {
-        fullName: fullName || user.consumer.fullName,
-        phoneNumber: phoneNumber || user.consumer.phoneNumber,
-        address: address || user.consumer.address,
-        country: country || user.consumer.country,
-        state: state || user.consumer.state,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : user.consumer.dateOfBirth,
+        fullName,
+        phoneNumber,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        address,
+        state,
+        country,
       },
     });
-
-    // For now, we'll store language preference in localStorage on frontend
-    // In a real app, you'd want to add a language field to the Consumer model
 
     return NextResponse.json({ 
       message: 'Profile updated successfully',
       consumer: updatedConsumer 
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error updating consumer profile:', error);
+    const message = error instanceof Error ? error.message : 'Failed to update consumer profile';
     return NextResponse.json(
-      { error: 'Failed to update consumer profile' },
+      { error: message },
       { status: 500 }
     );
   }

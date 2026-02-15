@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,7 +49,17 @@ export async function GET(request: NextRequest) {
     const statusBreakdown: { [key: string]: number } = {};
     const topDestinations: { [key: string]: number } = {};
 
-    transfers.forEach((transfer) => {
+    type TransferBasic = Prisma.OwnershipTransferGetPayload<{
+      select: {
+        id: true,
+        status: true,
+        createdAt: true,
+        fromOrgId: true,
+        toOrgId: true
+      }
+    }>;
+
+    transfers.forEach((transfer: TransferBasic) => {
       // Monthly count
       const month = transfer.createdAt.toISOString().slice(0, 7); // YYYY-MM
       monthlyStats[month] = (monthlyStats[month] || 0) + 1;
@@ -95,12 +106,14 @@ export async function GET(request: NextRequest) {
     });
 
     const formattedTopDestinations = destinationOrgs
-      .map((org) => ({
+      .map((org: Prisma.OrganizationGetPayload<{
+        select: { id: true, companyName: true }
+      }>) => ({
         organizationId: org.id,
         organizationName: org.companyName,
         transferCount: topDestinations[org.id],
       }))
-      .sort((a, b) => b.transferCount - a.transferCount)
+      .sort((a: { transferCount: number }, b: { transferCount: number }) => b.transferCount - a.transferCount)
       .slice(0, 5); // Top 5
 
     return NextResponse.json({
@@ -109,10 +122,11 @@ export async function GET(request: NextRequest) {
       topDestinations: formattedTopDestinations,
       totalTransfers: transfers.length,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching transfer reports:", error);
+    const message = error instanceof Error ? error.message : "Failed to fetch transfer reports";
     return NextResponse.json(
-      { error: "Failed to fetch transfer reports" },
+      { error: message },
       { status: 500 }
     );
   }

@@ -65,10 +65,10 @@ export async function GET(request: NextRequest) {
             product: {
               select: {
                 manufacturingDate: true,
-                expiryDate: true,
-              },
-            },
-          },
+                expiryDate: true
+              }
+            }
+          }
         },
         fromOrg: {
           select: {
@@ -92,10 +92,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ transfers });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching transfers:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }
@@ -203,10 +204,11 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ transfer: updatedTransfer });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error updating transfer:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }

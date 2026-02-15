@@ -24,17 +24,18 @@ export async function GET(request: NextRequest) {
     });
 
     // Get active batches count (not expired and in certain statuses)
+    // expiryDate is on Product; include batches with no product so they are not excluded
+    const now = new Date();
     const activeBatches = await prisma.medicationBatch.count({
       where: {
         organizationId: orgId,
-        product: {
-          expiryDate: {
-            gt: new Date(), // Not expired
-          },
-        },
         status: {
           in: ['CREATED', 'IN_TRANSIT', 'DELIVERED'],
         },
+        OR: [
+          { productId: null },
+          { product: { expiryDate: { gt: now } } },
+        ],
       },
     });
 
@@ -68,10 +69,10 @@ export async function GET(request: NextRequest) {
     };
 
     return NextResponse.json(stats);
-  }
-  catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch dashboard stats';
     return NextResponse.json(
-      { error: 'Failed to fetch dashboard stats' },
+      { error: message },
       { status: 500 }
     );
   }

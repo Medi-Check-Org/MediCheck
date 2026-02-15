@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
+import type { Prisma } from "@prisma/client";
+
+type ReportData = 
+  | Awaited<ReturnType<typeof generateInvestigationsReport>>
+  | Awaited<ReturnType<typeof generateComplianceReport>>
+  | Awaited<ReturnType<typeof generateEntitiesReport>>
+  | Awaited<ReturnType<typeof generateViolationsReport>>
+  | Awaited<ReturnType<typeof generateSummaryReport>>;
 
 export async function GET(request: NextRequest) {
   try {
@@ -60,7 +68,7 @@ export async function GET(request: NextRequest) {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-    let reportData: any = {};
+    let reportData: ReportData;
 
     switch (reportType) {
       case "investigations":
@@ -85,10 +93,11 @@ export async function GET(request: NextRequest) {
     const htmlContent = generateHtmlReport(reportType, reportData, organization);
 
     // Dynamic import puppeteer to avoid build issues
-    const puppeteer = await import('puppeteer');
+    const puppeteerModule = await import('puppeteer');
+    const puppeteer = puppeteerModule.default || puppeteerModule;
     
     // Launch Puppeteer and generate the PDF
-    const browser = await puppeteer.default.launch({
+    const browser = await (puppeteer as any).launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
@@ -104,17 +113,22 @@ export async function GET(request: NextRequest) {
         "Content-Disposition": `attachment; filename="${reportType}-report.pdf"`,
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error generating PDF:", error);
+    const message = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: message },
       { status: 500 }
     );
   }
 }
 
 // Generate HTML content for different report types
-function generateHtmlReport(reportType: string, reportData: any, organization: any): string {
+function generateHtmlReport(
+  reportType: string, 
+  reportData: ReportData, 
+  organization: Prisma.OrganizationGetPayload<{}>
+): string {
   const baseHtml = `
     <html>
       <head>
@@ -147,23 +161,23 @@ function generateHtmlReport(reportType: string, reportData: any, organization: a
 }
 
 // Generate specific report content based on type
-function generateReportContent(reportType: string, data: any): string {
+function generateReportContent(reportType: string, data: ReportData): string {
   switch (reportType) {
     case "compliance":
-      return generateComplianceHtml(data);
+      return generateComplianceHtml(data as Awaited<ReturnType<typeof generateComplianceReport>>);
     case "investigations":
-      return generateInvestigationsHtml(data);
+      return generateInvestigationsHtml(data as Awaited<ReturnType<typeof generateInvestigationsReport>>);
     case "entities":
-      return generateEntitiesHtml(data);
+      return generateEntitiesHtml(data as Awaited<ReturnType<typeof generateEntitiesReport>>);
     case "violations":
-      return generateViolationsHtml(data);
+      return generateViolationsHtml(data as Awaited<ReturnType<typeof generateViolationsReport>>);
     case "summary":
     default:
-      return generateSummaryHtml(data);
+      return generateSummaryHtml(data as Awaited<ReturnType<typeof generateSummaryReport>>);
   }
 }
 
-function generateComplianceHtml(data: any): string {
+function generateComplianceHtml(data: Awaited<ReturnType<typeof generateComplianceReport>>): string {
   return `
     <h2>Compliance Summary</h2>
     <div class="summary-stats">
@@ -189,7 +203,7 @@ function generateComplianceHtml(data: any): string {
   `;
 }
 
-function generateInvestigationsHtml(data: any): string {
+function generateInvestigationsHtml(data: Awaited<ReturnType<typeof generateInvestigationsReport>>): string {
   return `
     <h2>Investigation Summary</h2>
     <div class="summary-stats">
@@ -215,7 +229,7 @@ function generateInvestigationsHtml(data: any): string {
   `;
 }
 
-function generateEntitiesHtml(data: any): string {
+function generateEntitiesHtml(data: Awaited<ReturnType<typeof generateEntitiesReport>>): string {
   return `
     <h2>Entity Summary</h2>
     <div class="summary-stats">
@@ -241,7 +255,7 @@ function generateEntitiesHtml(data: any): string {
   `;
 }
 
-function generateViolationsHtml(data: any): string {
+function generateViolationsHtml(data: Awaited<ReturnType<typeof generateViolationsReport>>): string {
   return `
     <h2>Violation Summary</h2>
     <div class="summary-stats">
@@ -267,7 +281,7 @@ function generateViolationsHtml(data: any): string {
   `;
 }
 
-function generateSummaryHtml(data: any): string {
+function generateSummaryHtml(data: Awaited<ReturnType<typeof generateSummaryReport>>): string {
   return `
     <h2>Overview</h2>
     <div class="summary-stats">
@@ -303,7 +317,7 @@ function generateSummaryHtml(data: any): string {
 }
 
 // Helper functions for generating tables
-function generateTransfersTable(transfers: any[]): string {
+function generateTransfersTable(transfers: Awaited<ReturnType<typeof generateComplianceReport>>["transfers"]): string {
   return `
     <table>
       <thead>
@@ -316,11 +330,11 @@ function generateTransfersTable(transfers: any[]): string {
         </tr>
       </thead>
       <tbody>
-        ${transfers.slice(0, 10).map(t => `
+        ${transfers.slice(0, 10).map((t: typeof transfers[number]) => `
           <tr>
-            <td>${t.batch.drugName}</td>
-            <td>${t.batch.batchId}</td>
-            <td>${t.fromOrg.companyName} → ${t.toOrg.companyName}</td>
+            <td>${t.batch?.drugName || 'N/A'}</td>
+            <td>${t.batch?.batchId || 'N/A'}</td>
+            <td>${t.fromOrg?.companyName || 'Unknown'} → ${t.toOrg?.companyName || 'Unknown'}</td>
             <td>${formatDate(t.transferDate)}</td>
             <td>${t.status}</td>
           </tr>
@@ -330,7 +344,7 @@ function generateTransfersTable(transfers: any[]): string {
   `;
 }
 
-function generateInvestigationsTable(investigations: any[]): string {
+function generateInvestigationsTable(investigations: Awaited<ReturnType<typeof generateInvestigationsReport>>["investigations"]): string {
   return `
     <table>
       <thead>
@@ -343,10 +357,10 @@ function generateInvestigationsTable(investigations: any[]): string {
         </tr>
       </thead>
       <tbody>
-        ${investigations.slice(0, 10).map(inv => `
+        ${investigations.slice(0, 10).map((inv: typeof investigations[number]) => `
           <tr>
-            <td>${inv.batch.drugName}</td>
-            <td>${inv.batch.batchId}</td>
+            <td>${inv.batch?.drugName || 'N/A'}</td>
+            <td>${inv.batch?.batchId || 'N/A'}</td>
             <td>${inv.status}</td>
             <td>${inv.severity}</td>
             <td>${formatDate(inv.createdAt)}</td>
@@ -357,7 +371,7 @@ function generateInvestigationsTable(investigations: any[]): string {
   `;
 }
 
-function generateOrganizationsTable(organizations: any[]): string {
+function generateOrganizationsTable(organizations: Awaited<ReturnType<typeof generateEntitiesReport>>["organizations"]): string {
   return `
     <table>
       <thead>
@@ -369,7 +383,7 @@ function generateOrganizationsTable(organizations: any[]): string {
         </tr>
       </thead>
       <tbody>
-        ${organizations.slice(0, 10).map(org => `
+        ${organizations.slice(0, 10).map((org: typeof organizations[number]) => `
           <tr>
             <td>${org.companyName}</td>
             <td>${org.organizationType}</td>
@@ -382,7 +396,7 @@ function generateOrganizationsTable(organizations: any[]): string {
   `;
 }
 
-function generateViolationsTable(violations: any[]): string {
+function generateViolationsTable(violations: Awaited<ReturnType<typeof generateViolationsReport>>["violations"]): string {
   return `
     <table>
       <thead>
@@ -395,10 +409,10 @@ function generateViolationsTable(violations: any[]): string {
         </tr>
       </thead>
       <tbody>
-        ${violations.slice(0, 10).map(v => `
+        ${violations.slice(0, 10).map((v: typeof violations[number]) => `
           <tr>
-            <td>${v.batch.drugName}</td>
-            <td>${v.batch.batchId}</td>
+            <td>${v.batch?.drugName || 'N/A'}</td>
+            <td>${v.batch?.batchId || 'N/A'}</td>
             <td>${v.severity}</td>
             <td>${v.status}</td>
             <td>${formatDate(v.createdAt)}</td>
@@ -459,15 +473,15 @@ async function generateInvestigationsReport(startDate: Date) {
 
   const summary = {
     total: investigations.length,
-    pending: investigations.filter(inv => inv.status === "PENDING").length,
-    investigating: investigations.filter(inv => inv.status === "INVESTIGATING").length,
-    resolved: investigations.filter(inv => inv.status === "RESOLVED").length,
-    dismissed: investigations.filter(inv => inv.status === "DISMISSED").length,
+    pending: investigations.filter((inv: typeof investigations[number]) => inv.status === "PENDING").length,
+    investigating: investigations.filter((inv: typeof investigations[number]) => inv.status === "INVESTIGATING").length,
+    resolved: investigations.filter((inv: typeof investigations[number]) => inv.status === "RESOLVED").length,
+    dismissed: investigations.filter((inv: typeof investigations[number]) => inv.status === "DISMISSED").length,
     bySeverity: {
-      critical: investigations.filter(inv => inv.severity === "CRITICAL").length,
-      high: investigations.filter(inv => inv.severity === "HIGH").length,
-      medium: investigations.filter(inv => inv.severity === "MEDIUM").length,
-      low: investigations.filter(inv => inv.severity === "LOW").length
+      critical: investigations.filter((inv: typeof investigations[number]) => inv.severity === "CRITICAL").length,
+      high: investigations.filter((inv: typeof investigations[number]) => inv.severity === "HIGH").length,
+      medium: investigations.filter((inv: typeof investigations[number]) => inv.severity === "MEDIUM").length,
+      low: investigations.filter((inv: typeof investigations[number]) => inv.severity === "LOW").length
     }
   };
 
@@ -487,9 +501,9 @@ async function generateComplianceReport(startDate: Date) {
           product: {
             select: {
               manufacturingDate: true,
-              expiryDate: true,
-            },
-          },
+              expiryDate: true
+            }
+          }
         }
       },
       fromOrg: {
@@ -514,11 +528,11 @@ async function generateComplianceReport(startDate: Date) {
 
   const summary = {
     total: transfers.length,
-    pending: transfers.filter(t => t.status === "PENDING").length,
-    completed: transfers.filter(t => t.status === "COMPLETED").length,
-    failed: transfers.filter(t => t.status === "FAILED").length,
+    pending: transfers.filter((t: typeof transfers[number]) => t.status === "PENDING").length,
+    completed: transfers.filter((t: typeof transfers[number]) => t.status === "COMPLETED").length,
+    failed: transfers.filter((t: typeof transfers[number]) => t.status === "FAILED").length,
     complianceRate: transfers.length > 0 ? 
-      Math.round((transfers.filter(t => t.status === "COMPLETED").length / transfers.length) * 100) : 0
+      Math.round((transfers.filter((t: typeof transfers[number]) => t.status === "COMPLETED").length / transfers.length) * 100) : 0
   };
 
   return { transfers, summary };
@@ -556,13 +570,13 @@ async function generateEntitiesReport() {
 
   const summary = {
     total: organizations.length,
-    verified: organizations.filter(org => org.isVerified).length,
-    active: organizations.filter(org => org.isActive).length,
+    verified: organizations.filter((org: typeof organizations[number]) => org.isVerified).length,
+    active: organizations.filter((org: typeof organizations[number]) => org.isActive).length,
     byType: {
-      manufacturers: organizations.filter(org => org.organizationType === "MANUFACTURER").length,
-      distributors: organizations.filter(org => org.organizationType === "DRUG_DISTRIBUTOR").length,
-      hospitals: organizations.filter(org => org.organizationType === "HOSPITAL").length,
-      pharmacies: organizations.filter(org => org.organizationType === "PHARMACY").length
+      manufacturers: organizations.filter((org: typeof organizations[number]) => org.organizationType === "MANUFACTURER").length,
+      distributors: organizations.filter((org: typeof organizations[number]) => org.organizationType === "DRUG_DISTRIBUTOR").length,
+      hospitals: organizations.filter((org: typeof organizations[number]) => org.organizationType === "HOSPITAL").length,
+      pharmacies: organizations.filter((org: typeof organizations[number]) => org.organizationType === "PHARMACY").length
     }
   };
 
@@ -602,10 +616,10 @@ async function generateViolationsReport(startDate: Date) {
 
   const summary = {
     total: violations.length,
-    critical: violations.filter(v => v.severity === "CRITICAL").length,
-    high: violations.filter(v => v.severity === "HIGH").length,
-    resolved: violations.filter(v => v.status === "RESOLVED").length,
-    byType: violations.reduce((acc, violation) => {
+    critical: violations.filter((v: typeof violations[number]) => v.severity === "CRITICAL").length,
+    high: violations.filter((v: typeof violations[number]) => v.severity === "HIGH").length,
+    resolved: violations.filter((v: typeof violations[number]) => v.status === "RESOLVED").length,
+    byType: violations.reduce((acc: Record<string, number>, violation: typeof violations[number]) => {
       acc[violation.reportType] = (acc[violation.reportType] || 0) + 1;
       return acc;
     }, {} as Record<string, number>)

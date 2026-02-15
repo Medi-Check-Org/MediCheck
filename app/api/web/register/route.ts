@@ -207,10 +207,12 @@ export async function POST(req: Request) {
       }
 
       return NextResponse.json({ success: true });
-    }
-    catch (error) {
+    } catch (error: unknown) {
         console.error("Registration error:", error);
-        return NextResponse.json({ error: "Failed to register user" },{ status: 500 }
-);
+        const message = error instanceof Error ? error.message : "Failed to register user";
+        return NextResponse.json(
+            { error: message },
+            { status: 500 }
+        );
     }
 }

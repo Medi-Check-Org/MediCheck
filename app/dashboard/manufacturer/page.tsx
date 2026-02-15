@@ -40,12 +40,17 @@ export default function ManufacturerDashboard() {
       try {
         const res = await fetch("/api/web/organizations/me");
         const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to fetch organization");
+        }
+
         setOrgId(data.organizationId);
-        // Fetch organization info for name
-        const infoRes = await fetch(`/api/web/organizations/info?orgId=${data.organizationId}`);
-        if (infoRes.ok) {
-          const infoData = await infoRes.json();
-          setOrgName(infoData.companyName);
+        // Use companyName directly from the returned organization (aligned with new schema)
+        if (data.organization?.companyName) {
+          setOrgName(data.organization.companyName);
+        } else {
+          setOrgName("Unknown Organization");
         }
       }
       catch (err) {
@@ -66,7 +71,13 @@ export default function ManufacturerDashboard() {
     try {
       const res = await fetch(`/api/web/batches?organizationId=${orgId}`);
       const data = await res.json();
-      setBatches(data.data.batches); // note to extract the pagination as well.
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to fetch batches");
+      }
+
+      // Align with new batches API shape: { batches, total }
+      setBatches(data.batches || []);
       toast.success("Fetched batches");
     }
     catch (err) {
