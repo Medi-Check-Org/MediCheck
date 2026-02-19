@@ -382,7 +382,7 @@ const RegulatorEntities = () => {
                 <CardContent className="p-0">
                     {/* Responsive Table: Show table on md+ screens, show cards on mobile */}
                     <div className="hidden md:block w-full overflow-x-auto">
-                        <Table className="min-w-[700px]">
+                        <Table className="min-w-175">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Company Name</TableHead>
@@ -410,7 +410,7 @@ const RegulatorEntities = () => {
                                 ) : (
                                     entities.map((entity) => (
                                         <TableRow key={entity.id}>
-                                            <TableCell className="font-medium whitespace-nowrap max-w-[140px] overflow-hidden text-ellipsis">{entity.companyName}</TableCell>
+                                            <TableCell className="font-medium whitespace-nowrap max-w-35 overflow-hidden text-ellipsis">{entity.companyName}</TableCell>
                                             <TableCell className="whitespace-nowrap">{getOrganizationType(entity.organizationType)}</TableCell>
                                             <TableCell className="whitespace-nowrap">{entity.state ? `${entity.address}, ${entity.state}` : entity.address}</TableCell>
                                             <TableCell className="whitespace-nowrap">{entity.licenseNumber || entity.nafdacNumber || 'N/A'}</TableCell>

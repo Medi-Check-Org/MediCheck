@@ -159,7 +159,7 @@ const RegulatorInvestigations = () => {
                                 New Investigation
                             </Button>
                         </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px]">
+                    <DialogContent className="sm:max-w-125">
                         <DialogHeader>
                             <DialogTitle>Create New Investigation</DialogTitle>
                             <DialogDescription>

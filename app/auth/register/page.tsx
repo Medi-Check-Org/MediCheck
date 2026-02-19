@@ -259,7 +259,7 @@ export default function RegisterPage() {
                 Country of Origin *
               </Label>
               <Select value={formData.country} onValueChange={(value) => setFormData({ ...formData, country: value })}>
-                <SelectTrigger className="h-11">
+                <SelectTrigger className="h-11 cursor-pointer">
                   <SelectValue placeholder="Select country" />
                 </SelectTrigger>
                 <SelectContent>
@@ -276,7 +276,7 @@ export default function RegisterPage() {
                 State *
               </Label>
               <Select value={formData.state} onValueChange={(value) => setFormData({ ...formData, state: value })}>
-                <SelectTrigger className="h-11">
+                <SelectTrigger className="h-11 cursor-pointer">
                   <SelectValue placeholder="Select state" />
                 </SelectTrigger>
                 <SelectContent>
@@ -707,13 +707,13 @@ export default function RegisterPage() {
           <div className="flex justify-between items-center h-16 sm:h-20">
             <Link href="/" className="flex items-center space-x-2 sm:space-x-4">
               <div className="relative group cursor-pointer">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div className="relative bg-gradient-to-r from-primary to-accent p-1.5 sm:p-2 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
+                <div className="absolute inset-0 bg-linear-to-r from-primary to-accent rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                <div className="relative bg-linear-to-r from-primary to-accent p-1.5 sm:p-2 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
                   <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-white group-hover:scale-110 transition-transform duration-300" />
                 </div>
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-lg sm:text-2xl text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">MediCheck</span>
+                <span className="font-bold text-lg sm:text-2xl text-foreground bg-linear-to-r from-foreground to-foreground/80 bg-clip-text">MediCheck</span>
                 <span className="text-xs text-muted-foreground font-mono hidden sm:block">Blockchain Verified</span>
               </div>
             </Link>
@@ -737,7 +737,7 @@ export default function RegisterPage() {
 
       {/* Main Content */}
       <section className="relative py-8 sm:py-16 px-4 sm:px-6 lg:px-8 min-h-screen">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"></div>
+        <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-accent/5"></div>
         
         <div className="relative max-w-4xl mx-auto">
           {!accountType ? (
@@ -821,7 +821,7 @@ export default function RegisterPage() {
                               value={formData.organizationType}
                               onValueChange={(value) => setFormData({ ...formData, organizationType: value })}
                             >
-                              <SelectTrigger className="h-11">
+                              <SelectTrigger className="h-11 cursor-pointer">
                                 <SelectValue placeholder="Select organization type" />
                               </SelectTrigger>
                               <SelectContent>                                  
