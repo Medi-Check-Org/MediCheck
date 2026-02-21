@@ -4,13 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { verifySignature } from "@/lib/verifySignature";
 import { getBatchEventLogs } from "@/lib/hedera";
 import { runAllUnitAuthenticityChecks, HederaEvent } from "@/lib/safetyChecks";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { encodeFeatures } from "@/lib/formatModelInput";
 import * as ort from "onnxruntime-node";
 import { promises as fs } from "fs";
 import path from "path";
-import { safeSendHcs10 } from "@/lib/hcs10";
-import type { Prisma } from "@prisma/client";
 
 const QR_SECRET = process.env.QR_SECRET || "dev-secret";
 
@@ -23,6 +21,7 @@ export async function GET(
   const { userId } = await auth();
 
   // No need for redundant loggedInUser from currentUser()
+  
   // We'll use the prisma 'user' record fetched later
 
   const { serialNumber } = await context.params;
@@ -38,7 +37,7 @@ export async function GET(
   // Load as Buffer
   const modelBuffer = await fs.readFile(modelPath);
 
-  // 🔑 Convert Buffer to Uint8Array
+  // Convert Buffer to Uint8Array
   const modelUint8 = new Uint8Array(modelBuffer);
 
   if (!sig) {
@@ -74,7 +73,7 @@ export async function GET(
   const batchIdFromUrl = splitSerialNumber[1] + "-" + splitSerialNumber[2];
 
   if (
-    batchIdFromUrl !== unit.batch.batchId ||
+    batchIdFromUrl !== unit?.batch?.batchId ||
     sig !== unit.qrSignature ||
     serialNumber !== unit.serialNumber
   ) {
@@ -157,137 +156,6 @@ export async function GET(
       timestamp: now,
     },
   });
-
-
-
-
-
-
-  // --------------------- NEW: HCS-10 COMMUNICATION ---------------------
-  // Notify owner organization about this unit verification (managedRegistry + inbound agent topic)
-  try {
-    const ownerOrg = await prisma.organization.findUnique({
-      where: { id: unit.batch.organizationId },
-      include: {
-        organizationAgent: {
-          select: {
-            id: true,
-            agentName: true,
-            inboundTopic: true,
-            outboundTopic: true,
-          },
-        },
-      },
-    });
-
-    const verificationPayload = {
-      p: "hcs-10",
-      op: "unit_verification_event",
-      unitId: unit.id,
-      serialNumber: unit.serialNumber,
-      batchId: unit.batch.batchId,
-      registryTopic: topicId,
-      scanId: savedScan.id,
-      scanner: user
-        ? { type: "CONSUMER", id: consumer?.id ?? null }
-        : { type: "ANONYMOUS" },
-      result: authenticityResultCheck?.status ?? "UNKNOWN",
-      reasons: authenticityResultCheck?.reasons ?? [],
-      timestamp: new Date().toISOString(),
-    };
-
-    interface Hcs10SendResult {
-      target: string;
-      result: unknown;
-    }
-
-    const sendResults: Hcs10SendResult[] = [];
-
-    // 1) Send to owner's managed registry (if present) for global visibility
-    if (ownerOrg?.managedRegistry) {
-      const r = await safeSendHcs10(
-        ownerOrg.managedRegistry,
-        verificationPayload,
-        "Unit verification event (registry)"
-      );
-      sendResults.push({ target: ownerOrg.managedRegistry, result: r });
-    }
-
-    // 2) Send to owner's inbound agent topic (direct agent notification)
-    if (ownerOrg?.organizationAgent?.inboundTopic) {
-      const response = await safeSendHcs10(
-        ownerOrg.organizationAgent.inboundTopic,
-        {
-          ...verificationPayload,
-          op: "unit_verification_request",
-        },
-        "Unit verification request (agent inbound)"
-      );
-
-      sendResults.push({
-        target: ownerOrg.organizationAgent.inboundTopic,
-        result: response,
-      });
-
-      // Log outbound message to AgentMessage table (if agent exists)
-      try {
-        // attempt to extract a sequence number from the Hedera send result (best-effort)
-        // Hedera receipts usually have topicSequenceNumber
-        let seq = 0;
-        if (response && typeof response === 'object' && 'topicSequenceNumber' in response) {
-          const rawSeq = (response as { topicSequenceNumber: unknown }).topicSequenceNumber;
-          if (typeof rawSeq === 'number') {
-            seq = rawSeq;
-          } else if (typeof rawSeq === 'string') {
-            seq = parseInt(rawSeq, 10) || 0;
-          }
-        }
-
-        await prisma.agentMessage.create({
-          data: {
-            topicId: ownerOrg.organizationAgent.inboundTopic,
-            message: verificationPayload,
-            sequence: seq,
-            agentId: ownerOrg.organizationAgent.id,
-          },
-        });
-      } catch (logErr) {
-        console.warn("Failed to log agent message to DB (non-fatal):", logErr);
-      }
-    }
-
-    // Optional: if ownerOrg has outboundTopic 
-    if (ownerOrg?.organizationAgent?.outboundTopic) {
-      const r2 = await safeSendHcs10(
-        ownerOrg.organizationAgent.outboundTopic,
-        {
-          ...verificationPayload,
-          op: "unit_verification_notice",
-        },
-        "Unit verification notice (agent outbound)"
-      );
-      sendResults.push({
-        target: ownerOrg.organizationAgent.outboundTopic,
-        result: r2,
-      });
-    }
-
-    // attach sendResults for debugging in response
-    // (no sensitive values, just targets and success metadata)
-    // you can remove this from production responses if you prefer
-    console.log("HCS-10 sendResults:", sendResults);
-  }
-  catch (commError: unknown) {
-    const message = commError instanceof Error ? commError.message : String(commError);
-    console.warn("HCS-10 communication failed (non-fatal):", message);
-  }
-
-
-
-
-
-
-  // ------------------- END HCS-10 COMMUNICATION -------------------
 
   // Day of week
   const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

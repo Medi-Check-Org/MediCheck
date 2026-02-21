@@ -22,7 +22,6 @@ import {
   ForbiddenError,
   BusinessRuleViolationError,
 } from "@/utils/types/errors";
-import { hedera10Client } from "@/lib/hedera10Client";
 import { OwnershipTransfer } from "@/lib/generated/prisma/client";
 
 export interface InitiateTransferOutput {
@@ -117,25 +116,7 @@ export class InitiateTransferUseCase {
     });
 
 
-    // 10. Announce via HCS-10 if available
-    const fromOrg = await this.orgRepo.findById(batch.organizationId);
-    if (fromOrg?.organizationAgent?.outboundTopic) {
-      try {
-        await hedera10Client.sendMessage(
-          fromOrg.organizationAgent.outboundTopic,
-          JSON.stringify({
-            p: "hcs-10",
-            op: "transfer_initiated",
-            batch_id: batch.batchId,
-            transfer_id: transfer.id,
-            to_org: input.toOrgId,
-          }),
-          "Transfer initiation announcement"
-        );
-      } catch (e) {
-        console.warn("Failed to announce transfer initiation (non-fatal):", e);
-      }
-    }
+
 
     return {
       transfer,

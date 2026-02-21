@@ -3,6 +3,7 @@ import { hedera2Client } from "./hedera2Client";
 import { HCS2RegistryType } from "@hashgraphonline/standards-sdk";
 import { HederaLogPayload } from "@/utils";
 
+
 // Creates a new batch registry on Hedera blockchain for tracking medication batches
 export async function createBatchRegistry(
   batchId: string,
@@ -38,6 +39,7 @@ export async function createBatchRegistry(
 
   return registry;
 }
+
 
 // Creates organization-wide registry for managing all batches
 export async function createOrgManagedRegistry(orgId: string, orgName: string) {
@@ -90,6 +92,7 @@ export async function registerUnitOnBatch(
 
   return response.sequenceNumber;
 }
+
 
 export async function logBatchEvent(
   topicId: string,

@@ -9,7 +9,6 @@ import { encodeFeatures } from "@/lib/formatModelInput";
 import * as ort from "onnxruntime-node";
 import { promises as fs } from "fs";
 import path from "path";
-import { safeSendHcs10, createAgentConnection } from "@/lib/hcs10";
 
 const QR_SECRET = process.env.QR_SECRET || "dev-secret";
 
@@ -132,6 +131,7 @@ export async function GET(
     let updatedBatch = batch;
 
     if (transfer && transfer.status === "PENDING") {
+      
       // ========= Transfer acceptance flow =========
       // 1. Update ownership in DB
       updatedBatch = await prisma.medicationBatch.update({
@@ -161,63 +161,7 @@ export async function GET(
         }
       );
 
-      // 4 Ensure connection between agents
-      let connection = await prisma.agentConnection.findFirst({
-        where: {
-          initiatorOrgId: batch.organizationId,
-          receiverOrgId: scannerOrgId,
-          status: "ACTIVE",
-        },
-      });
-
-      if (!connection) {
-        console.log("🔗 No existing connection found — creating new...");
-        connection = await createAgentConnection(
-          batch.organizationId,
-          scannerOrgId
-        );
-      } else {
-        console.log("🔗 Using existing active connection:", connection.id);
-      }
-
-      // 5️⃣ Prepare payload
-      const payload = {
-        batchId: batch.batchId,
-        fromOrgId: batch.organizationId,
-        toOrgId: scannerOrgId,
-        registryTopic: batch.registryTopicId,
-        hederaSeq: transferSeq,
-        timestamp: new Date().toISOString(),
-      };
-
-      // 6️⃣ Announce via shared connection topic (both agents see it)
-      await safeSendHcs10(
-        connection.connectionTopicId,
-        { p: "hcs-10", op: "batch_transfer_confirmed", ...payload },
-        "Batch ownership confirmed",
-        connection.id
-      );
-
-      // 7️⃣  Announce on managed registries ( global visibility)
-      try {
-        if (senderOrg?.managedRegistry)
-          await safeSendHcs10(
-            senderOrg.managedRegistry,
-            { type: "BATCH_TRANSFERRED", ...payload },
-            "Sender registry log"
-          );
-
-        if (receiverOrg?.managedRegistry)
-          await safeSendHcs10(
-            receiverOrg.managedRegistry,
-            { type: "BATCH_RECEIVED", ...payload },
-            "Receiver registry log"
-          );
-      } catch (e: unknown) {
-        console.warn("Non-fatal registry broadcast error:", e);
-      }
-
-      // 8️⃣ Off-chain audit
+      // 4. Off-chain audit
       await prisma.batchEvent.create({
         data: {
           batchId: batch.id,
@@ -248,40 +192,6 @@ export async function GET(
         }
       );
 
-      // Announce flag on HCS-10 (org managed registries + agent topics), non-fatal
-      const flagPayload = {
-        // p: "hcs-10",
-        // op: "batch_flag",
-        batchId: batch.batchId,
-        orgId: batch.organizationId,
-        scannerOrgId,
-        registryTopic: batch.registryTopicId,
-        hederaSeq: flagSeq,
-        timestamp: new Date().toISOString(),
-      };
-
-      try {
-        if (senderOrg?.managedRegistry) {
-          await safeSendHcs10(
-            senderOrg.managedRegistry,
-            { type: "BATCH_FLAG", ...flagPayload },
-            "Batch flagged"
-          );
-        }
-        if (senderOrg?.organizationAgent?.outboundTopic) {
-          await safeSendHcs10(
-            senderOrg.organizationAgent.outboundTopic,
-            { p: "hcs-10", op: "batch_flag", ...flagPayload },
-            "Batch flagged (agent outbound)"
-          );
-        }
-      } catch (e: unknown) {
-        console.warn(
-          "Non-fatal: failed to announce flag to sender channels",
-          e
-        );
-      }
-
       // off-chain event
       await prisma.batchEvent.create({
         data: {
@@ -293,41 +203,9 @@ export async function GET(
         },
       });
 
-      // find or create connection
-      let flagConnection = await prisma.agentConnection.findFirst({
-        where: {
-          initiatorOrgId: batch.organizationId,
-          receiverOrgId: scannerOrgId,
-        },
-      });
-
-      if (!flagConnection) {
-        flagConnection = await createAgentConnection(
-          batch.organizationId,
-          scannerOrgId
-        );
-      }
-
-      // send flag alert via shared topic
-      await safeSendHcs10(
-        flagConnection.connectionTopicId,
-        {
-          p: "hcs-10",
-          op: "batch_flag_alert",
-          batchId: batch.batchId,
-          orgId: batch.organizationId,
-          scannerOrgId,
-          registryTopic: batch.registryTopicId,
-          hederaSeq: flagSeq,
-          timestamp: new Date().toISOString(),
-        },
-        "Unauthorized batch transfer alert",
-        flagConnection.id
-      );
     }
 
 
-    // ========== SCAN HISTORY + ML INFERENCE (keep unchanged) ==========
     const now = new Date();
 
     const savedScan = await prisma.scanHistory.create({

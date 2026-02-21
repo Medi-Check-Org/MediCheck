@@ -30,9 +30,8 @@ import {
   logBatchEvent,
 } from "@/lib/hedera";
 import { generateQRPayload, generateBatchQRPayload } from "@/lib/qrPayload";
-import { hedera10Client } from "@/lib/hedera10Client";
 import { prisma } from "@/lib/prisma";
-import { Product, MedicationBatch } from "@/lib/generated/prisma/client";
+import { MedicationBatch } from "@/lib/generated/prisma/client";
 
 const QR_SECRET = process.env.QR_SECRET || "dev-secret";
 
@@ -200,33 +199,7 @@ export class CreateBatchUseCase {
       region: org?.state ?? "",
     });
 
-    // 11. Announce via HCS-10 if organization agent exists
-    if (org.organizationAgent?.outboundTopic) {
-      try {
-        await hedera10Client.sendMessage(
-          org.organizationAgent.outboundTopic,
-          JSON.stringify({
-            p: "hcs-10",
-            op: "announce_batch",
-            batch_id: batchId,
-            registry_topic: registryTopicId,
-            status: "registered",
-          }),
-          "Batch creation announcement"
-        );
-        console.log(
-          "Announced batch on agent outbound topic:",
-          org.organizationAgent.outboundTopic
-        );
-      } catch (e) {
-        console.warn(
-          "Failed to announce to HCS-10 outbound topic (non-fatal):",
-          e
-        );
-      }
-    }
-
-    // 12. Create and register individual units
+    // 11. Create and register individual units
     const unitsData: Array<any> = [];
     const unitIndexes = Array.from({ length: input.batchSize }, (_, i) => i);
     const concurrency = UNIT_REG_CONCURRENCY > 0 ? UNIT_REG_CONCURRENCY : 10;
@@ -301,35 +274,13 @@ export class CreateBatchUseCase {
       region: org?.state ?? "",
     });
 
-    // 15. Announce on managed registry if available
-    if (org.managedRegistry) {
-      try {
-        await hedera10Client.sendMessage(
-          org.managedRegistry,
-          JSON.stringify({
-            type: "BATCH_CREATED",
-            orgId: input.organizationId,
-            batchId,
-            drugName: input.drugName,
-            timestamp: new Date().toISOString(),
-            topicId: registryTopicId?.topicId as string,
-          }),
-          "New batch announcement"
-        );
-        console.log(
-          `📢 Announced new batch ${batchId} on managed registry ${org.managedRegistry}`
-        );
-      } catch (e) {
-        console.warn("Failed to announce on managed registry (non-fatal):", e);
-      }
-    }
-
     return {
       batch: newBatch,
       unitsCreated: unitsData.length,
       registryTopicId: registryTopicId.topicId as string,
       batchEventSeq: eventSeq ?? 0,
     };
+
   }
 }
 

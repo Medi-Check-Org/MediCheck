@@ -4,10 +4,6 @@ import { UserRole } from "@/lib/generated/prisma/enums";
 import { ORG_TYPE_MAP } from "@/utils";
 import { clerkClient } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
-import { createAndRegisterAgent } from "@/lib/hcs10";
-import {
-  AIAgentCapability,
-} from "@hashgraphonline/standards-sdk";
 import { createOrgManagedRegistry } from "@/lib/hedera";
 
 
@@ -99,6 +95,7 @@ export async function POST(req: Request) {
 
       // Handle Organization
       if (accountType === "organization") {
+
         console.log("Registering organization of type:", organizationType);
 
         console.log(ORG_TYPE_MAP);
@@ -141,36 +138,6 @@ export async function POST(req: Request) {
 
         console.log("Organization created:", organization.id);
 
-        const roleMap = {
-          manufacturer: "MANUFACTURER",
-          drug_distributor: "DRUG_DISTRIBUTOR",
-          pharmacy: "PHARMACY",
-          hospital: "HOSPITAL",
-          regulator: "REGULATOR",
-        };
-
-        // ✅ create Hedera counterpart agent
-        const agentResult = await createAndRegisterAgent({
-          name: `${companyName}-Agent-${Date.now()}`,
-          description: `${companyName} Hedera Agent`,
-          orgId: organization.id,
-          role: roleMap[organizationType as keyof typeof roleMap],
-          model: "gpt-4",
-          capabilities: [AIAgentCapability.TEXT_GENERATION],
-          metadata: {
-            contactEmail,
-            contactPhone,
-            country,
-          },
-        });
-
-        // if (!agentResult.success) {
-        //   console.error("Failed to create HCS-10 agent:", agentResult.error);
-        //   // optional rollback or alert handling here
-        // } else {
-        //   console.log("HCS-10 agent registered:", agentResult?.data?.agent.accountId);
-        // }
-
         // Add the admin as a team member
         const teamMember = await prisma.teamMember.create({
           data: {
@@ -179,7 +146,7 @@ export async function POST(req: Request) {
             isAdmin: true,
             name: contactPersonName || companyName,
             email: contactEmail,
-            role: "Admin", // NEED TO ADD A FIELD FOR THIS IN THE FORM
+            role: "Admin",
             department: "Admin", // NEED TO ADD A FIELD FOR THIS IN THE FORM
           },
         });
@@ -207,7 +174,8 @@ export async function POST(req: Request) {
       }
 
       return NextResponse.json({ success: true });
-    } catch (error: unknown) {
+    }
+    catch (error: unknown) {
         console.error("Registration error:", error);
         const message = error instanceof Error ? error.message : "Failed to register user";
         return NextResponse.json(
