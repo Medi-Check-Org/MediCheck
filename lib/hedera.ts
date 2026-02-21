@@ -91,15 +91,16 @@ export async function registerUnitOnBatch(
   return response.sequenceNumber;
 }
 
-
 export async function logBatchEvent(
   topicId: string,
   eventType:
     | "BATCH_CREATED"
     | "BATCH_OWNERSHIP"
     | "BATCH_FLAG"
-    | "BATCH_UNITS_REGISTERED",
-  payload: HederaLogPayload
+    | "BATCH_UNITS_REGISTERED"
+    | "BATCH_TRANSFER_INITIATION"
+    | "TRANSFER_CANCELLED",
+  payload: HederaLogPayload,
 ) {
   const message = JSON.stringify({
     type: "EVENT_LOG",
@@ -113,11 +114,14 @@ export async function logBatchEvent(
     metadata: message,
   });
 
+  console.log("responseresponseresponse", response);
+
   if (!response.success) {
     throw new Error(`Failed to log event to Hedera topic ${topicId}`);
   }
 
   return response.sequenceNumber;
+  
 }
 
 

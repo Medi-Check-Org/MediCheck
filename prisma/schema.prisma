@@ -1,15 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../lib/generated/prisma"
+  provider = "prisma-client"
+  output = "../lib/generated/prisma"
 }
 
 datasource db {
-  provider  = "postgresql"
-}
-
-generator models {
-  provider = "prisma-generator-typescript" 
-  output   = "../lib/generated/prisma"
+  provider = "postgresql"
 }
 
 model User {

@@ -15,7 +15,6 @@ import { toast } from "react-toastify"
 
 export default function PharmacyDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard")
-  const [searchQuery, setSearchQuery] = useState("")
   const [prescriptionSearch, setPrescriptionSearch] = useState("")
   const [orgId, setOrgId] = useState("")
   const [orgLoading, setOrgLoading] = useState(true)
@@ -83,6 +82,17 @@ export default function PharmacyDashboard() {
 
   const handleViewReports = () => {
     setActiveTab("reports")
+  }
+
+  if (orgLoading || !orgId) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto"></div>
+          <p className="text-muted-foreground font-medium">Loading pharmacy dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

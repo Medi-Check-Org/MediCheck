@@ -5,7 +5,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
-import type { User, TeamMember } from "@/lib/generated/prisma";
+import type { User, TeamMember } from "@/lib/generated/prisma/client";
 import { NotFoundError } from "@/utils/types/errors";
 
 export interface UserWithTeamMember extends User {

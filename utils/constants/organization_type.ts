@@ -1,4 +1,4 @@
-import { OrganizationType } from "@/lib/generated/prisma";
+import { OrganizationType } from "@/lib/generated/prisma/enums";
 
 export const ORG_TYPE_MAP: Record<string, OrganizationType> = {
   manufacturer: OrganizationType.MANUFACTURER,

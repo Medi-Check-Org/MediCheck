@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import { Prisma } from "@/lib/generated/prisma";
+import { Prisma } from "@prisma/client";
 
 export type ActivityType = "BATCH_CREATED" | "TRANSFER" | "COUNTERFEIT_REPORT";
 

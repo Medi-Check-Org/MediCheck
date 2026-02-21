@@ -1,4 +1,4 @@
-import { Product } from "@prisma/client";
+import { Product } from "@/lib/generated/prisma/client";
 
 export enum UserRoleEnum {
   ORGANIZATION_MEMBER = "ORGANIZATION_MEMBER",

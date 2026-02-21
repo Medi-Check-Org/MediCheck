@@ -32,8 +32,7 @@ import {
 import { generateQRPayload, generateBatchQRPayload } from "@/lib/qrPayload";
 import { hedera10Client } from "@/lib/hedera10Client";
 import { prisma } from "@/lib/prisma";
-import type { MedicationBatch } from "@/lib/generated/prisma";
-import { Product } from "@/lib/generated/prisma";
+import { Product, MedicationBatch } from "@/lib/generated/prisma/client";
 
 const QR_SECRET = process.env.QR_SECRET || "dev-secret";
 
@@ -80,6 +79,8 @@ export class CreateBatchUseCase {
     // 1. Validate input
     const input = validateInput(CreateBatchSchema, rawInput);
 
+    console.log("inputinputinputinputinput", input);
+
     // 2. Check permissions
     requirePermission(actor, Permissions.BATCHES_CREATE);
 
@@ -96,9 +97,9 @@ export class CreateBatchUseCase {
     // 5. Additional business rule validations
 
     // Check if batch size is reasonable (at least 1, checked by schema, but double-check)
-    if (input.batchSize < 1 || input.batchSize > 100000) {
+    if (input.batchSize < 1 || input.batchSize > 100) {
       throw new BusinessRuleViolationError(
-        "Batch size must be between 1 and 100,000 units"
+        "Batch size must be between 1 and 100 units"
       );
     }
 
@@ -231,6 +232,7 @@ export class CreateBatchUseCase {
     const concurrency = UNIT_REG_CONCURRENCY > 0 ? UNIT_REG_CONCURRENCY : 10;
 
     await runInBatches<number>(unitIndexes, concurrency, async (i) => {
+
       const unitNumber = String(i + 1).padStart(4, "0");
       const randomSuffix = nanoid(3);
       const serialNumber = `UNIT-${batchId}-${unitNumber}${randomSuffix}`;
@@ -261,6 +263,17 @@ export class CreateBatchUseCase {
         productId: input.productId,
         qrSignature: qrUnitPayload.signature,
       });
+
+      // reduce product pool size
+
+      await prisma.product.update({
+        where: { id: product.id },
+        data: {
+          numberOfProductAvailable:
+            product.numberOfProductAvailable - input.batchSize,
+        },
+      });
+
     });
 
     // 13. Bulk insert units to database

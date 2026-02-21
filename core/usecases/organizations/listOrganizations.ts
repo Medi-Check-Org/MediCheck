@@ -14,7 +14,7 @@ import {
   OrganizationRepository,
   organizationRepository,
 } from "@/core/infrastructure/db/repositories";
-import type { Organization } from "@/lib/generated/prisma";
+import type { Organization } from "@/lib/generated/prisma/client";
 
 export interface ListOrganizationsOutput {
   organizations: Organization[];

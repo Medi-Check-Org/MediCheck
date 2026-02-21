@@ -35,10 +35,12 @@ export default function ManufacturerDashboard() {
 
   // 1️⃣ Fetch orgId and orgName
   useEffect(() => {
+
     const loadOrg = async () => {
       setOrgLoading(true);
       try {
         const res = await fetch("/api/web/organizations/me");
+
         const data = await res.json();
 
         if (!res.ok) {
@@ -46,15 +48,10 @@ export default function ManufacturerDashboard() {
         }
 
         setOrgId(data.organizationId);
-        // Use companyName directly from the returned organization (aligned with new schema)
-        if (data.organization?.companyName) {
-          setOrgName(data.organization.companyName);
-        } else {
-          setOrgName("Unknown Organization");
-        }
+        setOrgName(data.organization.companyName);
       }
       catch (err) {
-        toast.error(`Failed to fetch org: ${err instanceof Error ? err.message : String(err)}`);
+        toast.error(`${err instanceof Error ? err.message : String(err)}`);
       }
       finally {
         setOrgLoading(false);
@@ -70,14 +67,15 @@ export default function ManufacturerDashboard() {
     setBatchesLoading(true);
     try {
       const res = await fetch(`/api/web/batches?organizationId=${orgId}`);
+
       const data = await res.json();
 
       if (!res.ok) {
         throw new Error(data.error || "Failed to fetch batches");
       }
 
-      // Align with new batches API shape: { batches, total }
       setBatches(data.batches || []);
+
       toast.success("Fetched batches");
     }
     catch (err) {
@@ -99,7 +97,7 @@ export default function ManufacturerDashboard() {
 
 
   // 3️⃣ Guard rendering while loading
-  if (orgLoading || batchesLoading) {
+  if (orgLoading || batchesLoading || !orgId) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingSpinner size="large" text="Loading dashboard..." />

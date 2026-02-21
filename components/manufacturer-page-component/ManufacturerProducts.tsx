@@ -546,7 +546,7 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
 
                       {product.numberOfProductAvailable && (
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
-                          <span className="text-xs sm:text-sm text-muted-foreground">Number Of Product Available:</span>
+                          <span className="text-xs sm:text-sm text-muted-foreground">Number Of Products Available:</span>
                           <span className="text-xs sm:text-sm font-medium font-mono">{product.numberOfProductAvailable}</span>
                         </div>
                       )}

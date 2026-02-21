@@ -47,6 +47,8 @@ export async function POST(req: Request) {
       expiryDate
     } = body;
 
+    console.log("Received Product Creation Request:", body);
+
     // Basic validation
     if (
       !name ||
@@ -84,8 +86,8 @@ export async function POST(req: Request) {
       dosageForm,
       strength,
       activeIngredients: Array.isArray(activeIngredients)
-        ? activeIngredients
-        : [activeIngredients],
+        ? activeIngredients.filter((item): item is string => item !== undefined)
+        : activeIngredients ? [activeIngredients] : [],
       nafdacNumber,
       shelfLifeMonths: shelfLifeMonths != null ? parseInt(String(shelfLifeMonths), 10) : null,
       storageConditions,

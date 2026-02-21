@@ -1,7 +1,5 @@
 "use client"
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-
 // components import 
 import { DistributorSidebar } from "@/components/distributor-page-component/distributor-sidebar";
 import DistributorSettings from "@/components/distributor-page-component/DistributorSettings";
@@ -14,14 +12,13 @@ import { TeamMemberManagement } from "@/components/team-member-management";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Menu, Shield, X } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Menu, Shield} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "react-toastify";
 import { ManufacturerTab } from "@/utils";
 import { MedicationBatchInfoProps } from "@/utils";
 
 export default function DrugDistributorDashboard() {
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState<ManufacturerTab>("dashboard");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [orgId, setOrgId] = useState("");
@@ -69,12 +66,11 @@ export default function DrugDistributorDashboard() {
         throw new Error(data.error || "Failed to fetch batches");
       }
 
-      // Align with new batches API shape: { batches, total }
       setBatches(data.batches || []);
       toast.success("Fetched batches");
     }
     catch (err) {
-      toast.error(`Failed to fetch batches: ${err instanceof Error ? err.message : String(err)}`);
+      toast.error(`${err instanceof Error ? err.message : String(err)}`);
     }
     finally {
       setBatchesLoading(false);
@@ -86,7 +82,7 @@ export default function DrugDistributorDashboard() {
     loadBatches();
   }, [orgId]);
 
-  if (orgLoading || batchesLoading) {
+  if (orgLoading || batchesLoading || !orgId) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center space-y-4">

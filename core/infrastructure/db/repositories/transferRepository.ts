@@ -8,8 +8,8 @@ import { prisma } from "@/lib/prisma";
 import type {
   OwnershipTransfer,
   TransferStatus,
-  Prisma,
-} from "@/lib/generated/prisma";
+} from "@/lib/generated/prisma/client";
+import { Prisma } from "@prisma/client";
 import { NotFoundError } from "@/utils/types/errors";
 
 export interface TransferWithRelations extends OwnershipTransfer {

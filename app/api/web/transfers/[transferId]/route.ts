@@ -16,16 +16,25 @@ interface RouteParams {
 export async function PATCH(req: NextRequest, { params }: RouteParams) {
   try {
     const actor = await getActorFromClerk();
+
     const { transferId } = await params;
+
     const body = await req.json();
 
     const result = await updateTransferStatus({ transferId, ...body }, actor);
 
     return NextResponse.json({ success: true, data: result });
-  } catch (error: unknown) {
-    const errorResponse = toErrorResponse(error);
-    return NextResponse.json(errorResponse, {
-      status: errorResponse.statusCode,
-    });
   }
+  catch (error: unknown) {
+
+    const errorResponse = toErrorResponse(error);
+
+    return NextResponse.json(errorResponse, {
+
+      status: errorResponse.statusCode,
+
+    });
+
+  }
+
 }

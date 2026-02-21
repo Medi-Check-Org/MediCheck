@@ -1,5 +1,4 @@
 "use client"
-
 import Link from "next/link"
 import { Shield, ArrowLeft, FileCheck, Users, AlertTriangle, Scale, Copyright, Ban } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"

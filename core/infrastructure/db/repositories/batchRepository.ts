@@ -6,13 +6,13 @@
  */
 
 import { prisma } from "@/lib/prisma";
-import type {
+import {
   MedicationBatch,
   BatchEvent,
   BatchStatus,
   Product,
-} from "@/lib/generated/prisma";
-import { Prisma } from "@prisma/client"; // proper prisma type import
+} from "@/lib/generated/prisma/client";
+import { Prisma } from "@prisma/client"; 
 import { NotFoundError } from "@/utils/types/errors";
 
 export interface BatchWithRelations extends MedicationBatch {
