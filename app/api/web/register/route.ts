@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { UserRole } from "@/lib/generated/prisma";
+import { UserRole } from "@/lib/generated/prisma/enums";
 import { ORG_TYPE_MAP } from "@/utils";
 import { clerkClient } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";

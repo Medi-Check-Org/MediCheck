@@ -40,11 +40,13 @@ export interface TransferProps {
   requiresApproval: boolean;
   canApprove: boolean;
   batch: {
-    batchId: string;
+    batchId: string; 
     drugName: string;
     batchSize: number;
-    manufacturingDate: string;
-    expiryDate: string;
+    product: {
+      manufacturingDate: string;
+      expiryDate: string;
+    };
   };
   fromOrg: {
     companyName: string;
@@ -72,8 +74,8 @@ export interface HederaLogPayload {
   manufacturingDate?: string;
   expiryDate?: string;
   // specific to transfer
-  transferFrom?: string; // for transfer
-  transferTo?: string; // for transfer
+  transferFrom?: string; // for transfer initiation or confirmation
+  transferTo?: string; // for transfer initiation or confirmation
   qrSignature?: string;
   // flag
   flagReason?: string;

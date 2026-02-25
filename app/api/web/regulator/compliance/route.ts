@@ -74,20 +74,20 @@ export async function GET(request: NextRequest) {
           select: {
             companyName: true,
             organizationType: true,
-            contactEmail: true
-          }
+            contactEmail: true,
+          },
         },
         toOrg: {
           select: {
             companyName: true,
             organizationType: true,
-            contactEmail: true
-          }
-        }
+            contactEmail: true,
+          },
+        },
       },
       orderBy: {
-        transferDate: "desc"
-      }
+        transferDate: "desc",
+      },
     });
 
     return NextResponse.json({ transfers });

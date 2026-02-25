@@ -8,7 +8,6 @@ import { MyPublicMetadata } from "@/utils";
 import Link from "next/link";
 import { Loader2, Shield, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 export default function VerifyBatchPage() {
   const params = useParams();

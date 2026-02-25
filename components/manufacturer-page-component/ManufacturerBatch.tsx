@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { toast } from "react-toastify"
-import { $Enums } from "@/lib/generated/prisma"
 import {
     Plus,
     Search,
@@ -22,7 +21,7 @@ import {
 } from "lucide-react";
 import { MedicationBatchInfoProps } from "@/utils";
 import { OrganizationProp } from "@/utils/types/schemType";
-import { Product } from "@prisma/client"
+import { Product, $Enums } from "@/lib/generated/prisma/browser"
 
 
 // Safe date display: avoid "Invalid Date" when product or date is null
@@ -66,14 +65,14 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
         try {
             const res = await fetch(`/api/web/products?organizationId=${orgId}`);
             const data = await res.json();
-            
+
             if (res.ok) {
                 setProducts(data.products || []);
             } else {
-                console.error("Failed to load products:", data.error);
+                console.error("Failed to load products:", data.error); // we need visible error logging for users or placeholder
             }
         } catch (error) {
-            console.error("Failed to load products:", error);
+            console.error("Failed to load products:", error); // we need visible error logging for users or placeholder
         }
     };
 
@@ -83,11 +82,19 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
 
         setIsLoading(true)
 
-        if (!orgId) return;
+        if (!orgId) {
+            setIsLoading(false);
+            return;
+        }
+
+        if (parseInt(newBatch.batchSize) > (products.find((product) => product.name === newBatch.drugName && product.organizationId === orgId)?.numberOfProductAvailable ?? 0)) {
+            toast.info("Batch size cannot exceed available product quantity")
+            return;
+        }
 
         try {
 
-            if (!newBatch?.drugName || !newBatch?.batchSize) {
+            if (!newBatch?.drugName || !newBatch?.batchSize || parseInt(newBatch.batchSize) <= 0) {
                 toast.info("Please fill in all required fields")
                 return
             };
@@ -143,8 +150,10 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
             const res = await fetch("/api/web/organizations");
             if (res.ok) {
                 const data = await res.json();
+                console.log("original List of organizations for transfer", data);
                 // Filter out the current organization from the list
                 const otherOrgs = data.filter((org: OrganizationProp) => org.id !== orgId);
+                console.log("filtered list of organization", otherOrgs)
                 setOrganizations(otherOrgs);
             }
         } catch (error) {
@@ -322,9 +331,17 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                         id="quantity"
                                         type="number"
                                         placeholder="Enter quantity"
+                                        max={products.find((product) => product.name === newBatch.drugName && product.organizationId === orgId)?.numberOfProductAvailable}
+                                        min={0}
                                         value={newBatch.batchSize}
                                         onChange={(e) => setNewBatch({ ...newBatch, batchSize: e.target.value })}
                                     />
+                                    <p
+                                        className="text-xs text-gray-500"
+                                    >
+                                        max batch size:
+                                        {products.find((product) => product.name === newBatch.drugName && product.organizationId === orgId)?.numberOfProductAvailable}
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex justify-end space-x-2 mt-4">
@@ -463,7 +480,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                                 className="flex-1 cursor-pointer min-h-[44px] touch-manipulation"
                                             >
                                                 <ArrowUpRight className="h-4 w-4 mr-1" />
-                                                {batch.status === $Enums.BatchStatus.IN_TRANSIT ? "In Transit": "Transfer"}
+                                                {batch.status === $Enums.BatchStatus.IN_TRANSIT ? "In Transit" : "Transfer"}
                                             </Button>
                                         </div>
                                     </div>
@@ -530,7 +547,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                                     className="w-full sm:w-auto cursor-pointer"
                                                 >
                                                     <ArrowUpRight className="h-4 w-4 mr-1" />
-                                                    {batch.status === $Enums.BatchStatus.IN_TRANSIT ? "In Transit": "Transfer"}
+                                                    {batch.status === $Enums.BatchStatus.IN_TRANSIT ? "In Transit" : "Transfer"}
                                                 </Button>
                                             </div>
                                         </TableCell>
@@ -612,7 +629,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                     </div>
                                 </div>
                             )}
-                            
+
                             {/* Metadata */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
                                 <div className="space-y-2">
@@ -636,7 +653,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                         <Button variant="outline" onClick={() => setIsViewBatchOpen(false)}>
                             Close
                         </Button>
-                        <Button 
+                        <Button
                             onClick={() => {
                                 setIsViewBatchOpen(false)
                                 if (viewingBatch) {
@@ -673,7 +690,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                 </SelectTrigger>
                                 <SelectContent className="max-h-[200px]">
                                     {organizations.length > 0 ? (
-                                        organizations.map((org) => (
+                                        organizations.filter(org => org.id !== selectedBatch?.organizationId || org.id !== orgId).map((org) => (
                                             <SelectItem key={org.id} value={org.id} className="py-3">
                                                 <div className="flex flex-col items-start">
                                                     <span className="font-medium">{org.companyName}</span>
@@ -714,7 +731,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                 className="resize-none min-h-[100px]"
                             />
                         </div>
-                        
+
                         {/* Transfer Summary */}
                         {selectedBatch && transferForm.toOrganization && (
                             <div className="p-3 bg-muted/20 rounded-lg border">
@@ -729,8 +746,8 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                         )}
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:justify-end sm:space-x-2 mt-6 pt-4 border-t">
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             onClick={() => {
                                 setIsTransferOpen(false)
                                 setTransferForm({
@@ -744,7 +761,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                         >
                             Cancel
                         </Button>
-                        <Button 
+                        <Button
                             onClick={handleTransferBatch}
                             disabled={isTransferring || !transferForm.toOrganization || !transferForm.transferReason.trim()}
                             className="w-full sm:w-auto order-1 sm:order-2 min-h-[44px] touch-manipulation"

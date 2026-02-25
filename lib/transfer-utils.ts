@@ -1,6 +1,6 @@
 // /lib/transfer-utils.ts
 import { prisma } from "@/lib/prisma";
-import { OrganizationType } from "@/lib/generated/prisma";
+import { OrganizationType } from "@/lib/generated/prisma/enums";
 
 /**
  * Shape of the batch returned by the findUnique query in validateTransfer

@@ -20,7 +20,7 @@ import { Shield, Building2, User, ArrowLeft, Eye, EyeOff } from "lucide-react"
 // 
 import { toast } from "react-toastify";
 import { ORG_TYPE_MAP, getRedirectPath } from "@/utils";
-import { OrganizationType, UserRole } from "@/lib/generated/prisma";
+import { OrganizationType, UserRole } from "@/lib/generated/prisma/enums";
 
 
 export default function RegisterPage() {
@@ -92,7 +92,12 @@ export default function RegisterPage() {
         password: formData.password,
       });
 
-      console.log(result)
+      await setActive({ session: result.createdSessionId });
+
+      // Force Clerk to update the active session token with new metadata
+      await clerk.session?.reload();
+
+      console.log("clerkresult", result)
 
       if (result.status === "complete") {
 
@@ -137,11 +142,6 @@ export default function RegisterPage() {
 
         toast.success("Registration successful!");
 
-        await setActive({ session: result.createdSessionId });
-
-        // Force Clerk to update the active session token with new metadata
-        await clerk.session?.reload();
-
         // Update frontend user state
         await user?.reload();
 
@@ -157,9 +157,22 @@ export default function RegisterPage() {
       }
 
     }
-    catch (err) {
-      console.log(err)
-      toast.error(err instanceof Error ? err.message : String(err));
+    catch (error) {
+
+      console.error("Registration failed:", error);
+
+      try {
+        await fetch("/api/web/failed/registration/cleanup", {
+          method: "POST",
+        });
+      }
+      catch (cleanupError) {
+        console.error("Cleanup failed:", cleanupError);
+      }
+
+      await clerk.signOut();
+
+      toast.error("Registration failed. Please try again.");
     }
     finally {
       setIsLoading(false);

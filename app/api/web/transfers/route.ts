@@ -5,18 +5,19 @@ import { getActorFromClerk } from "@/core/auth/clerk";
 type DirectionParam = "all" | "outgoing" | "incoming";
 
 /** Single transfer in the GET response (frontend-friendly shape) */
-interface FormattedTransfer {
+export interface FormattedTransfer {
   id: string;
   batchId: string;
   medicationName: string;
   quantity: number;
   expiryDate: Date | null;
-  fromOrganization: { name: string; type: string };
-  toOrganization: { name: string; type: string };
+  fromOrg: { id: string; name: string; type: string };
+  toOrg: { id: string; name: string; type: string };
   status: string;
   createdAt: Date;
   updatedAt: Date;
   notes: string | null;
+  direction: "INCOMING" | "OUTGOING";
 }
 
 /** Response shape for GET /api/web/transfers */
@@ -56,29 +57,40 @@ export async function GET(request: NextRequest) {
       actor
     );
 
-    const formattedTransfers: FormattedTransfer[] = result.transfers.map((transfer) => ({
-      id: transfer.id,
-      batchId: transfer.batch.batchId,
-      medicationName: transfer.batch.drugName,
-      quantity: transfer.batch.batchSize,
-      expiryDate: transfer.batch.product?.expiryDate ?? null,
-      fromOrganization: {
-        name: transfer.fromOrg.companyName,
-        type: transfer.fromOrg.organizationType,
-      },
-      toOrganization: {
-        name: transfer.toOrg.companyName,
-        type: transfer.toOrg.organizationType,
-      },
-      status: transfer.status,
-      createdAt: transfer.createdAt,
-      updatedAt: transfer.updatedAt,
-      notes: transfer.notes,
-    }));
+
+    const formattedTransfers: FormattedTransfer[] = result.transfers.map(
+      (transfer) => ({
+        id: transfer.id,
+        batchId: transfer.batch.batchId,
+        medicationName: transfer.batch.drugName,
+        quantity: transfer.batch.batchSize,
+        expiryDate: transfer.batch.product?.expiryDate ?? null,
+        fromOrg: {
+          id: transfer.fromOrg.id,
+          name: transfer.fromOrg.companyName,
+          type: transfer.fromOrg.organizationType,
+        },
+        toOrg: {
+          id: transfer.toOrg.id,
+          name: transfer.toOrg.companyName,
+          type: transfer.toOrg.organizationType,
+        },
+        status: transfer.status,
+        createdAt: transfer.createdAt,
+        updatedAt: transfer.updatedAt,
+        notes: transfer.notes,
+        direction: transfer.fromOrg.id === orgId ? "OUTGOING" : "INCOMING",
+      }),
+    );
+
+    console.log(JSON.stringify(formattedTransfers, null, 2));
 
     const response: TransfersListResponse = { transfers: formattedTransfers };
+
     return NextResponse.json(response);
-  } catch (error: unknown) {
+
+  }
+  catch (error: unknown) {
     console.error("Error fetching transfers:", error);
     const message = error instanceof Error ? error.message : "Failed to fetch transfers";
     return NextResponse.json(

@@ -8,11 +8,17 @@ function isPartnerApiRoute(pathname: string) {
 }
 
 function isWebRoute(pathname: string) {
-  return pathname.startsWith("/dashboard") || pathname.startsWith("/api/web/");
+  return (
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/consumer") ||
+    pathname.startsWith("/api/web/")
+  );
 }
 
 export default clerkMiddleware(async (auth, req) => {
+
   const pathname = req.nextUrl.pathname;
+  
   const { sessionClaims } = await auth();
 
   if (pathname.startsWith("/api/partners/") && sessionClaims){

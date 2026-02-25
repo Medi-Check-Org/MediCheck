@@ -15,7 +15,7 @@ import {
   transferRepository,
   TransferWithRelations,
 } from "@/core/infrastructure/db/repositories";
-import type { TransferStatus } from "@/lib/generated/prisma";
+import type { TransferStatus } from "@/lib/generated/prisma/client";
 import { ForbiddenError } from "@/utils/types/errors";
 
 export interface ListTransfersOutput {

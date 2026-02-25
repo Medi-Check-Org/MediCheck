@@ -108,7 +108,7 @@ export default function HospitalDashboard() {
   }, [orgId]);
 
   // 3️⃣ Guard rendering while loading
-  if (orgLoading || batchesLoading) {
+  if (orgLoading || batchesLoading || !orgId) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center space-y-4">

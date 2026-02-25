@@ -1,7 +1,5 @@
 "use client";
-
 import { useClerk } from "@clerk/nextjs";   
-
 import { authRoutes } from "@/utils";
 import { AlertTriangle } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";

@@ -61,7 +61,11 @@ export const InitiateTransferSchema = z.object({
 
 export type InitiateTransferInput = z.infer<typeof InitiateTransferSchema>;
 
-import { TransferStatus, BatchStatus, OrganizationType } from "@/lib/generated/prisma";
+import {
+  TransferStatus,
+  BatchStatus,
+  OrganizationType,
+} from "@/lib/generated/prisma/enums";
 
 export const ListTransfersSchema = z.object({
   organizationId: z.string().cuid(),

@@ -15,7 +15,7 @@ import {
   batchRepository,
   BatchWithRelations,
 } from "@/core/infrastructure/db/repositories";
-import type { BatchStatus } from "@/lib/generated/prisma";
+import { BatchStatus } from "@/lib/generated/prisma/enums";
 
 export interface ListBatchesOutput {
   batches: BatchWithRelations[];

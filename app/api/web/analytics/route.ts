@@ -16,14 +16,19 @@ interface ScanResultGroupCount {
 }
 
 export async function GET(request: NextRequest) {
+
   try {
+
     const { userId } = await auth();
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
+
     const timeRange = searchParams.get("timeRange") || "30"; // days
+
     const dashboardType = searchParams.get("type") || "manufacturer";
 
     console.log("Analytics API: Processing request for user:", userId);
