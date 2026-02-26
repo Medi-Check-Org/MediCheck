@@ -258,7 +258,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersComponentProps) 
               {!availableBatches.length && " (No batches)"}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-[95vw] sm:max-w-125 max-h-[90vh] overflow-y-auto">
             <DialogHeader className="pb-4">
               <DialogTitle className="text-lg sm:text-xl font-semibold">Create New Transfer</DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground mt-2">
@@ -340,7 +340,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersComponentProps) 
                   placeholder="Add any additional notes or instructions for this transfer..."
                   value={newTransfer.notes}
                   onChange={(e) => setNewTransfer(prev => ({ ...prev, notes: e.target.value }))}
-                  className="min-h-[80px] resize-none"
+                  className="min-h-20 resize-none"
                 />
                 <p className="text-xs text-muted-foreground">Optional - Add context or special instructions</p>
               </div>
@@ -439,7 +439,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersComponentProps) 
             {/* Filter Controls */}
             <div className="flex flex-col sm:flex-row gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[140px] h-10">
+                <SelectTrigger className="w-full sm:w-35 h-10">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -454,7 +454,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersComponentProps) 
               </Select>
 
               <Select value={directionFilter} onValueChange={setDirectionFilter}>
-                <SelectTrigger className="w-full sm:w-[140px] h-10">
+                <SelectTrigger className="w-full sm:w-35 h-10">
                   <SelectValue placeholder="Direction" />
                 </SelectTrigger>
                 <SelectContent>
