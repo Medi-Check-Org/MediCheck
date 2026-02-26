@@ -10,6 +10,7 @@ import ManufacturerTransport from "@/components/manufacturer-page-component/Manu
 import ManufacturerQuality from "@/components/manufacturer-page-component/ManufacturerQuality";
 import ManufacturerProducts from "@/components/manufacturer-page-component/ManufacturerProducts";
 import ManufacturerBatch from "@/components/manufacturer-page-component/ManufacturerBatch";
+import UnitFlowManagement from "@/components/manufacturer-page-component/UnitFlowManagement";
 import Transfers from "@/components/Transfers";
 import ManufacturerMain from "@/components/manufacturer-page-component/ManufacturerMain"
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard"
@@ -196,6 +197,10 @@ export default function ManufacturerDashboard() {
 
           {activeTab === "transfers" && (
             <Transfers orgId={orgId} allBatches={batches} loadBatches={loadBatches} />
+          )}
+
+          {activeTab === "units" && (
+            <UnitFlowManagement orgId={orgId} />
           )}
 
           {activeTab === "quality" && (

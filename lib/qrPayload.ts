@@ -15,7 +15,7 @@ export function generateQRPayload(
   batchId: string,
   registrySequence: number,
   secret: string,
-  baseUrl: string
+  baseUrl: string,
 ) {
   // 1️⃣ Create a signed hash
 
@@ -33,6 +33,34 @@ export function generateQRPayload(
     url,
     serialNumber,
     batchId,
+    registrySequence,
+    signature,
+  };
+}
+
+export function generateMintedUnitQRPayload(
+  serialNumber: string,
+  orgId: string ,
+  registrySequence: number,
+  secret: string,
+  baseUrl: string,
+) {
+  // 1️⃣ Create a signed hash
+
+  const data = `${serialNumber}|${orgId}|${registrySequence}`;
+
+  const signature = crypto
+    .createHmac("sha256", secret)
+    .update(data)
+    .digest("hex");
+
+  // 2️⃣ Create a URL with query params
+  const url = `${baseUrl}/verify/batchUnit/${serialNumber}?sig=${signature}`;
+
+  return {
+    url,
+    serialNumber,
+    orgId,
     registrySequence,
     signature,
   };

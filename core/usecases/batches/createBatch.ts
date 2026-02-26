@@ -32,6 +32,7 @@ import {
 import { generateQRPayload, generateBatchQRPayload } from "@/lib/qrPayload";
 import { prisma } from "@/lib/prisma";
 import { MedicationBatch } from "@/lib/generated/prisma/client";
+import { runInBatches } from "@/utils/helpers/batch";
 
 const QR_SECRET = process.env.QR_SECRET || "dev-secret";
 
@@ -46,19 +47,7 @@ export interface CreateBatchOutput {
   batchEventSeq: number;
 }
 
-/**
- * Helper to run tasks in batches with concurrency control
- */
-async function runInBatches<T>(
-  items: T[],
-  batchSize: number,
-  worker: (item: T) => Promise<void>
-): Promise<void> {
-  for (let i = 0; i < items.length; i += batchSize) {
-    const chunk = items.slice(i, i + batchSize);
-    await Promise.all(chunk.map(worker));
-  }
-}
+
 
 
 /**
@@ -237,16 +226,6 @@ export class CreateBatchUseCase {
         qrSignature: qrUnitPayload.signature,
       });
 
-      // reduce product pool size
-
-      await prisma.product.update({
-        where: { id: product.id },
-        data: {
-          numberOfProductAvailable:
-            product.numberOfProductAvailable - input.batchSize,
-        },
-      });
-
     });
 
     // 13. Bulk insert units to database
@@ -272,6 +251,16 @@ export class CreateBatchUseCase {
       hederaSeq: unitsRegisteredSeq ?? 0,
       payload: { units: unitsData.map((u) => u.serialNumber) },
       region: org?.state ?? "",
+    });
+
+    // reduce product pool size
+
+    await prisma.product.update({
+      where: { id: product.id },
+      data: {
+        numberOfProductAvailable:
+          product.numberOfProductAvailable - input.batchSize,
+      },
     });
 
     return {

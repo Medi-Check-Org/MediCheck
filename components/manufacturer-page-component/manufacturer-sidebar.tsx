@@ -1,8 +1,6 @@
 "use client"
-
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { LoadingSpinner } from "@/components/ui/loading"
 import {
   Shield,
@@ -15,6 +13,7 @@ import {
   Truck,
   Users,
   BarChart3,
+  PillBottle
 } from "lucide-react"
 import Link from "next/link"
 import { useClerk } from "@clerk/nextjs"
@@ -87,6 +86,8 @@ export function ManufacturerSidebar({
     { id: "qr-generator", label: "QR Generator", icon: QrCode },
     { id: "team", label: "Team Management", icon: Users },
     { id: "settings", label: "Settings", icon: Settings },
+    {id: "units", label: "Unit Management", icon: PillBottle }
+
   ]
 
   const handleTabSelect = (tab: ManufacturerTab) => {

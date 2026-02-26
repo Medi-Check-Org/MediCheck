@@ -13,7 +13,7 @@ export async function createBatchRegistry(
   // Create registry topic on Hedera
   const registry = await hedera2Client.createRegistry({
     registryType: HCS2RegistryType.INDEXED,
-    ttl: 60 * 60 * 24 * 365, // 1 year
+    ttl: 60 * 60 * 24 * 365 * 2, // 2 years need to setup auutomatic renewal or extension of time to live
     adminKey: true,
   });
 
@@ -45,7 +45,7 @@ export async function createBatchRegistry(
 export async function createOrgManagedRegistry(orgId: string, orgName: string) {
   const registry = await hedera2Client.createRegistry({
     registryType: HCS2RegistryType.INDEXED,
-    ttl: 60 * 60 * 24 * 365 * 2, // 2 years
+    ttl: 60 * 60 * 24 * 365 * 2, // 2 years need to setup auutomatic renewal or extension of time to live
     adminKey: true,
   });
 
@@ -93,6 +93,27 @@ export async function registerUnitOnBatch(
   return response.sequenceNumber;
 }
 
+export async function registerUnitOnOrganizationManagedRegistry(
+  registryTopicId: string,
+  unit: { serialNumber: string; drugName: string; mintedUnitId: string, orgId: string, productId: string },
+): Promise<number> {
+  
+  const message = JSON.stringify({
+    type: "MINTED_UNIT",
+    ...unit,
+  });
+
+  const response = await hedera2Client.registerEntry(registryTopicId, {
+    targetTopicId: registryTopicId,
+    metadata: message,
+  });
+
+  if (!response.success || response.sequenceNumber === undefined) {
+    throw new Error(`Failed to register unit ${unit.serialNumber}`);
+  }
+
+  return response.sequenceNumber;
+}
 
 export async function logBatchEvent(
   topicId: string,
@@ -124,7 +145,36 @@ export async function logBatchEvent(
   }
 
   return response.sequenceNumber;
-  
+}
+
+
+export async function logOrgMintingUnitEvent(
+  topicId: string,
+  eventType: "UNIT_MINTED",
+  payload: {
+     organizationId: string;
+    units: string[];
+    count: number;
+  },
+) {
+  const message = JSON.stringify({
+    type: "EVENT_LOG",
+    eventType,
+    timestamp: new Date().toISOString(),
+    ...payload,
+  });
+
+  const response = await hedera2Client.registerEntry(topicId, {
+    targetTopicId: topicId,
+    metadata: message,
+  });
+
+
+  if (!response.success) {
+    throw new Error(`Failed to log event to Hedera topic ${topicId}`);
+  }
+
+  return response.sequenceNumber;
 }
 
 

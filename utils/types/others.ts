@@ -19,7 +19,8 @@ export type ManufacturerTab =
   | "investigations"
   | "analytics"
   | "entities"
-  | "compliance";
+  | "compliance"
+  | "units";
 
 export interface MedicationBatchInfoProps extends MedicationBatchProp {
   _count: {

@@ -72,6 +72,8 @@ export async function POST(req: Request) {
       include: { users: true }
     });
 
+    console.log("Organization lookup result:", organization);
+
     if (!organization || organization.users.clerkUserId !== userId) {
       return NextResponse.json(
         { error: "Organization not found or access denied" },

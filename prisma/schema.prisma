@@ -129,6 +129,7 @@ model Product {
   nafdacNumber      String?
   shelfLifeMonths   Int?
   storageConditions String?
+  mintedUnitCounter Int      @default(0)
   numberOfProductAvailable Int @default(0)
   isActive          Boolean   @default(true)
   createdAt         DateTime  @default(now())
@@ -175,12 +176,13 @@ model MedicationBatch {
 
 model MedicationUnit {
   id               String     @id @default(cuid()) // Primary key
-  batchId          String? // FK to MedicationBatch
-  productId        String?
+  batchId          String?    // FK to MedicationBatch
+  productId        String
   serialNumber     String     @unique // Unique identifier per unit
-  qrCode           String? // Optional QR code for scanning
+  mintedUnitId     String?
+  qrCode           String
   qrSignature      String?
-  currentLocation  String? // Where the unit currently is
+  currentLocation  String?    // Where the unit currently is
   status           UnitStatus @default(IN_STOCK) // Enum for tracking unit state
   createdAt        DateTime   @default(now()) // Auto set on creation
   soldAt           DateTime? 
