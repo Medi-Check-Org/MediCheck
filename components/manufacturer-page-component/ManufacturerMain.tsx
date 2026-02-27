@@ -207,7 +207,7 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
                     <CardContent className="space-y-3">
                         <Button 
                             variant="gradient"
-                            className="w-full justify-start shadow-lg hover:shadow-xl h-11 text-sm font-medium" 
+                            className="w-full cursor-pointer justify-start shadow-lg hover:shadow-xl h-11 text-sm font-medium" 
                             onClick={() => setActiveTab("batches")}
                         >
                             <Package className="h-4 w-4 mr-3" />
@@ -215,7 +215,7 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
                         </Button>
                         <Button 
                             variant="outline" 
-                            className="w-full justify-start hover:bg-primary/10 transition-all duration-300 border-2 border-primary/30 hover:border-primary/60 h-11 text-sm" 
+                            className="w-full hover:text-black cursor-pointer justify-start hover:bg-primary/10 transition-all duration-300 border-2 border-primary/30 hover:border-primary/60 h-11 text-sm" 
                             onClick={() => setActiveTab("transfers")}
                         >
                             <Truck className="h-4 w-4 mr-3" />
@@ -223,7 +223,7 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
                         </Button>
                         <Button 
                             variant="outline" 
-                            className="w-full justify-start hover:bg-primary/10 transition-all duration-300 border-2 border-primary/30 hover:border-primary/60 h-11 text-sm" 
+                            className="w-full hover:text-black justify-start cursor-pointer hover:bg-primary/10 transition-all duration-300 border-2 border-primary/30 hover:border-primary/60 h-11 text-sm" 
                             onClick={() => setActiveTab("qr-generator")}
                         >
                             <QrCode className="h-4 w-4 mr-3" />

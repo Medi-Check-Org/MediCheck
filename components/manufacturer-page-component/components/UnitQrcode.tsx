@@ -19,7 +19,7 @@ const UnitQrcode = ({ units, onBack }: { units: MedicationUnit[];  onBack: () =>
                     <h2 className="text-lg font-bold text-slate-800 text-cyan-700">Batch Registry</h2>
                     <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Ready for Carton Printing</p>
                 </div>
-                <button onClick={onBack} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                <button onClick={onBack} className="p-2 hover:bg-slate-200 rounded-full transition-colors cursor-pointer">
                     <ArrowLeft className="w-4 h-4 text-slate-600" />
                 </button>
             </div>
