@@ -19,10 +19,11 @@ const UnitFlowManagement = ({ orgId }: { orgId: string }) => {
         setLoading(true);
         setError(null);
         try {
+
             const res = await fetch(`/api/web/products?organizationId=${orgId}`);
+
             const data = await res.json();
 
-            console.log("Products API response:", data);
 
             if (res.ok) {
                 setProducts(data.products || []);
@@ -31,11 +32,10 @@ const UnitFlowManagement = ({ orgId }: { orgId: string }) => {
                 setError(errorMsg);
                 toast.error(errorMsg);
             }
-        } catch (err) {
+        } catch {
             const genericError = "A network error occurred while fetching products.";
             setError(genericError);
             toast.error(genericError);
-            console.error("Fetch error:", err);
         } finally {
             setLoading(false);
         }
@@ -52,14 +52,12 @@ const UnitFlowManagement = ({ orgId }: { orgId: string }) => {
         setStep(2);
     };
 
-    // 1. Loading State
     if (loading) return (
         <div className="flex justify-end min-h-full w-full p-6">
             <LoadingSpinner text="Accessing Product Pool..." />
         </div>
     );
 
-    // 2. Fallback UI / Error State
     if (error) return (
         <div className="flex justify-end min-h-full w-full p-6">
             <div className="w-96 bg-white border border-red-100 rounded-xl shadow-sm p-8 flex flex-col items-center text-center">
@@ -79,7 +77,6 @@ const UnitFlowManagement = ({ orgId }: { orgId: string }) => {
         </div>
     );
 
-    // 3. Success State
     return (
         <div className="flex justify-end min-h-full w-full">
             {step === 1 ? (

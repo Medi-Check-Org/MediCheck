@@ -74,23 +74,21 @@ export async function POST(req: Request) {
       );
     }
 
-    // const updatedProduct = await prisma.product.update({
-    //   where: { id: product.id },
-    //   data: {
-    //     mintedUnitCounter: {
-    //       increment: productQuantity,
-    //     },
-    //   },
-    //   select: {
-    //     mintedUnitCounter: true,
-    //   },
-    // });
+    const updatedProduct = await prisma.product.update({
+      where: { id: product.id },
+      data: {
+        mintedUnitCounter: {
+          increment: productQuantity,
+        },
+      },
+      select: {
+        mintedUnitCounter: true,
+      },
+    });
 
-    // const newCounter = updatedProduct.mintedUnitCounter;
+    const newCounter = updatedProduct.mintedUnitCounter;
     
-    // const startIndex = newCounter - productQuantity + 1;
-
-    const startIndex =  1;
+    const startIndex = newCounter - productQuantity + 1;
 
     const unitsData: Array<{
       serialNumber: string;
@@ -181,7 +179,8 @@ export async function POST(req: Request) {
       },
       { status: 201 },
     );
-  } catch (error: unknown) {
+  }
+  catch (error: unknown) {
     console.error("Product Creation Error:", error);
     return NextResponse.json(
       { error: "Failed to create product" },

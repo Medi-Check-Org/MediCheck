@@ -27,6 +27,8 @@ const QRGenerationComponent = ({ allBatches }: {allBatches: MedicationBatchInfoP
 
     const [isGenerating, setIsGenerating] = useState(false);
 
+    const [isDownloading, setIsDownloading] = useState(false);
+
     useEffect(() => {
         console.log(selectedBatchId)
         console.log(batches.find(b => b.id === selectedBatchId))
@@ -60,95 +62,122 @@ const QRGenerationComponent = ({ allBatches }: {allBatches: MedicationBatchInfoP
     const handleDownloadAll = async () => {
         if (!selectedBatch) return;
 
-        const pdf = new jsPDF('p', 'mm', 'a4', true);
-        // Hidden container to avoid Tailwind/oklch parsing
-        const hiddenContainer = document.createElement('div');
-        hiddenContainer.style.position = 'absolute';
-        hiddenContainer.style.top = '-9999px';
-        hiddenContainer.style.left = '-9999px';
-        document.body.appendChild(hiddenContainer);
+        if (!isDownloading) return;
 
-        // First page: Batch QR (value = batch.batchId token from DB)
-        hiddenContainer.innerHTML = '';
-        const batchContainer = document.createElement('div');
-        batchContainer.style.width = '600px';
-        batchContainer.style.height = '800px';
-        batchContainer.style.padding = '30px';
-        batchContainer.style.backgroundColor = '#fff';
-        batchContainer.style.textAlign = 'center';
-        batchContainer.style.display = 'flex';
-        batchContainer.style.flexDirection = 'column';
-        batchContainer.style.justifyContent = 'center';
-        batchContainer.style.alignItems = 'center';
+        setIsDownloading(true)
 
-        const batchTitle = document.createElement('div');
-        batchTitle.style.fontSize = '28px';
-        batchTitle.style.fontWeight = 'bold';
-        batchTitle.style.marginBottom = '20px';
-        batchTitle.innerText = `Batch: ${selectedBatch.drugName}`;
+        try {
+            const pdf = new jsPDF('p', 'mm', 'a4', true);
+            // Hidden container to avoid Tailwind/oklch parsing
+            const hiddenContainer = document.createElement('div');
+            hiddenContainer.style.position = 'absolute';
+            hiddenContainer.style.top = '-9999px';
+            hiddenContainer.style.left = '-9999px';
+            document.body.appendChild(hiddenContainer);
 
-        const batchQrCanvas = document.createElement('canvas');
-        await QRCodeLib.toCanvas(batchQrCanvas, selectedBatch.qrCodeData || "", { width: 200 });
-
-        batchContainer.appendChild(batchTitle);
-        batchContainer.appendChild(batchQrCanvas);
-        hiddenContainer.appendChild(batchContainer);
-
-        let canvas = await html2canvas(batchContainer, { scale: 1, backgroundColor: '#ffffff' });
-        let imgData = canvas.toDataURL('image/jpeg', 0.7);
-        pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
-
-        // Unit pages
-        for (let i = 0; i < units.length; i++) {
+            // First page: Batch QR (value = batch.batchId token from DB)
             hiddenContainer.innerHTML = '';
-            const container = document.createElement('div');
-            container.style.width = '600px';
-            container.style.height = '800px';
-            container.style.padding = '30px';
-            container.style.backgroundColor = '#fff';
-            container.style.textAlign = 'center';
-            container.style.display = 'flex';
-            container.style.flexDirection = 'column';
-            container.style.justifyContent = 'center';
-            container.style.alignItems = 'center';
+            const batchContainer = document.createElement('div');
+            batchContainer.style.width = '600px';
+            batchContainer.style.height = '800px';
+            batchContainer.style.padding = '30px';
+            batchContainer.style.backgroundColor = '#fff';
+            batchContainer.style.textAlign = 'center';
+            batchContainer.style.display = 'flex';
+            batchContainer.style.flexDirection = 'column';
+            batchContainer.style.justifyContent = 'center';
+            batchContainer.style.alignItems = 'center';
 
-            const unitLabel = document.createElement('div');
-            unitLabel.style.fontSize = '20px';
-            unitLabel.style.marginBottom = '15px';
-            unitLabel.innerText = `Unit ${i + 1} of ${units.length}`;
+            const batchTitle = document.createElement('div');
+            batchTitle.style.fontSize = '28px';
+            batchTitle.style.fontWeight = 'bold';
+            batchTitle.style.marginBottom = '20px';
+            batchTitle.innerText = `Batch: ${selectedBatch.drugName}`;
 
-            const qrCanvas = document.createElement('canvas');
-            // Encode the real unit serialNumber (from DB)
-            await QRCodeLib.toCanvas(qrCanvas, units[i].qrCode ?? "", { width: 150 });
+            const batchQrCanvas = document.createElement('canvas');
+            await QRCodeLib.toCanvas(batchQrCanvas, selectedBatch.qrCodeData || "", { width: 200 });
 
-            container.appendChild(unitLabel);
-            container.appendChild(qrCanvas);
-            hiddenContainer.appendChild(container);
+            batchContainer.appendChild(batchTitle);
+            batchContainer.appendChild(batchQrCanvas);
+            hiddenContainer.appendChild(batchContainer);
 
-            canvas = await html2canvas(container, { scale: 1, backgroundColor: '#ffffff' });
-            imgData = canvas.toDataURL('image/jpeg', 0.7);
-            pdf.addPage();
+            let canvas = await html2canvas(batchContainer, { scale: 1, backgroundColor: '#ffffff' });
+            let imgData = canvas.toDataURL('image/jpeg', 0.7);
             pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
-        }
 
-        document.body.removeChild(hiddenContainer);
-        pdf.save(`batch-${selectedBatch.batchId}-all-units.pdf`);
+            // Unit pages
+            for (let i = 0; i < units.length; i++) {
+                hiddenContainer.innerHTML = '';
+                const container = document.createElement('div');
+                container.style.width = '600px';
+                container.style.height = '800px';
+                container.style.padding = '30px';
+                container.style.backgroundColor = '#fff';
+                container.style.textAlign = 'center';
+                container.style.display = 'flex';
+                container.style.flexDirection = 'column';
+                container.style.justifyContent = 'center';
+                container.style.alignItems = 'center';
+
+                const unitLabel = document.createElement('div');
+                unitLabel.style.fontSize = '20px';
+                unitLabel.style.marginBottom = '15px';
+                unitLabel.innerText = `Unit ${i + 1} of ${units.length}`;
+
+                const qrCanvas = document.createElement('canvas');
+                // Encode the real unit serialNumber (from DB)
+                await QRCodeLib.toCanvas(qrCanvas, units[i].qrCode ?? "", { width: 150 });
+
+                container.appendChild(unitLabel);
+                container.appendChild(qrCanvas);
+                hiddenContainer.appendChild(container);
+
+                canvas = await html2canvas(container, { scale: 1, backgroundColor: '#ffffff' });
+                imgData = canvas.toDataURL('image/jpeg', 0.7);
+                pdf.addPage();
+                pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+            }
+
+            document.body.removeChild(hiddenContainer);
+            pdf.save(`batch-${selectedBatch.batchId}-all-units.pdf`);
+        }
+        catch {
+            toast.error("Download Failed");
+        }
+        finally {
+            setIsDownloading(false);
+        }
     };
 
     const handleExportCSV = () => {
+
         if (!selectedBatch) return;
-        const headers = ['Type', 'Code'];
-        const rows: string[][] = [
-            ['Batch', selectedBatch.qrCodeData ?? ""],
-            ...units.map(u => ['Unit', u.qrCode ?? ""]),
-        ];
-        const csvContent = [headers, ...rows].map(r => r.join(',')).join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', `batch-${selectedBatch.batchId}-qrcodes.csv`);
-        link.click();
+
+        if (!isDownloading) return;
+
+        setIsDownloading(true)
+
+        try {
+            if (!selectedBatch) return;
+            const headers = ['Type', 'Code'];
+            const rows: string[][] = [
+                ['Batch', selectedBatch.qrCodeData ?? ""],
+                ...units.map(u => ['Unit', u.qrCode ?? ""]),
+            ];
+            const csvContent = [headers, ...rows].map(r => r.join(',')).join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `batch-${selectedBatch.batchId}-qrcodes.csv`);
+            link.click();
+        }
+        catch (e) {
+            toast.error("Export Failed");
+        }
+        finally {
+            setIsDownloading(false);
+        }
     };
 
     return (
@@ -263,17 +292,17 @@ const QRGenerationComponent = ({ allBatches }: {allBatches: MedicationBatchInfoP
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={handleDownloadAll}
-                                                    className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center"
+                                                    className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center cursor-pointer"
                                                 >
                                                     <Download size={14} className="mr-1" />
-                                                    Download All
+                                                        {isDownloading ? "Downloading..." : "Download All"}
                                                 </button>
                                                 <button
                                                     onClick={handleExportCSV}
-                                                    className="px-3 py-1 text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 flex items-center justify-center"
+                                                    className="px-3 py-1 text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 flex items-center justify-center cursor-pointer"
                                                 >
                                                     <Upload size={14} className="mr-1" />
-                                                    Export CSV
+                                                        {isDownloading ? "Exporting CSV..." : "Export CSV"}
                                                 </button>
                                             </div>
                                         </div>

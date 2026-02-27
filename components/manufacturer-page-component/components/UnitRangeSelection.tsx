@@ -22,10 +22,14 @@ const UnitRangeSelection = ({ products, onSuccess, orgId }: Props) => {
 
     const handleMint = async () => {
 
+        if (creating) return;
+
         if (quantity > selectedProduct?.numberOfProductAvailable) {
             setError(`Insufficient units. Only ${selectedProduct?.numberOfProductAvailable} available in pool.`);
             return;
         }
+
+        setCreating(true)
 
         try {
             const createBody = {
@@ -34,7 +38,7 @@ const UnitRangeSelection = ({ products, onSuccess, orgId }: Props) => {
                 productQuantity: quantity,
             }
 
-            const res = await fetch("/api/web/products", {
+            const res = await fetch("/api/web/units", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(createBody)
@@ -42,27 +46,13 @@ const UnitRangeSelection = ({ products, onSuccess, orgId }: Props) => {
 
             const data = await res.json();
 
-            if (res.ok) {
+            console.log("Unit Creation Response:", data);
+
+            if (res.ok  && data.success) {
 
                 toast.success("Product created successfully");
 
-                const newUnits = Array.from({ length: quantity }).map((_, i) => ({
-                    id: `SN-${selectedProduct.name.substring(0, 3).toUpperCase()}-${1000 + i}`,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                    batchId: null,
-                    productId: selectedProduct.id,
-                    serialNumber: `${selectedProduct.name.substring(0, 3).toUpperCase()}-${1000 + i}`,
-                    mintedUnitId: null,
-                    qrCode: `https://medicheck.io/trace/${selectedProduct.id}/unit-${1000 + i}`,
-                    qrSignature: null,
-                    currentLocation: null,
-                    status: 'ACTIVE' as UnitStatus,
-                    soldAt: null,
-                    registrySequence: null
-                }));
-
-                onSuccess(newUnits);
+                onSuccess(data.units);
             }
             else {
                 setError(String(data.error) || "Failed to create product");

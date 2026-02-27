@@ -32,7 +32,7 @@ const UnitQrcode = ({ units, onBack }: { units: MedicationUnit[];  onBack: () =>
                         </div>
                         <div className="flex-1 overflow-hidden">
                             <span className="text-xs font-bold text-slate-400 block uppercase">Serial Number</span>
-                            <span className="text-sm font-bold text-slate-800 block truncate">{u.id}</span>
+                            <span className="text-sm font-bold text-slate-800 block truncate">UNIT-{u.mintedUnitId}</span>
                             <span className="text-[10px] text-cyan-600 font-mono truncate block mt-1">
                                 {u.qrCode}
                             </span>
