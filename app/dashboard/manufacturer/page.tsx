@@ -107,7 +107,8 @@ export default function ManufacturerDashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-background relative overflow-hidden page-transition">
+    <div className="flex h-screen bg-background relative page-transition">
+
       {/* Simplified Background Decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/3 rounded-full blur-3xl bg-decoration"></div>
