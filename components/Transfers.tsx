@@ -234,7 +234,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersComponentProps) 
   if (loading) {
     return (
       <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-        <h1 className="font-montserrat font-bold text-2xl sm:text-3xl text-foreground">Batch Transfers</h1>
+        <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Batch Transfers</h1>
         <div className="flex items-center justify-center p-6 sm:p-8">
           <LoadingSpinner size="large" text="Loading transfers..." />
         </div>
@@ -246,7 +246,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersComponentProps) 
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="font-montserrat font-bold text-2xl sm:text-3xl text-foreground">Batch Transfers</h1>
+          <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Batch Transfers</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Track all batch transfers and ownership changes</p>
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>

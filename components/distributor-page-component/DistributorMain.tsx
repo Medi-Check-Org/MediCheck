@@ -180,7 +180,7 @@ const DistributorMain = ({ setActiveTab, orgId }: {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="font-montserrat">Quick Actions</CardTitle>
+                        <CardTitle className="font-sans">Quick Actions</CardTitle>
                         <CardDescription>Wholesale distribution tasks and shortcuts</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">

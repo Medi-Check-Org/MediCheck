@@ -136,7 +136,7 @@ const HospitalSettings = () => {
     if (loading) {
         return (
             <div className="space-y-6">
-                <h1 className="font-montserrat font-bold text-3xl text-foreground">Settings</h1>
+                <h1 className="font-sans font-bold text-3xl text-foreground">Settings</h1>
                 <Card>
                     <CardHeader>
                         <CardTitle>Hospital Settings</CardTitle>
@@ -154,7 +154,7 @@ const HospitalSettings = () => {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-2">
                 <div>
-                    <h1 className="font-montserrat font-bold text-3xl text-foreground">Settings</h1>
+                    <h1 className="font-sans font-bold text-3xl text-foreground">Settings</h1>
                     <p className="text-muted-foreground mt-1 text-base sm:text-sm">Manage your hospital preferences and configurations</p>
                 </div>
                 <div className="w-full sm:w-auto flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-0">

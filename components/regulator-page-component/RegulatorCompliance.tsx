@@ -133,17 +133,17 @@ const RegulatorCompliance = () => {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'PENDING':
-                return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                return <Badge variant="secondary" className="bg-status-warning/10 text-status-warning dark:bg-status-warning/20 dark:text-status-warning">
                     <Clock className="w-3 h-3 mr-1" />
                     Pending
                 </Badge>
             case 'IN_PROGRESS':
-                return <Badge variant="default" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                return <Badge variant="default" className="bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary">
                     <AlertTriangle className="w-3 h-3 mr-1" />
                     In Progress
                 </Badge>
             case 'COMPLETED':
-                return <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                return <Badge variant="default" className="bg-status-verified/10 text-status-verified dark:bg-status-verified/20 dark:text-status-verified">
                     <CheckCircle className="w-3 h-3 mr-1" />
                     Completed
                 </Badge>
@@ -162,15 +162,15 @@ const RegulatorCompliance = () => {
     const getOrganizationTypeColor = (type: string) => {
         switch (type) {
             case 'MANUFACTURER':
-                return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                return 'bg-role-manufacturer/10 text-role-manufacturer dark:bg-role-manufacturer/20 dark:text-role-manufacturer'
             case 'DRUG_DISTRIBUTOR':
-                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                return 'bg-role-distributor/10 text-role-distributor dark:bg-role-distributor/20 dark:text-role-distributor'
             case 'HOSPITAL':
-                return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                return 'bg-role-hospital/10 text-role-hospital dark:bg-role-hospital/20 dark:text-role-hospital'
             case 'PHARMACY':
-                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                return 'bg-role-consumer/10 text-role-consumer dark:bg-role-consumer/20 dark:text-role-consumer'
             default:
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                return 'bg-muted text-muted-foreground'
         }
     }
 
@@ -195,7 +195,7 @@ const RegulatorCompliance = () => {
         return (
             <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                    <h1 className="font-montserrat font-bold text-2xl sm:text-3xl text-foreground">Compliance Monitoring</h1>
+                    <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Compliance Monitoring</h1>
                 </div>
                 <div className="flex items-center justify-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -211,7 +211,7 @@ const RegulatorCompliance = () => {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
                 <div className="flex flex-row items-center gap-2">
-                    <h1 className="font-montserrat font-bold text-2xl sm:text-3xl text-foreground">Compliance Monitoring</h1>
+                    <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Compliance Monitoring</h1>
                 </div>
                 {/* Hide ThemeToggle on mobile, show on desktop */}
                 <div className="hidden sm:block">
@@ -219,9 +219,9 @@ const RegulatorCompliance = () => {
                 </div>
             </div>
             {error && (
-                <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+                <Card className="border-destructive/20 bg-destructive/5 dark:border-destructive/30 dark:bg-destructive/10">
                     <CardContent className="pt-6">
-                        <div className="flex items-center gap-2 text-red-800 dark:text-red-200">
+                        <div className="flex items-center gap-2 text-destructive dark:text-destructive">
                             <AlertTriangle className="h-4 w-4" />
                             <span>{error}</span>
                             <Button 
@@ -258,7 +258,7 @@ const RegulatorCompliance = () => {
                         <Clock className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-yellow-600">{stats.pendingReviews}</div>
+                        <div className="text-2xl font-bold text-status-warning">{stats.pendingReviews}</div>
                         <p className="text-xs text-muted-foreground">
                             Awaiting approval
                         </p>
@@ -271,7 +271,7 @@ const RegulatorCompliance = () => {
                         <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-green-600">{stats.complianceRate}%</div>
+                        <div className="text-2xl font-bold text-status-verified">{stats.complianceRate}%</div>
                         <p className="text-xs text-muted-foreground">
                             Successful transfers
                         </p>
@@ -284,7 +284,7 @@ const RegulatorCompliance = () => {
                         <AlertTriangle className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-red-600">{stats.flaggedTransfers}</div>
+                        <div className="text-2xl font-bold text-destructive">{stats.flaggedTransfers}</div>
                         <p className="text-xs text-muted-foreground">
                         Failed/cancelled
                     </p>
@@ -297,7 +297,7 @@ const RegulatorCompliance = () => {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <Clock className="h-5 w-5 text-yellow-600" />
+                            <Clock className="h-5 w-5 text-status-warning" />
                             Pending Transfers ({pendingTransfers.length})
                         </CardTitle>
                         <CardDescription>Transfers requiring immediate regulatory approval</CardDescription>
@@ -319,7 +319,7 @@ const RegulatorCompliance = () => {
                                             <span>Batch: {transfer.batch.batchId}</span>
                                             <span>Transfer: {formatDate(transfer.transferDate)}</span>
                                             {transfer.batch.product?.expiryDate && isExpiringSoon(transfer.batch.product.expiryDate) && (
-                                                <span className="text-orange-600 ml-2">⚠️ Expires Soon</span>
+                                                <span className="text-status-warning ml-2">⚠️ Expires Soon</span>
                                             )}
                                         </div>
                                     </div>
@@ -328,7 +328,7 @@ const RegulatorCompliance = () => {
                                         <Button
                                             size="sm"
                                             onClick={() => handleApproveTransfer(transfer.id, 'COMPLETED')}
-                                            className="bg-green-600 hover:bg-green-700 w-full"
+                                            className="bg-status-verified text-status-verified-foreground hover:bg-status-verified/90 w-full"
                                         >
                                             <CheckCircle className="h-4 w-4 mr-1" />
                                             Approve
@@ -337,7 +337,7 @@ const RegulatorCompliance = () => {
                                             size="sm"
                                             variant="outline"
                                             onClick={() => handleApproveTransfer(transfer.id, 'FAILED', 'Rejected by regulator')}
-                                            className="text-red-600 hover:bg-red-50 w-full"
+                                            className="text-destructive hover:bg-destructive/10 w-full"
                                         >
                                             <XCircle className="h-4 w-4 mr-1" />
                                             Reject
@@ -399,7 +399,7 @@ const RegulatorCompliance = () => {
                                                             Mfg: {transfer.batch.product?.manufacturingDate ? formatDate(transfer.batch.product.manufacturingDate) : "—"} | 
                                                             Exp: {transfer.batch.product?.expiryDate ? formatDate(transfer.batch.product.expiryDate) : "—"}
                                                             {transfer.batch.product?.expiryDate && isExpiringSoon(transfer.batch.product.expiryDate) && (
-                                                                <span className="text-orange-600 ml-1">⚠️</span>
+                                                                <span className="text-status-warning ml-1">⚠️</span>
                                                             )}
                                                         </div>
                                                     </div>
@@ -441,7 +441,7 @@ const RegulatorCompliance = () => {
                                                                 <Button
                                                                     size="sm"
                                                                     onClick={() => handleApproveTransfer(transfer.id, 'COMPLETED')}
-                                                                    className="bg-green-600 hover:bg-green-700"
+                                                                    className="bg-status-verified text-status-verified-foreground hover:bg-status-verified/90"
                                                                 >
                                                                     <CheckCircle className="h-4 w-4 mr-1" />
                                                                     Approve
@@ -450,7 +450,7 @@ const RegulatorCompliance = () => {
                                                                     size="sm"
                                                                     variant="outline"
                                                                     onClick={() => handleApproveTransfer(transfer.id, 'FAILED', 'Rejected by regulator')}
-                                                                    className="text-red-600 hover:bg-red-50"
+                                                                    className="text-destructive hover:bg-destructive/10"
                                                                 >
                                                                     <XCircle className="h-4 w-4 mr-1" />
                                                                     Reject
@@ -506,7 +506,7 @@ const RegulatorCompliance = () => {
                                         <div className="text-xs text-muted-foreground mt-1">
                                             Mfg: {transfer.batch.product?.manufacturingDate ? formatDate(transfer.batch.product.manufacturingDate) : "—"} | Exp: {transfer.batch.product?.expiryDate ? formatDate(transfer.batch.product.expiryDate) : "—"}
                                             {transfer.batch.product?.expiryDate && isExpiringSoon(transfer.batch.product.expiryDate) && (
-                                                <span className="text-orange-600 ml-1">⚠️</span>
+                                                <span className="text-status-warning ml-1">⚠️</span>
                                             )}
                                         </div>
                                         <div className="text-xs text-muted-foreground">
@@ -518,7 +518,7 @@ const RegulatorCompliance = () => {
                                                     <Button
                                                         size="sm"
                                                         onClick={() => handleApproveTransfer(transfer.id, 'COMPLETED')}
-                                                        className="bg-green-600 hover:bg-green-700 flex-1"
+                                                        className="bg-status-verified text-status-verified-foreground hover:bg-status-verified/90 flex-1"
                                                     >
                                                         <CheckCircle className="h-4 w-4 mr-1" />
                                                         Approve
@@ -527,7 +527,7 @@ const RegulatorCompliance = () => {
                                                         size="sm"
                                                         variant="outline"
                                                         onClick={() => handleApproveTransfer(transfer.id, 'FAILED', 'Rejected by regulator')}
-                                                        className="text-red-600 hover:bg-red-50 flex-1"
+                                                        className="text-destructive hover:bg-destructive/10 flex-1"
                                                     >
                                                         <XCircle className="h-4 w-4 mr-1" />
                                                         Reject

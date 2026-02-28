@@ -42,7 +42,7 @@ const RegulatorActivities = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="font-montserrat">Recent Activities</CardTitle>
+          <CardTitle className="font-sans">Recent Activities</CardTitle>
           <CardDescription>Latest regulatory activities and inspections</CardDescription>
         </CardHeader>
         <CardContent>
@@ -69,7 +69,7 @@ const RegulatorActivities = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-montserrat">Recent Activities</CardTitle>
+        <CardTitle className="font-sans">Recent Activities</CardTitle>
         <CardDescription>Latest regulatory activities and inspections</CardDescription>
       </CardHeader>
       <CardContent>

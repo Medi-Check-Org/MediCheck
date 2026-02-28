@@ -181,7 +181,7 @@ export default function PharmacyDashboard() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="font-montserrat">Recent Prescriptions</CardTitle>
+                    <CardTitle className="font-sans">Recent Prescriptions</CardTitle>
                     <CardDescription>Latest prescription activities</CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -217,7 +217,7 @@ export default function PharmacyDashboard() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="font-montserrat">Quick Actions</CardTitle>
+                    <CardTitle className="font-sans">Quick Actions</CardTitle>
                     <CardDescription>Common pharmacy tasks and shortcuts</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -259,7 +259,7 @@ export default function PharmacyDashboard() {
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <div>
-                  <h1 className="font-montserrat font-bold text-3xl text-foreground">Prescription Management</h1>
+                  <h1 className="font-sans font-bold text-3xl text-foreground">Prescription Management</h1>
                   <p className="text-muted-foreground">Search and manage all prescriptions</p>
                 </div>
                 <Button onClick={() => alert("Adding new prescription...")}>
@@ -341,7 +341,7 @@ export default function PharmacyDashboard() {
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <div>
-                  <h1 className="font-montserrat font-bold text-3xl text-foreground">Inventory Management</h1>
+                  <h1 className="font-sans font-bold text-3xl text-foreground">Inventory Management</h1>
                   <p className="text-muted-foreground">Current medication stock and ordering</p>
                 </div>
                 <Button onClick={() => alert("Adding new medication to inventory...")}>
@@ -418,7 +418,7 @@ export default function PharmacyDashboard() {
 
           {activeTab === "reports" && (
             <div className="space-y-6">
-              <h1 className="font-montserrat font-bold text-3xl text-foreground">Reports & Analytics</h1>
+              <h1 className="font-sans font-bold text-3xl text-foreground">Reports & Analytics</h1>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
@@ -528,7 +528,7 @@ export default function PharmacyDashboard() {
 
           {activeTab === "settings" && (
             <div className="space-y-6">
-              <h1 className="font-montserrat font-bold text-3xl text-foreground">Settings</h1>
+              <h1 className="font-sans font-bold text-3xl text-foreground">Settings</h1>
               <Card>
                 <CardHeader>
                   <CardTitle>Pharmacy Settings</CardTitle>

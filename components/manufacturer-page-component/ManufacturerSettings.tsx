@@ -46,7 +46,7 @@ const ManufacturerSettings = () => {
     if (loading) {
         return (
             <div className="space-y-6">
-                <h1 className="font-montserrat font-bold text-3xl text-foreground">Settings</h1>
+                <h1 className="font-sans font-bold text-3xl text-foreground">Settings</h1>
                 <Card>
                     <CardHeader>
                         <CardTitle>Manufacturing Settings</CardTitle>
@@ -61,7 +61,7 @@ const ManufacturerSettings = () => {
     }
     return (
         <div className="space-y-6">
-            <h1 className="font-montserrat font-bold text-3xl text-foreground">Settings</h1>
+            <h1 className="font-sans font-bold text-3xl text-foreground">Settings</h1>
             <Card>
             <CardHeader>
                 <CardTitle>Manufacturing Settings</CardTitle>

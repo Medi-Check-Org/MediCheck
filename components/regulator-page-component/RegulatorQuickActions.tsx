@@ -36,7 +36,7 @@ const RegulatorQuickActions = ({ onTabChange }: RegulatorQuickActionsProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-montserrat">Quick Actions</CardTitle>
+        <CardTitle className="font-sans">Quick Actions</CardTitle>
         <CardDescription>Common regulatory tasks and shortcuts</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

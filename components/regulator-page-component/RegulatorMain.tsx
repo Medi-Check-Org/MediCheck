@@ -226,7 +226,7 @@ const RegulatorMain = ({ setActiveTab }: {
                 {/* Recent Activities */}
                 <Card>
                     <CardHeader>
-                        <CardTitle className="font-montserrat">Recent Activities</CardTitle>
+                        <CardTitle className="font-sans">Recent Activities</CardTitle>
                         <CardDescription>Latest regulatory activities and inspections</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -304,7 +304,7 @@ const RegulatorMain = ({ setActiveTab }: {
                 {/* Quick Actions */}
                 <Card>
                     <CardHeader>
-                        <CardTitle className="font-montserrat">Quick Actions</CardTitle>
+                        <CardTitle className="font-sans">Quick Actions</CardTitle>
                         <CardDescription>Common regulatory tasks and shortcuts</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">

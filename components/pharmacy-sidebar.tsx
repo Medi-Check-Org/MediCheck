@@ -73,12 +73,12 @@ export function PharmacySidebar({ activeTab, setActiveTab }: PharmacySidebarProp
         </div>
 
         {/* Organization Card */}
-        <div className="p-4 pt-6 flex flex-col items-center border-b border-sidebar-border bg-gradient-to-b from-role-manufacturer/10 to-transparent rounded-b-xl shadow-sm mb-2">
-          <Badge variant="manufacturer" className="mb-2 px-3 py-1 text-xs rounded-full shadow bg-gradient-to-r from-[#0FA3B1] to-[#0C8A96] text-white border-0">
+        <div className="p-4 pt-6 flex flex-col items-center border-b border-sidebar-border bg-gradient-to-b from-role-consumer/10 to-transparent rounded-b-xl shadow-sm mb-2">
+          <Badge variant="consumer" className="mb-2 px-3 py-1 text-xs rounded-full shadow bg-gradient-to-r from-[#2E7D5B] to-[#0FA3B1] text-white border-0">
             Pharmacy
           </Badge>
           <span className="font-bold text-base text-sidebar-foreground text-center tracking-wide mb-1">
-            MedPlus Pharmacy
+            Pharmacy
           </span>
           <span className="text-xs text-sidebar-foreground/60 text-center italic">Active Pharmacy</span>
         </div>
@@ -91,10 +91,10 @@ export function PharmacySidebar({ activeTab, setActiveTab }: PharmacySidebarProp
               <Button
                 key={item.id}
                 variant="ghost"
-                className={`w-full justify-start cursor-pointer hover:bg-sidebar-accent/50 transition-all duration-200 group ${activeTab === item.id ? 'border-l-[3px] border-[#0FA3B1] bg-sidebar-accent/50 text-sidebar-foreground rounded-l-none' : 'text-sidebar-foreground/70'} text-xs sm:text-sm`}
+                className={`w-full justify-start cursor-pointer hover:bg-sidebar-accent/50 transition-all duration-200 group ${activeTab === item.id ? 'border-l-[3px] border-[#2E7D5B] bg-sidebar-accent/50 text-sidebar-foreground rounded-l-none' : 'text-sidebar-foreground/70'} text-xs sm:text-sm`}
                 onClick={() => setActiveTab(item.id)}
               >
-                <Icon className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 sm:mr-3 ${activeTab === item.id ? 'text-[#0FA3B1]' : ''} group-hover:scale-110 transition-transform duration-200`} />
+                <Icon className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 sm:mr-3 ${activeTab === item.id ? 'text-[#2E7D5B]' : ''} group-hover:scale-110 transition-transform duration-200`} />
                 <span className="hidden sm:inline">{item.label}</span>
                 <span className="sm:hidden">{item.label.split(' ')[0]}</span>
               </Button>

@@ -282,7 +282,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
-                    <h1 className="font-montserrat font-bold text-2xl sm:text-3xl text-foreground">Batch Management</h1>
+                    <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Batch Management</h1>
                     <p className="text-muted-foreground text-sm sm:text-base">Create, view, and manage product batches</p>
                 </div>
                 {/* create batch dialog */}

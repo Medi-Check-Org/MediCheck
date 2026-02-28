@@ -174,7 +174,7 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
   if (loading) {
     return (
       <div className="space-y-4 sm:space-y-6">
-        <h1 className="font-montserrat font-bold text-2xl sm:text-3xl text-foreground">Product Catalog</h1>
+        <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Product Catalog</h1>
         <div className="flex items-center justify-center p-6 sm:p-8">
           <LoadingSpinner size="large" text="Loading products..." />
         </div>
@@ -187,7 +187,7 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
       <div className="space-y-4 sm:space-y-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="font-montserrat font-bold text-2xl sm:text-3xl text-foreground">Product Catalog</h1>
+            <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Product Catalog</h1>
             <p className="text-muted-foreground text-sm sm:text-base">Manage your product portfolio</p>
           </div>
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>

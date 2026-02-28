@@ -147,7 +147,7 @@ const RegulatorInvestigations = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="font-montserrat font-bold text-3xl text-foreground">Investigations Management</h1>
+                    <h1 className="font-sans font-bold text-3xl text-foreground">Investigations Management</h1>
                     <p className="text-muted-foreground">Active and completed investigations</p>
                 </div>
                 <div className="flex items-center gap-4">

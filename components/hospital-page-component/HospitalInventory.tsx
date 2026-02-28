@@ -81,7 +81,7 @@ const HospitalInventory = ({ orgId }: HospitalInventoryProps) => {
     if (loading) {
         return (
             <div className="space-y-6">
-                <h1 className="font-montserrat font-bold text-3xl text-foreground">Inventory Management</h1>
+                <h1 className="font-sans font-bold text-3xl text-foreground">Inventory Management</h1>
                 <div className="flex items-center justify-center p-8">
                     <LoadingSpinner size="large" text="Loading inventory..." />
                 </div>
@@ -93,7 +93,7 @@ const HospitalInventory = ({ orgId }: HospitalInventoryProps) => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="font-montserrat font-bold text-3xl text-foreground">Inventory Management</h1>
+                    <h1 className="font-sans font-bold text-3xl text-foreground">Inventory Management</h1>
                     <p className="text-muted-foreground">Current medication stock levels and status</p>
                 </div>
                 {/* <Button onClick={() => alert("Adding new medication to inventory...")}>

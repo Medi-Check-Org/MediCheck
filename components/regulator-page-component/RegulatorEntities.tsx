@@ -152,7 +152,7 @@ const RegulatorEntities = () => {
         <div className="space-y-6 px-2 sm:px-0">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="font-montserrat font-bold text-2xl sm:text-3xl text-foreground">Registered Entities</h1>
+                    <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Registered Entities</h1>
                     <p className="text-muted-foreground text-sm sm:text-base">All registered pharmaceutical entities</p>
                 </div>
                 <div className="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto">

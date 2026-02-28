@@ -163,7 +163,7 @@ const HospitalAlerts = () => {
     if (loading) {
         return (
             <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-                <h1 className="font-montserrat font-bold text-2xl sm:text-3xl text-foreground">Alerts & Notifications</h1>
+                <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Alerts & Notifications</h1>
                 <div className="flex items-center justify-center p-6 sm:p-8">
                     <LoadingSpinner size="large" text="Loading alerts..." />
                 </div>
@@ -174,7 +174,7 @@ const HospitalAlerts = () => {
         <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 className="font-montserrat font-bold text-2xl sm:text-3xl text-foreground">Alerts & Notifications</h1>
+                    <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Alerts & Notifications</h1>
                     <p className="text-muted-foreground text-sm sm:text-base mt-1">Monitor critical alerts and system notifications</p>
                 </div>
                 

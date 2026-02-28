@@ -168,7 +168,7 @@ const HospitalMain = ({ setActiveTab, orgId }: {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="font-montserrat">Quick Actions</CardTitle>
+                        <CardTitle className="font-sans">Quick Actions</CardTitle>
                         <CardDescription>Common hospital tasks and shortcuts</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">

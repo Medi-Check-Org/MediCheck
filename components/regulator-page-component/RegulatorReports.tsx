@@ -124,7 +124,7 @@ const RegulatorReports = () => {
         return (
             <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                    <h1 className="font-montserrat font-bold text-3xl text-foreground">Reports & Analytics</h1>
+                    <h1 className="font-sans font-bold text-3xl text-foreground">Reports & Analytics</h1>
                 </div>
                 <div className="flex items-center justify-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -136,7 +136,7 @@ const RegulatorReports = () => {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h1 className="font-montserrat font-bold text-3xl text-foreground">Reports & Analytics</h1>
+                <h1 className="font-sans font-bold text-3xl text-foreground">Reports & Analytics</h1>
                 {/* Hide ThemeToggle on mobile, show on desktop */}
                 <div className="hidden sm:block">
                     <ThemeToggle />

@@ -167,7 +167,7 @@ const RegulatorSettings = () => {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="font-montserrat font-bold text-3xl text-foreground">Settings</h1> 
+          <h1 className="font-sans font-bold text-3xl text-foreground">Settings</h1> 
         </div>
         <Card>
           <CardHeader>
@@ -192,7 +192,7 @@ const RegulatorSettings = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="font-montserrat font-bold text-3xl text-foreground">Settings</h1>
+        <h1 className="font-sans font-bold text-3xl text-foreground">Settings</h1>
         {/* Hide ThemeToggle on mobile, show on desktop */}
         <div className="hidden sm:block">
           <ThemeToggle />
