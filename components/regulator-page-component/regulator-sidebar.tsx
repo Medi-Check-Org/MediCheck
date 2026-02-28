@@ -129,9 +129,9 @@ export function RegulatorSidebar({ activeTab, setActiveTab, isOpen = false, onCl
         </div>
 
         {/* Organization Card */}
-        <div className="p-4 pt-6 flex flex-col items-center border-b border-border bg-gradient-to-b from-sidebar-primary/10 to-transparent rounded-b-xl shadow-sm mb-2">
+        <div className="p-4 pt-6 flex flex-col items-center border-b border-sidebar-border bg-gradient-to-b from-role-regulator/10 to-transparent rounded-b-xl shadow-sm mb-2">
           <div className="flex items-center gap-2 mb-2">
-            <Badge variant="secondary" className="px-3 py-1 text-xs rounded-full shadow bg-gradient-to-r from-blue-500/80 to-green-400/80 text-white border-0">
+            <Badge variant="regulator" className="px-3 py-1 text-xs rounded-full shadow bg-gradient-to-r from-[#4C4F9E] to-[#0F2A44] text-white border-0">
               <Shield className="h-3 w-3 mr-1 inline-block" />
               Regulator
             </Badge>
@@ -148,11 +148,11 @@ export function RegulatorSidebar({ activeTab, setActiveTab, isOpen = false, onCl
             return (
               <Button
                 key={item.id}
-                variant={activeTab === item.id as ManufacturerTab ? "secondary" : "ghost"}
-                className="w-full justify-start cursor-pointer"
+                variant="ghost"
+                className={`w-full justify-start cursor-pointer hover:bg-sidebar-accent/50 transition-all duration-200 ${activeTab === item.id as unknown as string ? 'border-l-[3px] border-[#4C4F9E] bg-sidebar-accent/50 text-sidebar-foreground rounded-l-none' : 'text-sidebar-foreground/70'}`}
                 onClick={() => handleTabClick(item.id as ManufacturerTab)}
               >
-                <Icon className="h-3 w-3 sm:h-4 sm:w-4 mr-2 sm:mr-3" />
+                <Icon className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 sm:mr-3 ${activeTab === item.id as unknown as string ? 'text-[#4C4F9E]' : ''}`} />
                 <span className="text-sm">{item.label}</span>
               </Button>
             )

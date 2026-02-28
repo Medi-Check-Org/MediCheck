@@ -17,6 +17,22 @@ const badgeVariants = cva(
           "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        verified:
+          "border-transparent bg-status-verified text-status-verified-foreground",
+        warning:
+          "border-transparent bg-status-warning text-status-warning-foreground",
+        critical:
+          "border-transparent bg-status-critical text-status-critical-foreground",
+        manufacturer:
+          "border-role-manufacturer text-role-manufacturer bg-role-manufacturer/10",
+        hospital:
+          "border-role-hospital text-role-hospital bg-role-hospital/10",
+        consumer:
+          "border-role-consumer text-role-consumer bg-role-consumer/10",
+        regulator:
+          "border-role-regulator text-role-regulator bg-role-regulator/10",
+        distributor:
+          "border-role-distributor text-role-distributor bg-role-distributor/10",
       },
     },
     defaultVariants: {

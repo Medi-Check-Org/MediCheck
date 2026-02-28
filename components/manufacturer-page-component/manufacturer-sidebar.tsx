@@ -170,8 +170,8 @@ export function ManufacturerSidebar({
 
           <section className="flex flex-col space-y-2 h-full">
             {/* Organization Card */}
-            <div className=" p-4 pt-6 flex flex-col items-center border-b border-border bg-linear-to-b from-blue-100/40 to-transparent rounded-b-xl shadow-sm">
-              <Badge variant="secondary" className="mb-2 px-3 py-1 text-xs rounded-full shadow bg-linear-to-r from-blue-500/80 to-green-400/80 text-white border-0">
+            <div className=" p-4 pt-6 flex flex-col items-center border-b border-sidebar-border bg-linear-to-b from-role-manufacturer/10 to-transparent rounded-b-xl shadow-sm">
+              <Badge variant="manufacturer" className="mb-2 px-3 py-1 text-xs rounded-full shadow bg-gradient-to-r from-[#0FA3B1] to-[#0C8A96] text-white border-0">
                 Manufacturer
               </Badge>
               <span className="font-bold text-base text-sidebar-foreground text-center tracking-wide mb-1">
@@ -186,11 +186,11 @@ export function ManufacturerSidebar({
                 return (
                   <Button
                     key={item.id}
-                    variant={activeTab === item.id ? "secondary" : "ghost"}
-                    className={`w-full justify-start cursor-pointer hover:bg-sidebar-accent/50 transition-all duration-200 group ${isMobile ? 'text-base h-12' : 'text-xs sm:text-sm'}`}
+                    variant="ghost"
+                    className={`w-full justify-start cursor-pointer hover:bg-sidebar-accent/50 transition-all duration-200 group ${activeTab === item.id ? 'border-l-[3px] border-[#0FA3B1] bg-sidebar-accent/50 text-sidebar-foreground rounded-l-none' : 'text-sidebar-foreground/70'} ${isMobile ? 'text-base h-12' : 'text-xs sm:text-sm'}`}
                     onClick={() => handleTabSelect(item.id as ManufacturerTab)}
                   >
-                    <Icon className={`${isMobile ? 'h-5 w-5 mr-3' : 'h-3 w-3 sm:h-4 sm:w-4 mr-2 sm:mr-3'} group-hover:scale-110 transition-transform duration-200`} />
+                    <Icon className={`${isMobile ? 'h-5 w-5 mr-3' : 'h-3 w-3 sm:h-4 sm:w-4 mr-2 sm:mr-3'} ${activeTab === item.id ? 'text-[#0FA3B1]' : ''} group-hover:scale-110 transition-transform duration-200`} />
                     <span className={isMobile ? '' : 'hidden sm:inline'}>{item.label}</span>
                     {!isMobile && <span className="sm:hidden">{item.label.split(' ')[0]}</span>}
                   </Button>
