@@ -53,12 +53,12 @@ const RegulatorStats = () => {
         {[...Array(4)].map((_, i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="h-4 bg-gray-200 rounded w-24"></div>
-              <div className="h-4 w-4 bg-gray-200 rounded"></div>
+              <div className="h-4 bg-muted rounded w-24"></div>
+              <div className="h-4 w-4 bg-muted rounded"></div>
             </CardHeader>
             <CardContent>
-              <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-20"></div>
+              <div className="h-8 bg-muted rounded w-16 mb-2"></div>
+              <div className="h-3 bg-muted rounded w-20"></div>
             </CardContent>
           </Card>
         ))}
@@ -68,60 +68,68 @@ const RegulatorStats = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+      <Card className="border border-border shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">Active Investigations</CardTitle>
-          <Eye className="h-4 w-4 text-primary" />
+          <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
+            <Eye className="h-4 w-4 text-primary" />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-foreground">{stats.activeInvestigations}</div>
           <p className="text-xs text-muted-foreground">
-            <span className={stats.investigationGrowth >= 0 ? "text-accent font-medium" : "text-red-600 font-medium"}>
+            <span className={stats.investigationGrowth >= 0 ? "text-accent font-medium" : "text-destructive font-medium"}>
               {stats.investigationGrowth >= 0 ? '+' : ''}{stats.investigationGrowth}
             </span> from last month
           </p>
         </CardContent>
       </Card>
 
-      <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+      <Card className="border border-border shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Compliance Checks</CardTitle>
-          <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium text-muted-foreground">Compliance Checks</CardTitle>
+          <div className="h-8 w-8 rounded-md bg-status-verified/10 flex items-center justify-center">
+            <CheckCircle className="h-4 w-4 text-status-verified" />
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.complianceChecks}</div>
+          <div className="text-2xl font-bold text-foreground">{stats.complianceChecks}</div>
           <p className="text-xs text-muted-foreground">
-            <span className={stats.complianceGrowth >= 0 ? "text-primary" : "text-red-600"}>
+            <span className={stats.complianceGrowth >= 0 ? "text-status-verified" : "text-destructive"}>
               {stats.complianceGrowth >= 0 ? '+' : ''}{stats.complianceGrowth}%
             </span> this month
           </p>
         </CardContent>
       </Card>
 
-      <Card className="border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+      <Card className="border border-border shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
-          <Clock className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-medium text-muted-foreground">Pending Reviews</CardTitle>
+          <div className="h-8 w-8 rounded-md bg-status-warning/10 flex items-center justify-center">
+            <Clock className="h-4 w-4 text-status-warning" />
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-orange-600">{stats.pendingReviews}</div>
+          <div className="text-2xl font-bold text-status-warning">{stats.pendingReviews}</div>
           <p className="text-xs text-muted-foreground">
-            <span className={stats.pendingGrowth >= 0 ? "text-orange-600" : "text-green-600"}>
+            <span className={stats.pendingGrowth >= 0 ? "text-status-warning" : "text-status-verified"}>
               {stats.pendingGrowth >= 0 ? '+' : ''}{stats.pendingGrowth}%
             </span> change
           </p>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border border-border shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Violations Found</CardTitle>
-          <XCircle className="h-4 w-4 text-destructive" />
+          <CardTitle className="text-sm font-medium text-muted-foreground">Violations Found</CardTitle>
+          <div className="h-8 w-8 rounded-md bg-destructive/10 flex items-center justify-center">
+            <XCircle className="h-4 w-4 text-destructive" />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-destructive">{stats.violationsFound}</div>
           <p className="text-xs text-muted-foreground">
-            <span className={stats.violationChange <= 0 ? "text-green-600" : "text-red-600"}>
+            <span className={stats.violationChange <= 0 ? "text-status-verified" : "text-destructive"}>
               {stats.violationChange >= 0 ? '+' : ''}{stats.violationChange}
             </span> from last month
           </p>

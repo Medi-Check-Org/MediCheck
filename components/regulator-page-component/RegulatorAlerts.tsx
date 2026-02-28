@@ -92,30 +92,30 @@ const RegulatorAlerts = () => {
     const getSeverityIcon = (severity: string) => {
         switch (severity) {
             case 'critical':
-                return <AlertTriangle className="h-4 w-4 text-red-600" />
+                return <AlertTriangle className="h-4 w-4 text-destructive" />
             case 'high':
-                return <XCircle className="h-4 w-4 text-orange-600" />
+                return <XCircle className="h-4 w-4 text-status-critical" />
             case 'warning':
-                return <Clock className="h-4 w-4 text-yellow-600" />
+                return <Clock className="h-4 w-4 text-status-warning" />
             case 'info':
-                return <Activity className="h-4 w-4 text-blue-600" />
+                return <Activity className="h-4 w-4 text-accent" />
             default:
-                return <Bell className="h-4 w-4 text-gray-600" />
+                return <Bell className="h-4 w-4 text-muted-foreground" />
         }
     }
 
     const getSeverityColor = (severity: string) => {
         switch (severity) {
             case 'critical':
-                return 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800'
+                return 'bg-destructive/5 border-destructive/20'
             case 'high':
-                return 'bg-orange-50 border-orange-200 dark:bg-orange-950 dark:border-orange-800'
+                return 'bg-status-critical/5 border-status-critical/20'
             case 'warning':
-                return 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800'
+                return 'bg-status-warning/5 border-status-warning/20'
             case 'info':
-                return 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800'
+                return 'bg-accent/5 border-accent/20'
             default:
-                return 'bg-gray-50 border-gray-200 dark:bg-gray-950 dark:border-gray-800'
+                return 'bg-muted border-border'
         }
     }
 
@@ -179,9 +179,9 @@ const RegulatorAlerts = () => {
             </div>
 
             {error && (
-                <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+                <Card className="border border-destructive/20 bg-destructive/5">
                     <CardContent className="pt-6">
-                        <div className="flex items-center gap-2 text-red-800 dark:text-red-200">
+                        <div className="flex items-center gap-2 text-destructive">
                             <AlertTriangle className="h-4 w-4" />
                             <span>{error}</span>
                             <Button 
@@ -199,47 +199,47 @@ const RegulatorAlerts = () => {
 
             {/* Alert Summary Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Critical</p>
-                                <p className="text-2xl font-bold text-red-600">{criticalAlerts.length}</p>
+                                <p className="text-2xl font-bold text-destructive">{criticalAlerts.length}</p>
                             </div>
-                            <AlertTriangle className="h-8 w-8 text-red-600" />
+                            <AlertTriangle className="h-8 w-8 text-destructive" />
                         </div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">High Priority</p>
-                                <p className="text-2xl font-bold text-orange-600">{highAlerts.length}</p>
+                                <p className="text-2xl font-bold text-status-critical">{highAlerts.length}</p>
                             </div>
-                            <XCircle className="h-8 w-8 text-orange-600" />
+                            <XCircle className="h-8 w-8 text-status-critical" />
                         </div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Warnings</p>
-                                <p className="text-2xl font-bold text-yellow-600">{warningAlerts.length}</p>
+                                <p className="text-2xl font-bold text-status-warning">{warningAlerts.length}</p>
                             </div>
-                            <Clock className="h-8 w-8 text-yellow-600" />
+                            <Clock className="h-8 w-8 text-status-warning" />
                         </div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Info</p>
-                                <p className="text-2xl font-bold text-blue-600">{infoAlerts.length}</p>
+                                <p className="text-2xl font-bold text-accent">{infoAlerts.length}</p>
                             </div>
-                            <Activity className="h-8 w-8 text-blue-600" />
+                            <Activity className="h-8 w-8 text-accent" />
                         </div>
                     </CardContent>
                 </Card>
@@ -270,20 +270,20 @@ const RegulatorAlerts = () => {
             </Card>
             {/* Critical Alerts */}
             {criticalAlerts.length > 0 && (
-                <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+                <Card className="border border-destructive/20 bg-destructive/5">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-red-800 dark:text-red-200">
+                        <CardTitle className="flex items-center gap-2 text-destructive">
                             <AlertTriangle className="h-5 w-5" />
                             Critical Alerts ({criticalAlerts.length})
                         </CardTitle>
-                        <CardDescription className="text-red-700 dark:text-red-300">
+                        <CardDescription className="text-destructive/70">
                             Immediate attention required
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
                             {criticalAlerts.map((alert) => (
-                                <div key={alert.id} className="p-4 bg-white dark:bg-gray-900 border border-red-200 dark:border-red-800 rounded-lg">
+                                <div key={alert.id} className="p-4 bg-card border border-border rounded-lg">
                                     <div className="flex items-start justify-between mb-3">
                                         <div className="flex items-center gap-2">
                                             {getTypeIcon(alert.type)}
@@ -306,7 +306,7 @@ const RegulatorAlerts = () => {
                                         </div>
                                     </div>
                                     {alert.details && (
-                                        <div className="text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800 p-2 rounded mb-3">
+                                        <div className="text-xs text-muted-foreground bg-muted p-2 rounded mb-3">
                                             {alert.details.batchId && (
                                                 <div>Batch ID: {alert.details.batchId}</div>
                                             )}
@@ -321,8 +321,8 @@ const RegulatorAlerts = () => {
                                     <div className="flex gap-2">
                                         <Button 
                                             size="sm" 
+                                            variant="destructive"
                                             onClick={() => handleInvestigate(alert.id, alert.type)}
-                                            className="bg-red-600 hover:bg-red-700"
                                         >
                                             <Eye className="h-3 w-3 mr-1" />
                                             Investigate Now
@@ -340,20 +340,20 @@ const RegulatorAlerts = () => {
 
             {/* High Priority Alerts */}
             {highAlerts.length > 0 && (
-                <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
+                <Card className="border border-status-warning/20 bg-status-warning/5">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-orange-800 dark:text-orange-200">
+                        <CardTitle className="flex items-center gap-2 text-status-warning">
                             <XCircle className="h-5 w-5" />
                             High Priority Alerts ({highAlerts.length})
                         </CardTitle>
-                        <CardDescription className="text-orange-700 dark:text-orange-300">
+                        <CardDescription className="text-status-warning/70">
                             Requires prompt review
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
                             {highAlerts.map((alert) => (
-                                <div key={alert.id} className="p-4 bg-white dark:bg-gray-900 border border-orange-200 dark:border-orange-800 rounded-lg">
+                                <div key={alert.id} className="p-4 bg-card border border-border rounded-lg">
                                     <div className="flex items-start justify-between mb-3">
                                         <div className="flex items-center gap-2">
                                             {getTypeIcon(alert.type)}
@@ -380,7 +380,6 @@ const RegulatorAlerts = () => {
                                             size="sm" 
                                             variant="outline"
                                             onClick={() => handleInvestigate(alert.id, alert.type)}
-                                            className="text-orange-600 hover:bg-orange-50"
                                         >
                                             <Eye className="h-3 w-3 mr-1" />
                                             Review
@@ -398,20 +397,20 @@ const RegulatorAlerts = () => {
 
             {/* Warning Alerts */}
             {warningAlerts.length > 0 && (
-                <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950">
+                <Card className="border border-status-warning/20 bg-status-warning/5">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+                        <CardTitle className="flex items-center gap-2 text-status-warning">
                             <Clock className="h-5 w-5" />
                             Warning Alerts ({warningAlerts.length})
                         </CardTitle>
-                        <CardDescription className="text-yellow-700 dark:text-yellow-300">
+                        <CardDescription className="text-status-warning/70">
                             Monitor and review when possible
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-3">
                             {warningAlerts.map((alert) => (
-                                <div key={alert.id} className="p-3 bg-white dark:bg-gray-900 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                                <div key={alert.id} className="p-3 bg-card border border-border rounded-lg">
                                     <div className="flex items-start justify-between mb-2">
                                         <div className="flex items-center gap-2">
                                             {getTypeIcon(alert.type)}
@@ -474,7 +473,7 @@ const RegulatorAlerts = () => {
                 <Card>
                     <CardContent className="pt-12 pb-12">
                         <div className="text-center">
-                            <CheckCircle className="h-12 w-12 mx-auto text-green-600 mb-4" />
+                            <CheckCircle className="h-12 w-12 mx-auto text-status-verified mb-4" />
                             <h3 className="text-lg font-medium text-foreground mb-2">All Clear!</h3>
                             <p className="text-muted-foreground">
                                 No active alerts or notifications at this time.

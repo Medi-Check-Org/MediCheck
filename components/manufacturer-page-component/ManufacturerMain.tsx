@@ -89,16 +89,16 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
     const getStatusColor = (status: string) => {
         switch (status.toLowerCase()) {
             case 'pending':
-                return 'bg-yellow-500';
+                return 'bg-status-warning';
             case 'completed':
             case 'manufactured':
-                return 'bg-green-500';
+                return 'bg-status-verified';
             case 'in_transit':
-                return 'bg-blue-500';
+                return 'bg-primary';
             case 'delivered':
-                return 'bg-purple-500';
+                return 'bg-role-regulator';
             default:
-                return 'bg-gray-500';
+                return 'bg-muted-foreground';
         }
     };
 
@@ -112,13 +112,12 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
         <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="relative mb-4">
                 <Activity 
-                    className="w-16 h-16 text-gray-300 animate-pulse" 
+                    className="w-16 h-16 text-muted-foreground/40" 
                     strokeWidth={1.5}
                 />
-                <div className="absolute inset-0 w-16 h-16 border-2 border-blue-200 rounded-full animate-ping opacity-20"></div>
             </div>
-            <h3 className="text-lg font-medium text-gray-600 mb-2">No Recent Activity</h3>
-            <p className="text-sm text-gray-500 mb-4">
+            <h3 className="text-lg font-medium text-foreground mb-2">No Recent Activity</h3>
+            <p className="text-sm text-muted-foreground mb-4">
                 When you create batches or initiate transfers, they'll appear here
             </p>
             <div className="flex gap-2">
@@ -145,7 +144,7 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
                 <div>
-                    <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                    <h1 className="font-bold text-2xl sm:text-3xl lg:text-4xl text-foreground">
                         Manufacturer Dashboard
                     </h1>
                 </div>
@@ -156,10 +155,12 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
 
             {/* Stats Cards - Mobile: Stacked Vertically, Desktop: Grid */}
             <div className="space-y-4 sm:space-y-6 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:space-y-0">
-                <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Total Batches</CardTitle>
-                        <Factory className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                        <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
+                            <Factory className="h-4 w-4 text-primary" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl sm:text-3xl font-bold text-foreground">{stats.totalBatches}</div>
@@ -168,10 +169,12 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
                     </CardContent>
                 </Card>
 
-                <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Active Batches</CardTitle>
-                        <Package className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                        <div className="h-8 w-8 rounded-md bg-accent/10 flex items-center justify-center">
+                            <Package className="h-4 w-4 text-accent" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl sm:text-3xl font-bold text-foreground">{stats.activeBatches}</div>
@@ -181,10 +184,12 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
                     </CardContent>
                 </Card>
 
-                <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Recent Transfers</CardTitle>
-                        <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                        <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
+                            <Truck className="h-4 w-4 text-primary" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl sm:text-3xl font-bold text-foreground">{stats.recentTransfers}</div>
@@ -195,9 +200,9 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
             {/* Quick Actions and Recent Activity - Mobile: Stacked, Desktop: Side by side */}
             <div className="space-y-6 lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0">
                 {/* Quick Actions */}
-                <Card className="glass-effect border-2 border-primary/20 shadow-xl backdrop-blur-xl">
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="pb-4">
-                        <CardTitle className="font-bold text-lg sm:text-xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                        <CardTitle className="font-semibold text-lg text-foreground">
                             Quick Actions
                         </CardTitle>
                         <CardDescription className="text-muted-foreground text-sm">
@@ -206,8 +211,8 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <Button 
-                            variant="gradient"
-                            className="w-full cursor-pointer justify-start shadow-lg hover:shadow-xl h-11 text-sm font-medium" 
+                            variant="default"
+                            className="w-full cursor-pointer justify-start h-11 text-sm font-medium" 
                             onClick={() => setActiveTab("batches")}
                         >
                             <Package className="h-4 w-4 mr-3" />
@@ -215,7 +220,7 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
                         </Button>
                         <Button 
                             variant="outline" 
-                            className="w-full hover:text-black cursor-pointer justify-start hover:bg-primary/10 transition-all duration-300 border-2 border-primary/30 hover:border-primary/60 h-11 text-sm" 
+                            className="w-full cursor-pointer justify-start h-11 text-sm" 
                             onClick={() => setActiveTab("transfers")}
                         >
                             <Truck className="h-4 w-4 mr-3" />
@@ -223,7 +228,7 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
                         </Button>
                         <Button 
                             variant="outline" 
-                            className="w-full hover:text-black justify-start cursor-pointer hover:bg-primary/10 transition-all duration-300 border-2 border-primary/30 hover:border-primary/60 h-11 text-sm" 
+                            className="w-full justify-start cursor-pointer h-11 text-sm" 
                             onClick={() => setActiveTab("qr-generator")}
                         >
                             <QrCode className="h-4 w-4 mr-3" />
@@ -233,10 +238,10 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
                 </Card>
 
                 {/* Recent Activity */}
-                <Card className="glass-effect border-2 border-primary/20 shadow-xl backdrop-blur-xl">
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="pb-4">
-                        <CardTitle className="font-bold text-lg sm:text-xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent flex items-center gap-2">
-                            <Activity className="w-5 h-5" />
+                        <CardTitle className="font-semibold text-lg text-foreground flex items-center gap-2">
+                            <Activity className="w-5 h-5 text-accent" />
                             Recent Activity
                         </CardTitle>
                         <CardDescription className="text-muted-foreground text-sm">
@@ -251,8 +256,8 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
                         ) : (
                             <div className="space-y-3">
                                 {recentActivity.slice(0, 4).map((activity) => (
-                                    <div key={activity.id} className="flex items-start gap-3 p-3 rounded-xl bg-card/50 hover:bg-card/70 transition-all duration-200">
-                                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <div key={activity.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors duration-150">
+                                        <div className="w-8 h-8 bg-primary/10 rounded-md flex items-center justify-center flex-shrink-0">
                                             {activity.type === 'batch' ? (
                                                 <Package className="w-4 h-4 text-primary" />
                                             ) : (
@@ -275,7 +280,7 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
                                         </div>
                                         <div className="flex flex-col items-end flex-shrink-0">
                                             <Badge 
-                                                variant={activity.status === "completed" ? "default" : "secondary"} 
+                                                variant={activity.status === "completed" ? "verified" : "secondary"} 
                                                 className="text-xs mb-1"
                                             >
                                                 {activity.status.replace('_', ' ')}

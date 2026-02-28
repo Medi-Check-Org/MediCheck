@@ -146,18 +146,18 @@ const HospitalAlerts = () => {
 
     const getSeverityColor = (severity: string) => {
         switch (severity.toLowerCase()) {
-            case 'critical': return 'bg-red-600 border-red-200';
-            case 'high': return 'bg-red-500 border-red-200';
-            case 'medium': return 'bg-orange-500 border-orange-200';
-            case 'low': return 'bg-yellow-500 border-yellow-200';
-            default: return 'bg-gray-500 border-gray-200';
+            case 'critical': return 'bg-destructive border-destructive/20';
+            case 'high': return 'bg-status-critical border-status-critical/20';
+            case 'medium': return 'bg-status-warning border-status-warning/20';
+            case 'low': return 'bg-status-warning/60 border-status-warning/10';
+            default: return 'bg-muted-foreground border-border';
         }
     };
 
     const getUrgencyColor = (days: number) => {
-        if (days <= 10) return 'border-red-200 bg-red-50';
-        if (days <= 30) return 'border-orange-200 bg-orange-50';
-        return 'border-gray-200 bg-gray-50';
+        if (days <= 10) return 'border-destructive/20 bg-destructive/5';
+        if (days <= 30) return 'border-status-warning/20 bg-status-warning/5';
+        return 'border-border bg-muted/30';
     };
 
     if (loading) {
@@ -252,62 +252,62 @@ const HospitalAlerts = () => {
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-sm border-2 border-red-200 dark:border-red-800">
+                <Card className="shadow-sm border border-destructive/20">
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div className="space-y-1">
                                 <p className="text-xs sm:text-sm font-medium text-muted-foreground">Critical</p>
-                                <div className="text-xl sm:text-2xl font-bold text-red-600">{stats.critical}</div>
+                                <div className="text-xl sm:text-2xl font-bold text-destructive">{stats.critical}</div>
                             </div>
-                            <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
+                            <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-destructive" />
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-sm border-2 border-orange-200 dark:border-orange-800">
+                <Card className="shadow-sm border border-status-warning/20">
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div className="space-y-1">
                                 <p className="text-xs sm:text-sm font-medium text-muted-foreground">Expiring</p>
-                                <div className="text-xl sm:text-2xl font-bold text-orange-600">{stats.expiring}</div>
+                                <div className="text-xl sm:text-2xl font-bold text-status-warning">{stats.expiring}</div>
                             </div>
-                            <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+                            <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-status-warning" />
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-sm border-2 border-yellow-200 dark:border-yellow-800">
+                <Card className="shadow-sm border border-status-warning/10">
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div className="space-y-1">
                                 <p className="text-xs sm:text-sm font-medium text-muted-foreground">Suspicious</p>
-                                <div className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.suspicious}</div>
+                                <div className="text-xl sm:text-2xl font-bold text-status-warning">{stats.suspicious}</div>
                             </div>
-                            <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
+                            <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-status-warning" />
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-sm border-2 border-green-200 dark:border-green-800">
+                <Card className="shadow-sm border border-status-verified/20">
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div className="space-y-1">
                                 <p className="text-xs sm:text-sm font-medium text-muted-foreground">Active</p>
-                                <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.active}</div>
+                                <div className="text-xl sm:text-2xl font-bold text-status-verified">{stats.active}</div>
                             </div>
-                            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-status-verified" />
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-sm border-2 border-gray-200 dark:border-gray-700">
+                <Card className="shadow-sm border border-border">
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div className="space-y-1">
                                 <p className="text-xs sm:text-sm font-medium text-muted-foreground">Dismissed</p>
-                                <div className="text-xl sm:text-2xl font-bold text-gray-600">{stats.dismissed}</div>
+                                <div className="text-xl sm:text-2xl font-bold text-muted-foreground">{stats.dismissed}</div>
                             </div>
-                            <X className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                            <X className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                         </div>
                     </CardContent>
                 </Card>
@@ -319,27 +319,27 @@ const HospitalAlerts = () => {
                     <CardContent className="p-4">
                         <div className="flex items-start gap-3">
                             <div className="flex-shrink-0 mt-0.5">
-                                <div className="h-8 w-8 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center">
-                                    <TrendingUp className="h-4 w-4 text-blue-600" />
+                                <div className="h-8 w-8 bg-primary/10 rounded-md flex items-center justify-center">
+                                    <TrendingUp className="h-4 w-4 text-primary" />
                                 </div>
                             </div>
                             <div className="space-y-1">
                                 <h4 className="font-medium text-sm sm:text-base">Alert Summary</h4>
                                 <p className="text-sm text-muted-foreground">
                                     {stats.critical > 0 ? (
-                                        <span className="text-red-600 font-medium">
+                                        <span className="text-destructive font-medium">
                                             {stats.critical} critical alert{stats.critical !== 1 ? 's' : ''} require immediate attention
                                         </span>
                                     ) : stats.expiring > 0 ? (
-                                        <span className="text-orange-600 font-medium">
+                                        <span className="text-status-warning font-medium">
                                             {stats.expiring} medication{stats.expiring !== 1 ? 's are' : ' is'} expiring soon
                                         </span>
                                     ) : stats.suspicious > 0 ? (
-                                        <span className="text-yellow-600 font-medium">
+                                        <span className="text-status-warning font-medium">
                                             {stats.suspicious} suspicious activit{stats.suspicious !== 1 ? 'ies' : 'y'} detected
                                         </span>
                                     ) : (
-                                        <span className="text-green-600 font-medium">
+                                        <span className="text-status-verified font-medium">
                                             All systems operating normally - no critical issues detected
                                         </span>
                                     )}
@@ -358,9 +358,9 @@ const HospitalAlerts = () => {
             <div className="space-y-4">
                 {/* Critical Alerts */}
                 {alertsData?.criticalAlerts && getVisibleAlerts(alertsData.criticalAlerts, 'critical').length > 0 && (
-                    <Card className="border-red-200 bg-red-50 dark:bg-red-950/20 shadow-sm">
+                    <Card className="border border-destructive/20 bg-destructive/5 shadow-sm">
                         <CardHeader className="pb-4">
-                            <CardTitle className="flex items-center gap-2 text-red-800 dark:text-red-200 text-lg sm:text-xl">
+                            <CardTitle className="flex items-center gap-2 text-destructive text-lg sm:text-xl">
                                 <AlertTriangle className="h-5 w-5" />
                                 <span>Critical Alerts</span>
                                 <Badge variant="destructive" className="ml-auto text-xs">
@@ -370,11 +370,11 @@ const HospitalAlerts = () => {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {getVisibleAlerts(alertsData.criticalAlerts, 'critical').map((alert) => (
-                                <Card key={alert.id} className={`bg-white dark:bg-card border-0 shadow-sm ${dismissedAlerts.has(alert.id) ? 'opacity-50' : ''}`}>
+                                <Card key={alert.id} className={`bg-card border border-border shadow-sm ${dismissedAlerts.has(alert.id) ? 'opacity-50' : ''}`}>
                                     <CardContent className="p-4">
                                         <div className="flex items-start justify-between mb-3">
                                             <div className="flex items-center space-x-2">
-                                                <AlertTriangle className="h-4 w-4 text-red-600 flex-shrink-0" />
+                                                <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
                                                 <Badge variant="destructive" className="text-xs">
                                                     {alert.severity.toLowerCase()}
                                                 </Badge>

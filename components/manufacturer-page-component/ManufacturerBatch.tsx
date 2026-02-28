@@ -336,9 +336,9 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                         value={newBatch.batchSize}
                                         onChange={(e) => setNewBatch({ ...newBatch, batchSize: e.target.value })}
                                     />
-                                    <p
-                                        className="text-xs text-gray-500"
-                                    >
+                        <p
+                        className="text-xs text-muted-foreground"
+                        >
                                         max batch size:
                                         {products.find((product) => product.name === newBatch.drugName && product.organizationId === orgId)?.numberOfProductAvailable}
                                     </p>
@@ -369,10 +369,12 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                         </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">In Transit</CardTitle>
-                        <Clock className="h-4 w-4 text-blue-600" />
+                        <div className="h-8 w-8 rounded-md bg-accent/10 flex items-center justify-center">
+                            <Clock className="h-4 w-4 text-accent" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
@@ -383,10 +385,12 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                         </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Created</CardTitle>
-                        <Zap className="h-4 w-4 text-yellow-600" />
+                        <div className="h-8 w-8 rounded-md bg-status-warning/10 flex items-center justify-center">
+                            <Zap className="h-4 w-4 text-status-warning" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">

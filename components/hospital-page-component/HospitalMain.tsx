@@ -77,7 +77,7 @@ const HospitalMain = ({ setActiveTab, orgId }: {
     if (loading) {
         return (
             <div className="space-y-8">
-                <h1 className="font-bold text-2xl sm:text-3xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Hospital Dashboard</h1>
+                <h1 className="font-bold text-2xl sm:text-3xl text-foreground">Hospital Dashboard</h1>
                 <div className="flex items-center justify-center p-8">
                     <LoadingSpinner size="large" text="Loading dashboard..." />
                 </div>
@@ -90,8 +90,8 @@ const HospitalMain = ({ setActiveTab, orgId }: {
             {/* Header */}
             <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
                 <div className="min-w-0 flex-1">
-                    <h1 className="font-bold text-2xl sm:text-3xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Hospital Dashboard</h1>
-                    <p className="text-muted-foreground mt-1 sm:mt-2 text-base sm:text-lg font-extrabold">
+                    <h1 className="font-bold text-2xl sm:text-3xl text-foreground">Hospital Dashboard</h1>
+                    <p className="text-muted-foreground mt-1 sm:mt-2 text-base sm:text-lg">
                       Welcome{hospitalName ? ` to ${hospitalName}` : " to your hospital"}
                     </p>
                 </div>
@@ -99,7 +99,7 @@ const HospitalMain = ({ setActiveTab, orgId }: {
                     <span className="hidden sm:inline">
                         <ThemeToggle />
                     </span>
-                    <Badge variant="secondary" className="px-3 py-1.5 bg-primary/10 text-primary border-primary/20 text-sm">
+                    <Badge variant="hospital" className="px-3 py-1.5 text-sm">
                         <Building2 className="h-4 w-4 mr-2" />
                         Hospital
                     </Badge>
@@ -108,56 +108,64 @@ const HospitalMain = ({ setActiveTab, orgId }: {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Total Medications</CardTitle>
-                        <Package className="h-4 w-4 text-primary" />
+                        <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
+                            <Package className="h-4 w-4 text-primary" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-foreground">{stats.totalMedications.toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground">
-                            <span className={`font-medium ${stats.medicationGrowth >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                            <span className={`font-medium ${stats.medicationGrowth >= 0 ? 'text-status-verified' : 'text-destructive'}`}>
                                 {stats.medicationGrowth >= 0 ? '+' : ''}{stats.medicationGrowth}%
                             </span> from last month
                         </p>
                     </CardContent>
                 </Card>
 
-                <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Verified Today</CardTitle>
-                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <div className="h-8 w-8 rounded-md bg-status-verified/10 flex items-center justify-center">
+                            <CheckCircle className="h-4 w-4 text-status-verified" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-foreground">{stats.verifiedToday}</div>
                         <p className="text-xs text-muted-foreground">
-                            <span className={`font-medium ${stats.verificationDifference >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                            <span className={`font-medium ${stats.verificationDifference >= 0 ? 'text-status-verified' : 'text-destructive'}`}>
                                 {stats.verificationDifference >= 0 ? '+' : ''}{stats.verificationDifference}
                             </span> {stats.verificationDifference === 1 || stats.verificationDifference === -1 ? 'more' : 'from'} yesterday
                         </p>
                     </CardContent>
                 </Card>
 
-                <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Pending Verifications</CardTitle>
-                        <Clock className="h-4 w-4 text-orange-500" />
+                        <div className="h-8 w-8 rounded-md bg-status-warning/10 flex items-center justify-center">
+                            <Clock className="h-4 w-4 text-status-warning" />
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-orange-600">{stats.pendingVerifications}</div>
+                        <div className="text-2xl font-bold text-status-warning">{stats.pendingVerifications}</div>
                         <p className="text-xs text-muted-foreground">Awaiting verification</p>
                     </CardContent>
                 </Card>
 
-                <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Alerts</CardTitle>
-                        <AlertTriangle className="h-4 w-4 text-destructive" />
+                        <div className="h-8 w-8 rounded-md bg-destructive/10 flex items-center justify-center">
+                            <AlertTriangle className="h-4 w-4 text-destructive" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-destructive">{stats.alerts}</div>
                         <p className="text-xs text-muted-foreground">
-                            Expired & expiring medications
+                            Expired &amp; expiring medications
                         </p>
                     </CardContent>
                 </Card>
@@ -166,9 +174,9 @@ const HospitalMain = ({ setActiveTab, orgId }: {
             {/* Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardHeader>
-                        <CardTitle className="font-sans">Quick Actions</CardTitle>
+                        <CardTitle className="font-semibold text-foreground">Quick Actions</CardTitle>
                         <CardDescription>Common hospital tasks and shortcuts</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">

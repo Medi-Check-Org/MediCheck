@@ -65,7 +65,7 @@ export default function RegulatorAnalytics() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <AlertTriangle className="h-5 w-5 text-red-500" />
+                            <AlertTriangle className="h-5 w-5 text-destructive" />
                             Analytics Error
                         </CardTitle>
                     </CardHeader>
@@ -122,7 +122,7 @@ export default function RegulatorAnalytics() {
                                 <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Scans</p>
                                 <p className="text-xl sm:text-2xl font-bold">{totalScans}</p>
                             </div>
-                            <Activity className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" />
+                            <Activity className="h-6 w-6 sm:h-8 sm:w-8 text-accent" />
                         </div>
                     </CardContent>
                 </Card>
@@ -132,11 +132,11 @@ export default function RegulatorAnalytics() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs sm:text-sm font-medium text-muted-foreground">Counterfeit Rate</p>
-                                <p className="text-xl sm:text-2xl font-bold text-red-600">
+                                <p className="text-xl sm:text-2xl font-bold text-destructive">
                                     {counterfeitRate.toFixed(1)}%
                                 </p>
                             </div>
-                            <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-red-500" />
+                            <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-destructive" />
                         </div>
                     </CardContent>
                 </Card>
@@ -146,10 +146,10 @@ export default function RegulatorAnalytics() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-xs sm:text-sm font-medium text-muted-foreground">Recent Alerts</p>
-                                <p className="text-xl sm:text-2xl font-bold text-orange-600">{recentCounterfeits}</p>
+                                <p className="text-xl sm:text-2xl font-bold text-status-warning">{recentCounterfeits}</p>
                                 <p className="text-xs text-muted-foreground">Last 7 days</p>
                             </div>
-                            <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-orange-500" />
+                            <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-status-warning" />
                         </div>
                     </CardContent>
                 </Card>
@@ -168,7 +168,7 @@ export default function RegulatorAnalytics() {
                                     </Badge>
                                 </div>
                             </div>
-                            <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-green-500" />
+                            <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-status-verified" />
                         </div>
                     </CardContent>
                 </Card>
@@ -252,11 +252,11 @@ export default function RegulatorAnalytics() {
                         <CardContent>
                             <div className="space-y-4">
                                 {recentCounterfeits > 5 && (
-                                    <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
-                                        <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
+                                    <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-destructive/5 border border-destructive/20 rounded-lg">
+                                        <AlertTriangle className="h-5 w-5 text-destructive mt-0.5" />
                                         <div>
-                                            <h4 className="font-medium text-red-900 text-sm sm:text-base">High Alert</h4>
-                                            <p className="text-xs sm:text-sm text-red-700">
+                                            <h4 className="font-medium text-foreground text-sm sm:text-base">High Alert</h4>
+                                            <p className="text-xs sm:text-sm text-muted-foreground">
                                                 {recentCounterfeits} counterfeit incidents detected in the last 7 days.
                                                 Immediate investigation recommended.
                                             </p>
@@ -265,11 +265,11 @@ export default function RegulatorAnalytics() {
                                 )}
 
                                 {counterfeitRate > 10 && (
-                                    <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                                        <Clock className="h-5 w-5 text-orange-500 mt-0.5" />
+                                    <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-status-warning/5 border border-status-warning/20 rounded-lg">
+                                        <Clock className="h-5 w-5 text-status-warning mt-0.5" />
                                         <div>
-                                            <h4 className="font-medium text-orange-900 text-sm sm:text-base">Trend Alert</h4>
-                                            <p className="text-xs sm:text-sm text-orange-700">
+                                            <h4 className="font-medium text-foreground text-sm sm:text-base">Trend Alert</h4>
+                                            <p className="text-xs sm:text-sm text-muted-foreground">
                                                 Counterfeit rate at {counterfeitRate.toFixed(1)}% - above normal threshold.
                                                 Enhanced monitoring suggested.
                                             </p>
@@ -277,11 +277,11 @@ export default function RegulatorAnalytics() {
                                     </div>
                                 )}
 
-                                <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                    <TrendingUp className="h-5 w-5 text-blue-500 mt-0.5" />
+                                <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-3 p-3 sm:p-4 bg-accent/5 border border-accent/20 rounded-lg">
+                                    <TrendingUp className="h-5 w-5 text-accent mt-0.5" />
                                     <div>
-                                        <h4 className="font-medium text-blue-900 text-sm sm:text-base">AI Analysis Active</h4>
-                                        <p className="text-xs sm:text-sm text-blue-700">
+                                        <h4 className="font-medium text-foreground text-sm sm:text-base">AI Analysis Active</h4>
+                                        <p className="text-xs sm:text-sm text-muted-foreground">
                                             Predictive modeling is continuously analyzing patterns to forecast hotspots
                                             with 87% accuracy.
                                         </p>
