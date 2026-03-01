@@ -706,39 +706,25 @@ export default function RegisterPage() {
 
   return (
 
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background Decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-32 -left-40 w-80 h-80 bg-accent/6 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 -right-32 w-64 h-64 bg-primary/5 rounded-full blur-2xl"></div>
-        <div className="absolute top-2/3 left-1/4 w-40 h-40 bg-accent/8 rounded-full blur-xl"></div>
-      </div>
-      
-      {/* Navigation - Updated to match landing page */}
-      <nav className="border-b border-border/50 bg-card/95 backdrop-blur-xl sticky top-0 z-50 shadow-lg glass-effect">
+    <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <nav className="border-b border-border bg-card sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 sm:h-20">
-            <Link href="/" className="flex items-center space-x-2 sm:space-x-4">
-              <div className="relative group cursor-pointer">
-                <div className="absolute inset-0 bg-linear-to-r from-primary to-accent rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div className="relative bg-linear-to-r from-primary to-accent p-1.5 sm:p-2 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
-                  <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-white group-hover:scale-110 transition-transform duration-300" />
-                </div>
+          <div className="flex justify-between items-center h-16">
+            <Link href="/" className="flex items-center space-x-3">
+              <div className="bg-primary p-1.5 rounded-lg">
+                <Shield className="h-5 w-5 text-primary-foreground" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-lg sm:text-2xl text-foreground bg-linear-to-r from-foreground to-foreground/80 bg-clip-text">MediCheck</span>
-                <span className="text-xs text-muted-foreground font-mono hidden sm:block">Blockchain Verified</span>
+              <div>
+                <span className="font-bold text-lg text-foreground">MediCheck</span>
+                <span className="text-xs text-muted-foreground font-mono ml-2 hidden sm:inline">Blockchain Secured</span>
               </div>
             </Link>
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center gap-2">
               <ThemeToggle />
               <Link href="/">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="cursor-pointer font-medium text-xs sm:text-sm px-3 sm:px-6"
-                >
-                  <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                <Button variant="outline" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
                   <span className="hidden sm:inline">Back to Home</span>
                   <span className="sm:hidden">Back</span>
                 </Button>
@@ -749,10 +735,8 @@ export default function RegisterPage() {
       </nav>
 
       {/* Main Content */}
-      <section className="relative py-8 sm:py-16 px-4 sm:px-6 lg:px-8 min-h-screen">
-        <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-accent/5"></div>
-        
-        <div className="relative max-w-4xl mx-auto">
+      <section className="py-8 sm:py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
           {!accountType ? (
             <div className="max-w-2xl mx-auto">
               <div className="text-center mb-12">
@@ -770,8 +754,8 @@ export default function RegisterPage() {
                   onClick={() => setAccountType("organization")}
                 >
                   <CardContent className="p-8 text-center">
-                    <div className="text-6xl mb-6 group-hover:scale-110 transition-all duration-200">
-                      🏢
+                    <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
+                      <Building2 className="h-7 w-7 text-primary" />
                     </div>
                     <h3 className="text-xl font-semibold text-foreground mb-3">Organization</h3>
                     <p className="text-muted-foreground text-sm leading-relaxed">
@@ -785,8 +769,8 @@ export default function RegisterPage() {
                   onClick={() => setAccountType("consumer")}
                 >
                   <CardContent className="p-8 text-center">
-                    <div className="text-6xl mb-6 group-hover:scale-110 transition-all duration-200">
-                      👤
+                    <div className="h-14 w-14 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-6 group-hover:bg-accent/20 transition-colors">
+                      <User className="h-7 w-7 text-accent" />
                     </div>
                     <h3 className="text-xl font-semibold text-foreground mb-3">Consumer</h3>
                     <p className="text-muted-foreground text-sm leading-relaxed">
@@ -817,7 +801,7 @@ export default function RegisterPage() {
                 )}
               </div>
 
-              <Card className="shadow-lg border-0 bg-card/50 backdrop-blur-sm">
+              <Card className="shadow-sm border border-border">
                 <CardContent className="p-8">
                   
                 <form onSubmit={handleSubmit} className="space-y-6">

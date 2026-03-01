@@ -53,61 +53,41 @@ export default function ScanPage() {
   );
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <MobileHeader />
-      {/* Background Decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/4 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/3 -left-32 w-64 h-64 bg-accent/6 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-primary/3 rounded-full blur-3xl"></div>
-        <div className="absolute top-3/4 left-1/3 w-48 h-48 bg-accent/8 rounded-full blur-xl"></div>
-      </div>
 
       {/* Navigation */}
-      <nav className="border-b border-border/50 bg-card/95 backdrop-blur-xl sticky top-0 z-40 shadow-lg glass-effect hidden lg:block">
+      <nav className="border-b border-border bg-card sticky top-0 z-40 hidden lg:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 sm:h-20">
-            <Link href={publicRoutes.home} className="flex items-center space-x-2 sm:space-x-4">
-              <div className="relative group cursor-pointer">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div className="relative bg-gradient-to-r from-primary to-accent p-1.5 sm:p-2 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
-                  <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-white group-hover:scale-110 transition-transform duration-300" />
-                </div>
+          <div className="flex justify-between items-center h-16">
+            <Link href={publicRoutes.home} className="flex items-center space-x-3">
+              <div className="bg-primary p-1.5 rounded-lg">
+                <Shield className="h-5 w-5 text-primary-foreground" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-lg sm:text-2xl text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">MediCheck</span>
-                <span className="text-xs text-muted-foreground font-mono hidden sm:block">Blockchain Verified</span>
+              <div>
+                <span className="font-bold text-lg text-foreground">MediCheck</span>
+                <span className="text-xs text-muted-foreground font-mono ml-2 hidden sm:inline">Blockchain Secured</span>
               </div>
             </Link>
             {isSignedIn ? (
-              <div className="flex items-center space-x-2 sm:space-x-4">
+              <div className="flex items-center gap-2">
                 <ThemeToggle />
                 <Link href={getRedirectPath(role, organizationType)}>
-                  <Button 
-                    variant="gradient"
-                    size="sm"
-                    className="cursor-pointer font-medium shadow-lg hover:shadow-xl text-xs sm:text-sm px-3 sm:px-6"
-                  >
-                    <span className="hidden sm:inline">Dashboard</span>
-                    <span className="sm:hidden">Dash</span>
+                  <Button variant="default" size="sm">
+                    Dashboard
                   </Button>
                 </Link>
               </div>
             ) : (
-              <div className="flex items-center space-x-2 sm:space-x-4">
+              <div className="flex items-center gap-2">
                 <ThemeToggle />
                 <Link href={authRoutes.register}>
-                  <Button variant="outline" size="sm" className="cursor-pointer font-medium text-xs sm:text-sm px-3 sm:px-6">
-                    <span className="hidden sm:inline">Create Account</span>
-                    <span className="sm:hidden">Sign Up</span>
+                  <Button variant="outline" size="sm">
+                    Create Account
                   </Button>
                 </Link>
                 <Link href={authRoutes.login}>
-                  <Button 
-                    variant="gradient"
-                    size="sm"
-                    className="cursor-pointer font-medium shadow-lg hover:shadow-xl text-xs sm:text-sm px-3 sm:px-6"
-                  >
+                  <Button variant="default" size="sm">
                     Sign In
                   </Button>
                 </Link>
@@ -120,7 +100,7 @@ export default function ScanPage() {
       <main className="flex-1 w-full max-w-4xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Mobile: Place title under header */}
         <div className="block lg:hidden pt-[68px] pb-4 px-1">
-          <h1 className="font-bold text-2xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-1 text-center">
+          <h1 className="font-bold text-2xl text-foreground mb-1 text-center">
             Verify Your Medicine
           </h1>
           <p className="text-muted-foreground text-sm text-center">
@@ -131,23 +111,23 @@ export default function ScanPage() {
         <div className="hidden lg:block text-center mb-6 sm:mb-8">
           <Link
             href={publicRoutes.home}
-            className="inline-flex items-center text-muted-foreground hover:text-primary mb-4 cursor-pointer transition-colors duration-200 text-base"
+            className="inline-flex items-center text-muted-foreground hover:text-foreground mb-4 transition-colors text-sm"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Home
           </Link>
-          <h1 className="font-bold text-3xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent mb-2">
+          <h1 className="font-bold text-3xl text-foreground mb-2">
             Verify Your Medicine
           </h1>
           <p className="text-muted-foreground text-base">
             Scan the QR code on your medication packaging
           </p>
         </div>
-        <Card className="max-w-2xl mx-auto border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 glass-effect">
+        <Card className="max-w-2xl mx-auto border border-border shadow-sm">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center font-bold">
               <QrCode className="h-6 w-6 mr-2 text-primary" />
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Medicine Scanner</span>
+              <span className="text-foreground">Medicine Scanner</span>
             </CardTitle>
           </CardHeader>
           <CardContent>

@@ -71,7 +71,6 @@ export default function VerifyBatchPage() {
               Please contact support or your administrator.
             </>
           ),
-          icon: "🚩"
         };
       case "recalled":
         return {
@@ -85,7 +84,6 @@ export default function VerifyBatchPage() {
               Please do not use or distribute.
             </>
           ),
-          icon: "⚠️"
         };
       case "expired":
         return {
@@ -99,7 +97,6 @@ export default function VerifyBatchPage() {
               Please dispose of properly.
             </>
           ),
-          icon: "⌛"
         };
       case "bully":
         return {
@@ -113,7 +110,6 @@ export default function VerifyBatchPage() {
               Please review with caution.
             </>
           ),
-          icon: "🚨"
         };
       case "in_transit":
         return {
@@ -127,7 +123,6 @@ export default function VerifyBatchPage() {
               Awaiting delivery.
             </>
           ),
-          icon: "🚚"
         };
       case "delivered":
         return {
@@ -138,10 +133,9 @@ export default function VerifyBatchPage() {
           message: (
             <>
               This batch has been <span className="underline">delivered</span>.<br />
-              Transfer completed!
+              Transfer completed.
             </>
           ),
-          icon: "✅"
         };
       case "created":
         return {
@@ -154,7 +148,6 @@ export default function VerifyBatchPage() {
               This batch has been <span className="underline">created</span> and is awaiting processing.
             </>
           ),
-          icon: "📦"
         };
       default:
         return {
@@ -163,7 +156,6 @@ export default function VerifyBatchPage() {
           badge: "text-gray-700 dark:text-gray-300",
           label: status || "Unknown",
           message: null,
-          icon: "ℹ️"
         };
     }
   };
