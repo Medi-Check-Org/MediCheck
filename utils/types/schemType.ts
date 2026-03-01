@@ -218,34 +218,3 @@ export interface CounterfeitReportProp {
   updatedAt: Date;
 }
 
-/**
- * 🔒 Message Envelope Interface — standardized for all HCS-10 messages
- */
-export interface HCS10Envelope {
-  p: "hcs-10"; // Protocol identifier
-  op:
-    | "connection_request"
-    | "connection_created"
-    | "message"
-    | "close_connection";
-  data: string; // JSON-stringified payload
-  payer: string; // Agent account ID sending message
-  outbound_topic_id?: string;
-  connection_topic_id?: string;
-  created?: Date;
-  sig?: string; // Signature of data
-}
-
-/**
- * 🧾 Agent registration payload
- */
-export interface AgentRegistrationPayload {
-  accountId: string;
-  orgId: string;
-  role: string; // "manufacturer" | "distributor" | "pharmacy" | "hospital" | "regulator" | "gateway"
-  inboundTopic: string;
-  outboundTopic: string;
-  managedRegistry?: string;
-  profileId?: string;
-  publicKey: string;
-}

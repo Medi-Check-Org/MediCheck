@@ -79,7 +79,7 @@ export class CreateBatchUseCase {
       );
     }
 
-    // 4. Load organization with agent info
+    // 4. Load organization
     const org = await this.orgRepo.getByIdOrThrow(input.organizationId);
 
     // 5. Additional business rule validations

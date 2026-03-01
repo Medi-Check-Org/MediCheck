@@ -63,7 +63,7 @@ export async function GET(
 
     const scannerOrgId = user.teamMember.organizationId;
 
-    // 1️⃣ Fetch batch + include sender org & their agent info
+    // 1️⃣ Fetch batch + include sender org 
     const batch = await prisma.medicationBatch.findUnique({
       where: { batchId },
     });
@@ -120,12 +120,10 @@ export async function GET(
     // Load org metadata for sender (current batch owner) and receiver (scanner org)
     const senderOrg = await prisma.organization.findUnique({
       where: { id: batch.organizationId },
-      include: { organizationAgent: true },
     });
 
     const receiverOrg = await prisma.organization.findUnique({
       where: { id: scannerOrgId },
-      include: { organizationAgent: true },
     });
 
     let updatedBatch = batch;
