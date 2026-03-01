@@ -199,11 +199,11 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersComponentProps) 
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "COMPLETED": return "text-green-600";
-      case "FAILED": return "text-red-600";
-      case "CANCELLED": return "text-red-600";
-      case "IN_PROGRESS": return "text-blue-600";
-      default: return "text-yellow-600";
+      case "COMPLETED": return "text-status-verified";
+      case "FAILED": return "text-destructive";
+      case "CANCELLED": return "text-destructive";
+      case "IN_PROGRESS": return "text-primary";
+      default: return "text-status-warning";
     }
   };
 
@@ -293,8 +293,8 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersComponentProps) 
                   </SelectContent>
                 </Select>
                 {!availableBatches.length && (
-                  <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
-                    <p className="text-sm text-orange-700 dark:text-orange-300">No batches available for transfer</p>
+                  <div className="bg-status-warning/10 border border-status-warning/20 rounded-lg p-3">
+                    <p className="text-sm text-status-warning">No batches available for transfer</p>
                   </div>
                 )}
               </div>
@@ -389,13 +389,13 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersComponentProps) 
             </p>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-2 border-blue-200 dark:border-blue-800">
+        <Card className="shadow-sm border-2 border-primary/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 sm:p-6">
             <CardTitle className="text-sm sm:text-base font-medium">Outgoing</CardTitle>
-            <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+            <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
-            <div className="text-2xl sm:text-3xl font-bold text-blue-600">
+            <div className="text-2xl sm:text-3xl font-bold text-primary">
               {hasActiveFilters ? 
                 filteredTransfers.filter(t => t.direction === 'OUTGOING').length :
                 transfers.filter(t => t.direction === 'OUTGOING').length
@@ -404,13 +404,13 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersComponentProps) 
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">Sent out</p>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-2 border-green-200 dark:border-green-800">
+        <Card className="shadow-sm border-2 border-status-verified/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 sm:p-6">
             <CardTitle className="text-sm sm:text-base font-medium">Incoming</CardTitle>
-            <ArrowDownLeft className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+            <ArrowDownLeft className="h-4 w-4 sm:h-5 sm:w-5 text-status-verified" />
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
-            <div className="text-2xl sm:text-3xl font-bold text-green-600">
+            <div className="text-2xl sm:text-3xl font-bold text-status-verified">
               {hasActiveFilters ? 
                 filteredTransfers.filter(t => t.direction === 'INCOMING').length :
                 transfers.filter(t => t.direction === 'INCOMING').length

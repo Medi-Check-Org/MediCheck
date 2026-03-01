@@ -61,9 +61,9 @@ export default function VerifyBatchPage() {
     switch (normalized) {
       case "flagged":
         return {
-          bg: "bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700",
-          text: "text-red-700 dark:text-red-400",
-          badge: "text-red-600 dark:text-red-400",
+          bg: "bg-destructive/10 border border-destructive/20",
+          text: "text-destructive",
+          badge: "text-destructive",
           label: "Flagged",
           message: (
             <>
@@ -74,9 +74,9 @@ export default function VerifyBatchPage() {
         };
       case "recalled":
         return {
-          bg: "bg-orange-100 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-700",
-          text: "text-orange-700 dark:text-orange-400",
-          badge: "text-orange-700 dark:text-orange-400",
+          bg: "bg-status-warning/10 border border-status-warning/20",
+          text: "text-status-warning",
+          badge: "text-status-warning",
           label: "Recalled",
           message: (
             <>
@@ -87,9 +87,9 @@ export default function VerifyBatchPage() {
         };
       case "expired":
         return {
-          bg: "bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-700",
-          text: "text-gray-700 dark:text-gray-300",
-          badge: "text-gray-700 dark:text-gray-300",
+          bg: "bg-muted border border-border",
+          text: "text-muted-foreground",
+          badge: "text-muted-foreground",
           label: "Expired",
           message: (
             <>
@@ -100,9 +100,9 @@ export default function VerifyBatchPage() {
         };
       case "bully":
         return {
-          bg: "bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700",
-          text: "text-yellow-700 dark:text-yellow-400",
-          badge: "text-yellow-700 dark:text-yellow-400",
+          bg: "bg-status-warning/10 border border-status-warning/20",
+          text: "text-status-warning",
+          badge: "text-status-warning",
           label: "Bully",
           message: (
             <>
@@ -113,9 +113,9 @@ export default function VerifyBatchPage() {
         };
       case "in_transit":
         return {
-          bg: "bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700",
-          text: "text-blue-700 dark:text-blue-400",
-          badge: "text-blue-700 dark:text-blue-400",
+          bg: "bg-primary/10 border border-primary/20",
+          text: "text-primary",
+          badge: "text-primary",
           label: "In Transit",
           message: (
             <>
@@ -126,9 +126,9 @@ export default function VerifyBatchPage() {
         };
       case "delivered":
         return {
-          bg: "bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-700",
-          text: "text-green-700 dark:text-green-400",
-          badge: "text-green-700 dark:text-green-400",
+          bg: "bg-status-verified/10 border border-status-verified/20",
+          text: "text-status-verified",
+          badge: "text-status-verified",
           label: "Delivered",
           message: (
             <>
@@ -139,9 +139,9 @@ export default function VerifyBatchPage() {
         };
       case "created":
         return {
-          bg: "bg-slate-100 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-700",
-          text: "text-slate-700 dark:text-slate-300",
-          badge: "text-slate-700 dark:text-slate300",
+          bg: "bg-secondary border border-border",
+          text: "text-secondary-foreground",
+          badge: "text-secondary-foreground",
           label: "Created",
           message: (
             <>
@@ -151,9 +151,9 @@ export default function VerifyBatchPage() {
         };
       default:
         return {
-          bg: "bg-gray-100 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700",
-          text: "text-gray-700 dark:text-gray-300",
-          badge: "text-gray-700 dark:text-gray-300",
+          bg: "bg-muted border border-border",
+          text: "text-muted-foreground",
+          badge: "text-muted-foreground",
           label: status || "Unknown",
           message: null,
         };
@@ -195,8 +195,8 @@ export default function VerifyBatchPage() {
             <DesktopHeader />
             {/* Background Decorations */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-20 right-20 w-56 h-56 bg-blue-500/6 rounded-full blur-2xl"></div>
-                <div className="absolute bottom-20 left-20 w-40 h-40 bg-green-500/8 rounded-full blur-xl"></div>
+                <div className="absolute top-20 right-20 w-56 h-56 bg-primary/5 rounded-full blur-2xl"></div>
+                <div className="absolute bottom-20 left-20 w-40 h-40 bg-accent/5 rounded-full blur-xl"></div>
             </div>
             <main className="flex flex-1 items-center justify-center w-full px-2 sm:px-4">
                 <Card className="w-full max-w-xs sm:max-w-sm mx-auto rounded-xl shadow-lg z-10">
@@ -225,13 +225,13 @@ export default function VerifyBatchPage() {
             <DesktopHeader />
             {/* Background Decorations */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-20 right-20 w-56 h-56 bg-red-500/6 rounded-full blur-2xl"></div>
-                <div className="absolute bottom-20 left-20 w-40 h-40 bg-orange-500/8 rounded-full blur-xl"></div>
+                <div className="absolute top-20 right-20 w-56 h-56 bg-destructive/5 rounded-full blur-2xl"></div>
+                <div className="absolute bottom-20 left-20 w-40 h-40 bg-status-warning/5 rounded-full blur-xl"></div>
             </div>
             <main className="flex flex-1 items-center justify-center w-full px-2 sm:px-4">
                 <Card className="w-full max-w-md mx-auto rounded-xl shadow-lg z-10">
                     <CardHeader>
-                        <CardTitle className="text-xl sm:text-2xl font-bold text-red-600">Verification Error</CardTitle>
+                        <CardTitle className="text-xl sm:text-2xl font-bold text-destructive">Verification Error</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p className="text-sm sm:text-base">{error}</p>
@@ -248,9 +248,9 @@ export default function VerifyBatchPage() {
       <DesktopHeader />
       {/* Background Decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-20 w-64 h-64 bg-green-500/10 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-20 left-20 w-48 h-48 bg-blue-500/10 rounded-full blur-xl"></div>
-        <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-green-500/10 rounded-full blur-lg transform -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute top-20 right-20 w-64 h-64 bg-status-verified/10 rounded-full blur-2xl"></div>
+        <div className="absolute bottom-20 left-20 w-48 h-48 bg-primary/10 rounded-full blur-xl"></div>
+        <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-status-verified/10 rounded-full blur-lg transform -translate-x-1/2 -translate-y-1/2"></div>
       </div>
       <main className="flex flex-1 items-center justify-center w-full px-2 sm:px-4">
         <Card className="w-full max-w-lg mx-auto rounded-xl shadow-lg p-4 sm:p-8 my-8 sm:my-16 relative z-10">
@@ -286,8 +286,8 @@ export default function VerifyBatchPage() {
               );
             })() : valid ? (
               // fallback for valid but no status
-              <div className="rounded-xl p-4 sm:p-6 text-center transition-all duration-300 bg-gray-100 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700">
-                <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-gray-700 dark:text-gray-300">
+              <div className="rounded-xl p-4 sm:p-6 text-center transition-all duration-300 bg-muted border border-border">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-muted-foreground">
                   ℹ️ Unknown Status
                 </h2>
                 <p className="mt-2 text-base sm:text-lg font-medium">
@@ -296,14 +296,14 @@ export default function VerifyBatchPage() {
               </div>
             ) : (
               // INVALID: RED CARD
-              <div className="rounded-xl bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-700 p-4 sm:p-6 text-center transition-all duration-300">
-                <h2 className="text-2xl sm:text-3xl font-bold text-red-700 dark:text-red-400 mb-2">
-                  ⚠️ Invalid Signature
+              <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 sm:p-6 text-center transition-all duration-300">
+                <h2 className="text-2xl sm:text-3xl font-bold text-destructive mb-2">
+                  Invalid Signature
                 </h2>
-                <p className="text-sm sm:text-base text-red-700 dark:text-red-300">
+                <p className="text-sm sm:text-base text-destructive">
                   This batch QR code does not match any authentic record.
                 </p>
-                <p className="text-sm sm:text-base text-red-700 dark:text-red-300">
+                <p className="text-sm sm:text-base text-destructive">
                   Batch transfer has been cancelled, this batch id has been forged.
                 </p>
               </div>

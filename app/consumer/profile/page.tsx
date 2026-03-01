@@ -273,17 +273,17 @@ export default function ConsumerProfile() {
   const getResultColor = (result: string) => {
     switch (result) {
       case "GENUINE":
-        return "bg-green-100 text-green-800"
+        return "bg-status-verified/10 text-status-verified"
       case "SUSPICIOUS":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-status-warning/10 text-status-warning"
       case "COUNTERFEIT":
-        return "bg-red-100 text-red-800"
+        return "bg-destructive/10 text-destructive"
       case "EXPIRED":
-        return "bg-orange-100 text-orange-800"
+        return "bg-status-warning/10 text-status-warning"
       case "NOT_FOUND":
-        return "bg-gray-100 text-gray-800"
+        return "bg-muted text-muted-foreground"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-muted text-muted-foreground"
     }
   }
 

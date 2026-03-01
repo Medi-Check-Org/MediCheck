@@ -153,28 +153,28 @@ const HospitalReports = () => {
 
             {/* Visual Statistics Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="border-2 border-blue-200 dark:border-blue-800">
+                <Card className="border-2 border-primary/20">
                     <CardContent className="p-4 sm:p-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Total Reports</p>
-                                <p className="text-2xl font-bold text-blue-600">{reportsData?.recentReports?.length || 0}</p>
+                                <p className="text-2xl font-bold text-primary">{reportsData?.recentReports?.length || 0}</p>
                             </div>
-                            <ClipboardList className="h-8 w-8 text-blue-500" />
+                            <ClipboardList className="h-8 w-8 text-primary" />
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card  className="border-2 border-orange-200 dark:border-orange-800">
+                <Card  className="border-2 border-status-warning/20">
                     <CardContent className="p-4 sm:p-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Pending</p>
-                                <p className="text-2xl font-bold text-orange-600">
+                                <p className="text-2xl font-bold text-status-warning">
                                     {reportsData?.recentReports?.filter(r => r.status.toLowerCase() === 'pending').length || 0}
                                 </p>
                             </div>
-                            <Timer className="h-8 w-8 text-orange-500" />
+                            <Timer className="h-8 w-8 text-status-warning" />
                         </div>
                     </CardContent>
                 </Card>

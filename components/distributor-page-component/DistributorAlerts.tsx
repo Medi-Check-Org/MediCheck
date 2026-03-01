@@ -312,50 +312,50 @@ const DistributorAlerts = () => {
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-sm border-2 border-orange-200 dark:border-orange-800">
+                <Card className="shadow-sm border-2 border-status-warning/20">
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div className="space-y-1">
                                 <p className="text-xs sm:text-sm font-medium text-muted-foreground">Expiring</p>
-                                <div className="text-xl sm:text-2xl font-bold text-orange-600">{stats.expiring}</div>
+                                <div className="text-xl sm:text-2xl font-bold text-status-warning">{stats.expiring}</div>
                             </div>
-                            <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+                            <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-status-warning" />
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-sm border-2 border-yellow-200 dark:border-yellow-800">
+                <Card className="shadow-sm border-2 border-status-warning/20">
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div className="space-y-1">
                                 <p className="text-xs sm:text-sm font-medium text-muted-foreground">Suspicious</p>
-                                <div className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.suspicious}</div>
+                                <div className="text-xl sm:text-2xl font-bold text-status-warning">{stats.suspicious}</div>
                             </div>
-                            <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
+                            <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-status-warning" />
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-sm border-2 border-green-200 dark:border-green-800">
+                <Card className="shadow-sm border-2 border-status-verified/20">
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div className="space-y-1">
                                 <p className="text-xs sm:text-sm font-medium text-muted-foreground">Active</p>
-                                <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.active}</div>
+                                <div className="text-xl sm:text-2xl font-bold text-status-verified">{stats.active}</div>
                             </div>
-                            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                            <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-status-verified" />
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="shadow-sm border-2 border-gray-200 dark:border-gray-700">
+                <Card className="shadow-sm border border-border">
                     <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                             <div className="space-y-1">
                                 <p className="text-xs sm:text-sm font-medium text-muted-foreground">Dismissed</p>
-                                <div className="text-xl sm:text-2xl font-bold text-gray-600">{stats.dismissed}</div>
+                                <div className="text-xl sm:text-2xl font-bold text-muted-foreground">{stats.dismissed}</div>
                             </div>
-                            <X className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                            <X className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                         </div>
                     </CardContent>
                 </Card>

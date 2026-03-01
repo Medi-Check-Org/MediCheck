@@ -106,17 +106,17 @@ const RegulatorReports = () => {
             case 'completed':
             case 'resolved':
             case 'delivered':
-                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                return 'bg-status-verified/10 text-status-verified'
             case 'pending':
             case 'investigating':
             case 'in_transit':
-                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                return 'bg-status-warning/10 text-status-warning'
             case 'failed':
             case 'dismissed':
             case 'flagged':
-                return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                return 'bg-destructive/10 text-destructive'
             default:
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                return 'bg-muted text-muted-foreground'
         }
     }
 
@@ -144,9 +144,9 @@ const RegulatorReports = () => {
             </div>
 
             {error && (
-                <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+                <Card className="border-destructive/20 bg-destructive/5">
                     <CardContent className="pt-6">
-                        <div className="flex items-center gap-2 text-red-800 dark:text-red-200">
+                        <div className="flex items-center gap-2 text-destructive">
                             <AlertTriangle className="h-4 w-4" />
                             <span>{error}</span>
                             <Button 
@@ -185,7 +185,7 @@ const RegulatorReports = () => {
                                 <Shield className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-orange-600">{analytics.summary.activeInvestigations}</div>
+                                <div className="text-2xl font-bold text-status-warning">{analytics.summary.activeInvestigations}</div>
                                 <p className="text-xs text-muted-foreground">
                                     {analytics.summary.resolvedInvestigations} resolved this month
                                 </p>
@@ -198,7 +198,7 @@ const RegulatorReports = () => {
                                 <Activity className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-blue-600">{analytics.summary.totalScans}</div>
+                                <div className="text-2xl font-bold text-primary">{analytics.summary.totalScans}</div>
                                 <p className="text-xs text-muted-foreground">
                                     This month
                                 </p>
@@ -211,7 +211,7 @@ const RegulatorReports = () => {
                                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-green-600">{analytics.summary.totalBatches}</div>
+                                <div className="text-2xl font-bold text-status-verified">{analytics.summary.totalBatches}</div>
                                 <p className="text-xs text-muted-foreground">
                                     Total registered
                                 </p>
@@ -242,9 +242,9 @@ const RegulatorReports = () => {
                                                     {stat.organizationType.replace('_', ' ')}
                                                 </Badge>
                                                 {stat.isVerified ? (
-                                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                                    <CheckCircle className="h-4 w-4 text-status-verified" />
                                                 ) : (
-                                                    <XCircle className="h-4 w-4 text-gray-400" />
+                                                    <XCircle className="h-4 w-4 text-muted-foreground" />
                                                 )}
                                             </div>
                                             <span className="font-semibold">{stat._count.id}</span>
@@ -346,11 +346,11 @@ const RegulatorReports = () => {
                                 <div className="space-y-1">
                                     <div className="flex justify-between text-sm">
                                         <span>Active Cases</span>
-                                        <span className="font-medium text-orange-600">{analytics.summary.activeInvestigations}</span>
+                                        <span className="font-medium text-status-warning">{analytics.summary.activeInvestigations}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span>Resolved</span>
-                                        <span className="font-medium text-green-600">{analytics.summary.resolvedInvestigations}</span>
+                                        <span className="font-medium text-status-verified">{analytics.summary.resolvedInvestigations}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span>Total Cases</span>
@@ -368,7 +368,7 @@ const RegulatorReports = () => {
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span>Verified</span>
-                                        <span className="font-medium text-green-600">{analytics.summary.verifiedOrganizations}</span>
+                                        <span className="font-medium text-status-verified">{analytics.summary.verifiedOrganizations}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span>Verification Rate</span>
