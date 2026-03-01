@@ -44,13 +44,12 @@ export default function RegulatorDashboard() {
     loadOrg();
   }, []);
 
-  // 3️⃣ Guard rendering while loading
   if (orgLoading || !orgId) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto"></div>
-          <p className="text-muted-foreground font-medium">Loading regulator dashboard...</p>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 border-2 border-border border-t-primary rounded-full animate-spin" />
+          <p className="text-muted-foreground text-sm">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -70,25 +69,20 @@ export default function RegulatorDashboard() {
       <main className="flex-1 overflow-y-auto lg:ml-0">
         
         {/* Mobile Header */}
-        <div className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSidebarOpen(true)}
-            className="h-8 w-8 p-0"
-          >
-            <Menu className="h-4 w-4" />
-          </Button>
-          <div className="flex items-center">
-            <Shield className="h-6 w-6 text-sidebar-primary mr-2" /> {/* Shield icon */}
-            <h1 className="font-semibold text-lg">MediCheck</h1>
-          </div>
-          <div className="flex items-center justify-end w-8">
+        <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-card border-b border-border">
+          <div className="flex items-center justify-between px-4 h-14">
+            <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="h-8 w-8 p-0">
+              <Menu className="h-5 w-5" />
+            </Button>
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              <span className="font-bold text-sm tracking-tight">MediCheck</span>
+            </div>
             <ThemeToggle />
           </div>
         </div>
 
-        <div className="p-4 lg:p-8">
+        <div className="p-4 lg:p-8 mt-14 lg:mt-0">
 
           {activeTab === "dashboard" && (
             <RegulatorMain setActiveTab={setActiveTab} />

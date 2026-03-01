@@ -107,57 +107,26 @@ export default function ManufacturerDashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-background relative page-transition">
-
-      {/* Simplified Background Decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/3 rounded-full blur-3xl bg-decoration"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/4 rounded-full blur-2xl bg-decoration"></div>
-        <div className="absolute top-1/2 right-1/3 w-32 h-32 bg-primary/6 rounded-full blur-xl bg-decoration"></div>
-      </div>
+    <div className="flex h-screen bg-background">
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b">
-        <div className="flex items-center justify-between p-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsMobileMenuOpen(true)}
-            className="p-2"
-          >
-            <Menu className="h-6 w-6" />
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border">
+        <div className="flex items-center justify-between px-4 h-14">
+          <Button variant="ghost" size="sm" onClick={() => setIsMobileMenuOpen(true)} className="h-8 w-8 p-0">
+            <Menu className="h-5 w-5" />
           </Button>
-          
-          <div className="flex items-center space-x-2">
-            <Shield className="h-6 w-6 text-primary" />
-            <span className="font-bold text-lg">MediCheck</span>
+          <div className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            <span className="font-bold text-sm tracking-tight">MediCheck</span>
           </div>
-          
           <ThemeToggle />
         </div>
       </div>
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setIsMobileMenuOpen(false)}>
-          <div className="fixed left-0 top-0 bottom-0 w-80 bg-background shadow-xl" onClick={e => e.stopPropagation()}>
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Shield className="h-6 w-6 text-primary" />
-                  <span className="font-bold text-lg">MediCheck</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-            
+        <div className="lg:hidden fixed inset-0 z-50 bg-foreground/20 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
+          <div className="fixed left-0 top-0 bottom-0 w-72 bg-sidebar shadow-xl border-r border-sidebar-border" onClick={e => e.stopPropagation()}>
             <ManufacturerSidebar 
               activeTab={activeTab} 
               setActiveTab={setActiveTab} 

@@ -117,57 +117,55 @@ export function RegulatorSidebar({ activeTab, setActiveTab, isOpen = false, onCl
         </div>
 
         {/* Sidebar Header */}
-        <div className="p-4 sm:p-6 border-b border-border flex-shrink-0">
-          <Link href="/" className="flex items-center space-x-2 group">
-            <div className="relative group-hover:scale-110 transition-transform duration-300">
-              <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-sidebar-primary" />
-            </div>
-            <span className="font-bold text-lg sm:text-xl text-sidebar-foreground bg-gradient-to-r from-sidebar-foreground to-sidebar-foreground/80 bg-clip-text">
-              MediCheck
-            </span>
+        <div className="px-5 py-4 border-b border-sidebar-border flex-shrink-0 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
+            <Shield className="h-6 w-6 text-sidebar-primary flex-shrink-0" />
+            <span className="font-bold text-base text-sidebar-foreground tracking-tight">MediCheck</span>
           </Link>
+          <div className="lg:hidden">
+            <Button variant="ghost" size="sm" onClick={onClose} className="h-7 w-7 p-0 text-sidebar-foreground/60 hover:text-sidebar-foreground">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Organization Card */}
-        <div className="p-4 pt-6 flex flex-col items-center border-b border-sidebar-border bg-gradient-to-b from-role-regulator/10 to-transparent rounded-b-xl shadow-sm mb-2">
-          <div className="flex items-center gap-2 mb-2">
-            <Badge variant="regulator" className="px-3 py-1 text-xs rounded-full shadow bg-gradient-to-r from-[#4C4F9E] to-[#0F2A44] text-white border-0">
-              <Shield className="h-3 w-3 mr-1 inline-block" />
-              Regulator
-            </Badge>
+        <div className="px-5 py-4 border-b border-sidebar-border flex-shrink-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <div className="h-1.5 w-1.5 rounded-full bg-role-regulator flex-shrink-0" />
+            <span className="text-xs font-medium text-role-regulator uppercase tracking-widest">Regulator</span>
           </div>
-          <span className="font-bold text-base text-sidebar-foreground text-center tracking-wide mb-1">
-            {orgName}
-          </span>
-          <span className="text-xs text-muted-foreground text-center italic">Regulatory Authority</span>
+          <span className="block font-semibold text-sm text-sidebar-foreground truncate mt-1">{orgName}</span>
+          <span className="text-xs text-sidebar-foreground/50">Regulatory Authority</span>
         </div>
 
-        <nav className="flex-1 px-2 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon
+            const isActive = activeTab === item.id as unknown as string
             return (
               <Button
                 key={item.id}
                 variant="ghost"
-                className={`w-full justify-start cursor-pointer hover:bg-sidebar-accent/50 transition-all duration-200 ${activeTab === item.id as unknown as string ? 'border-l-[3px] border-[#4C4F9E] bg-sidebar-accent/50 text-sidebar-foreground rounded-l-none' : 'text-sidebar-foreground/70'}`}
+                className={`w-full justify-start cursor-pointer h-9 px-3 text-sm font-medium transition-colors duration-150 ${isActive ? 'bg-sidebar-accent text-sidebar-foreground border-l-2 border-role-regulator rounded-l-none pl-[10px]' : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'}`}
                 onClick={() => handleTabClick(item.id as ManufacturerTab)}
               >
-                <Icon className={`h-3 w-3 sm:h-4 sm:w-4 mr-2 sm:mr-3 ${activeTab === item.id as unknown as string ? 'text-[#4C4F9E]' : ''}`} />
-                <span className="text-sm">{item.label}</span>
+                <Icon className={`h-4 w-4 mr-2.5 flex-shrink-0 ${isActive ? 'text-role-regulator' : ''}`} />
+                <span>{item.label}</span>
               </Button>
             )
           })}
         </nav>
 
         {/* Sign Out Button */}
-        <div className="p-4 border-t flex-shrink-0 space-y-3">
+        <div className="px-3 py-3 border-t border-sidebar-border flex-shrink-0">
           <Button
             variant="ghost"
-            className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors text-xs sm:text-sm"
+            className="w-full justify-start h-9 px-3 text-sm text-sidebar-foreground/60 hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
             onClick={handleSignOut}
             disabled={isSigningOut}
           >
-            <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-2 sm:mr-3" />
+            <LogOut className="h-4 w-4 mr-2.5 flex-shrink-0" />
             <span>Sign Out</span>
           </Button>
         </div>

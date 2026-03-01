@@ -142,74 +142,61 @@ export function ManufacturerSidebar({
         >
 
           {/* Sidebar Header */}
-          <div className="p-4 sm:p-6 border-b border-border flex items-center justify-between">
-
-            <Link href="/" className="flex items-center space-x-2 group">
-              <div className="relative group-hover:scale-110 transition-transform duration-300">
-                <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-sidebar-primary" />
-              </div>
-              <span className="font-bold text-lg sm:text-xl text-sidebar-foreground bg-linear-to-r from-sidebar-foreground to-sidebar-foreground/80 bg-clip-text">
-                MediCheck
-              </span>
+          <div className="px-5 py-4 border-b border-sidebar-border flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-2.5">
+              <Shield className="h-6 w-6 text-sidebar-primary flex-shrink-0" />
+              <span className="font-bold text-base text-sidebar-foreground tracking-tight">MediCheck</span>
             </Link>
-            {/* Close button for mobile */}
             {isMobile && (
               <button
                 aria-label="Close sidebar"
-                className="ml-2 p-2 rounded cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800"
-                onClick={() => {
-                  setShowSidebar(false);
-                  if (onTabSelect) onTabSelect();
-                }}
+                className="p-1.5 rounded-md cursor-pointer hover:bg-sidebar-accent/50 text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors"
+                onClick={() => { setShowSidebar(false); if (onTabSelect) onTabSelect(); }}
               >
-                <span className="sr-only">Close sidebar</span>
-                <svg width="20" height="20" viewBox="0 0 20 20" className="text-gray-600 dark:text-gray-300"><path d="M6 6l8 8M6 14L14 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 5l8 8M5 13L13 5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" /></svg>
               </button>
             )}
           </div>
 
-          <section className="flex flex-col space-y-2 h-full">
+          <section className="flex flex-col h-full overflow-hidden">
             {/* Organization Card */}
-            <div className=" p-4 pt-6 flex flex-col items-center border-b border-sidebar-border bg-linear-to-b from-role-manufacturer/10 to-transparent rounded-b-xl shadow-sm">
-              <Badge variant="manufacturer" className="mb-2 px-3 py-1 text-xs rounded-full shadow bg-gradient-to-r from-[#0FA3B1] to-[#0C8A96] text-white border-0">
-                Manufacturer
-              </Badge>
-              <span className="font-bold text-base text-sidebar-foreground text-center tracking-wide mb-1">
-                {orgName}
-              </span>
-              <span className="text-xs text-muted-foreground text-center italic">Manufacturing Organization</span>
+            <div className="px-5 py-4 border-b border-sidebar-border">
+              <div className="flex items-center gap-2 mb-0.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-sidebar-primary flex-shrink-0" />
+                <span className="text-xs font-medium text-sidebar-primary uppercase tracking-widest">Manufacturer</span>
+              </div>
+              <span className="block font-semibold text-sm text-sidebar-foreground truncate mt-1">{orgName}</span>
+              <span className="text-xs text-sidebar-foreground/50">Manufacturing Organization</span>
             </div>
             {/* Navigation */}
-            <nav className=" px-2 py-4 h-[50vh] space-y-1 overflow-y-auto">
+            <nav className="px-3 py-3 flex-1 overflow-y-auto space-y-0.5">
               {menuItems.map((item) => {
                 const Icon = item.icon
+                const isActive = activeTab === item.id
                 return (
                   <Button
                     key={item.id}
                     variant="ghost"
-                    className={`w-full justify-start cursor-pointer hover:bg-sidebar-accent/50 transition-all duration-200 group ${activeTab === item.id ? 'border-l-[3px] border-[#0FA3B1] bg-sidebar-accent/50 text-sidebar-foreground rounded-l-none' : 'text-sidebar-foreground/70'} ${isMobile ? 'text-base h-12' : 'text-xs sm:text-sm'}`}
+                    className={`w-full justify-start cursor-pointer h-9 px-3 text-sm font-medium transition-colors duration-150 ${isActive ? 'bg-sidebar-accent text-sidebar-foreground border-l-2 border-sidebar-primary rounded-l-none pl-[10px]' : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'} ${isMobile ? 'h-11 text-base' : ''}`}
                     onClick={() => handleTabSelect(item.id as ManufacturerTab)}
                   >
-                    <Icon className={`${isMobile ? 'h-5 w-5 mr-3' : 'h-3 w-3 sm:h-4 sm:w-4 mr-2 sm:mr-3'} ${activeTab === item.id ? 'text-[#0FA3B1]' : ''} group-hover:scale-110 transition-transform duration-200`} />
-                    <span className={isMobile ? '' : 'hidden sm:inline'}>{item.label}</span>
-                    {!isMobile && <span className="sm:hidden">{item.label.split(' ')[0]}</span>}
+                    <Icon className={`flex-shrink-0 ${isMobile ? 'h-5 w-5 mr-3' : 'h-4 w-4 mr-2.5'} ${isActive ? 'text-sidebar-primary' : ''}`} />
+                    <span>{item.label}</span>
                   </Button>
                 )
               })}
             </nav>
             {/* Sign Out Button */}
-            <div className=" flex-1 flex justify-end items-end">
-              <div className="w-full px-2 border-t py-4 ">
-                <Button
-                  className={`py-3 h-12 cursor-pointer flex items-center gap-1 justify-center`}
-                  onClick={handleSignOut}
-                  disabled={isSigningOut}
-                >
-                  <LogOut className={`${isMobile ? 'h-5 w-5' : 'h-3 w-3 sm:h-4 sm:w-4'}`} />
-                  <span className={isMobile ? 'block' : 'hidden sm:inline'}>Sign Out</span>
-                  {!isMobile && <span className="sm:hidden">Out</span>}
-                </Button>
-              </div>
+            <div className="px-3 py-3 border-t border-sidebar-border">
+              <Button
+                variant="ghost"
+                className="w-full justify-start h-9 px-3 text-sm text-sidebar-foreground/60 hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
+                onClick={handleSignOut}
+                disabled={isSigningOut}
+              >
+                <LogOut className="h-4 w-4 mr-2.5 flex-shrink-0" />
+                <span>Sign Out</span>
+              </Button>
             </div>
           </section>
 

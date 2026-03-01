@@ -708,25 +708,21 @@ export default function RegisterPage() {
 
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="border-b border-border bg-card sticky top-0 z-50">
+      <nav className="border-b border-border bg-card/95 backdrop-blur-sm fixed top-0 left-0 right-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="bg-primary p-1.5 rounded-lg">
-                <Shield className="h-5 w-5 text-primary-foreground" />
+          <div className="flex justify-between items-center h-14">
+            <Link href="/" className="flex items-center gap-2.5">
+              <div className="bg-primary p-1.5 rounded-md">
+                <Shield className="h-4 w-4 text-primary-foreground" />
               </div>
-              <div>
-                <span className="font-bold text-lg text-foreground">MediCheck</span>
-                <span className="text-xs text-muted-foreground font-mono ml-2 hidden sm:inline">Blockchain Secured</span>
-              </div>
+              <span className="font-bold text-base text-foreground tracking-tight">MediCheck</span>
             </Link>
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <Link href="/">
-                <Button variant="outline" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">Back to Home</span>
-                  <span className="sm:hidden">Back</span>
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-1.5" />
+                  <span>Back</span>
                 </Button>
               </Link>
             </div>
@@ -735,74 +731,81 @@ export default function RegisterPage() {
       </nav>
 
       {/* Main Content */}
-      <section className="py-8 sm:py-16 px-4 sm:px-6 lg:px-8">
+      <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {!accountType ? (
-            <div className="max-w-2xl mx-auto">
-              <div className="text-center mb-12">
-                <h1 className="text-4xl font-bold text-foreground mb-4">
+            <div className="max-w-xl mx-auto">
+              <div className="mb-10">
+                <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest block mb-3">Getting Started</span>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 tracking-tight">
                   Create Your Account
                 </h1>
-                <p className="text-lg text-muted-foreground">
-                  Choose the account type that best fits your needs
+                <p className="text-muted-foreground text-sm">
+                  Select the account type that matches your role in the medication supply chain.
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card 
-                  className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-primary/50 group"
+              <div className="grid sm:grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  className="text-left border border-border rounded-lg p-6 bg-card hover:border-primary hover:bg-muted/30 transition-colors cursor-pointer group"
                   onClick={() => setAccountType("organization")}
                 >
-                  <CardContent className="p-8 text-center">
-                    <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
-                      <Building2 className="h-7 w-7 text-primary" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-foreground mb-3">Organization</h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      For manufacturers, distributors, hospitals, pharmacies, and regulatory agencies
-                    </p>
-                  </CardContent>
-                </Card>
+                  <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center mb-4">
+                    <Building2 className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-base text-foreground mb-1.5">Organization</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Manufacturers, distributors, hospitals, pharmacies, and regulatory agencies.
+                  </p>
+                </button>
 
-                <Card 
-                  className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-primary/50 group"
+                <button
+                  type="button"
+                  className="text-left border border-border rounded-lg p-6 bg-card hover:border-accent hover:bg-muted/30 transition-colors cursor-pointer group"
                   onClick={() => setAccountType("consumer")}
                 >
-                  <CardContent className="p-8 text-center">
-                    <div className="h-14 w-14 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-6 group-hover:bg-accent/20 transition-colors">
-                      <User className="h-7 w-7 text-accent" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-foreground mb-3">Consumer</h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      For patients and consumers who want to verify medications
-                    </p>
-                  </CardContent>
-                </Card>
+                  <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center mb-4">
+                    <User className="h-5 w-5 text-accent" />
+                  </div>
+                  <h3 className="font-semibold text-base text-foreground mb-1.5">Consumer</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    Patients and individuals who want to verify medication authenticity.
+                  </p>
+                </button>
               </div>
             </div>
 
           ) : (
             <div className="max-w-2xl mx-auto">
-              <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-foreground mb-2">
-                  {accountType === "organization" ? "Organization Registration" : "Create Account"}
+              <div className="mb-8">
+                <button
+                  type="button"
+                  onClick={() => { setAccountType(null); setStep(1); }}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-5 cursor-pointer"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  <span>Change account type</span>
+                </button>
+                <h1 className="text-2xl font-bold text-foreground mb-1.5 tracking-tight">
+                  {accountType === "organization" ? "Organization Registration" : "Create Consumer Account"}
                 </h1>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {accountType === "organization"
-                    ? "Register your organization to start managing medication verification"
-                    : "Create your consumer account for medication verification"}
+                    ? "Register your organization to manage medication verification."
+                    : "Create your account to verify medications."}
                 </p>
                 {accountType === "organization" && (
-                  <div className="mt-4">
-                    <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
-                      Step {step} of 2
-                    </Badge>
+                  <div className="flex items-center gap-2 mt-4">
+                    <div className={`h-1.5 rounded-full transition-all ${step >= 1 ? 'bg-primary w-8' : 'bg-border w-8'}`} />
+                    <div className={`h-1.5 rounded-full transition-all ${step >= 2 ? 'bg-primary w-8' : 'bg-border w-8'}`} />
+                    <span className="text-xs text-muted-foreground ml-1">Step {step} of 2</span>
                   </div>
                 )}
               </div>
 
               <Card className="shadow-sm border border-border">
-                <CardContent className="p-8">
+                <CardContent className="p-6 sm:p-8">
                   
                 <form onSubmit={handleSubmit} className="space-y-6">
                     

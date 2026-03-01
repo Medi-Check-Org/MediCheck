@@ -84,44 +84,36 @@ export default function DrugDistributorDashboard() {
 
   if (orgLoading || batchesLoading || !orgId) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto"></div>
-          <p className="text-muted-foreground font-medium">Loading distributor dashboard...</p>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 border-2 border-border border-t-primary rounded-full animate-spin" />
+          <p className="text-muted-foreground text-sm">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
-  const MobileHeader = () => (
-    <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b">
-      <div className="flex items-center justify-between p-4">
-        <Button variant="ghost" size="sm" onClick={() => setIsMobileMenuOpen(true)} className="p-2">
-          <Menu className="h-6 w-6" />
-        </Button>
-        <div className="flex items-center space-x-2">
-          <Shield className="h-6 w-6 text-primary" />
-          <span className="font-bold text-lg">MediCheck</span>
-        </div>
-        <ThemeToggle />
-      </div>
-    </div>
-  );
-
   return (
-    <div className="flex h-screen bg-background relative overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-16 left-16 w-80 h-80 bg-primary/4 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-16 right-16 w-60 h-60 bg-accent/5 rounded-full blur-2xl"></div>
-        <div className="absolute top-1/2 left-1/3 w-36 h-36 bg-primary/7 rounded-full blur-xl"></div>
+    <div className="flex h-screen bg-background">
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border">
+        <div className="flex items-center justify-between px-4 h-14">
+          <Button variant="ghost" size="sm" onClick={() => setIsMobileMenuOpen(true)} className="h-8 w-8 p-0">
+            <Menu className="h-5 w-5" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            <span className="font-bold text-sm tracking-tight">MediCheck</span>
+          </div>
+          <ThemeToggle />
+        </div>
       </div>
-      <MobileHeader />
       <div className="hidden lg:block">
         <DistributorSidebar activeTab={activeTab} setActiveTab={setActiveTab} orgId={orgId} />
       </div>
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setIsMobileMenuOpen(false)}>
-          <div className="fixed left-0 top-0 bottom-0 w-80 bg-background shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="lg:hidden fixed inset-0 z-50 bg-foreground/20 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
+          <div className="fixed left-0 top-0 bottom-0 w-72 bg-sidebar shadow-xl border-r border-sidebar-border" onClick={e => e.stopPropagation()}>
             <DistributorSidebar 
               activeTab={activeTab} 
               setActiveTab={setActiveTab} 
@@ -132,8 +124,8 @@ export default function DrugDistributorDashboard() {
           </div>
         </div>
       )}
-      <main className="flex-1 overflow-y-auto relative z-10 lg:ml-0">
-        <div className="p-4 sm:p-6 lg:p-8 mt-16 lg:mt-0">
+      <main className="flex-1 overflow-y-auto lg:ml-0">
+        <div className="p-4 sm:p-6 lg:p-8 mt-14 lg:mt-0">
           {activeTab === "dashboard" && (<DistributorMain setActiveTab={setActiveTab} orgId={orgId} />)}
           {activeTab === "inventory" && (<DistributorInventory orgId={orgId} />)}
           {activeTab === "team" && (<TeamMemberManagement organizationType="distributor" organizationId={orgId} />)}
@@ -143,7 +135,7 @@ export default function DrugDistributorDashboard() {
           {activeTab === "qr-scanner" && (
             <div className="flex justify-center items-center min-h-[500px]">
               <div className="hidden lg:block w-full max-w-[600px]">
-                <Card className="border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card className="border border-border shadow-sm">
                   <CardContent>
                     <div className="flex justify-center items-center">
                       <QRScanner onScan={handleQRScan} />
