@@ -46,6 +46,8 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
 
     const [products, setProducts] = useState<Product[]>([]);
 
+    const [gettingProduct, setGettingProduct] = useState(true)
+
     const [searchQuery, setSearchQuery] = useState("");
 
     const [isTransferOpen, setIsTransferOpen] = useState(false);
@@ -62,9 +64,16 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
     }, [allBatches, orgId]);
 
     const loadProducts = async () => {
+
+        setGettingProduct(true)
+
         try {
+
             const res = await fetch(`/api/web/products?organizationId=${orgId}`);
+
             const data = await res.json();
+
+            console.log(data)
 
             if (res.ok) {
                 setProducts(data.products || []);
@@ -73,6 +82,9 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
             }
         } catch (error) {
             console.error("Failed to load products:", error); // we need visible error logging for users or placeholder
+        }
+        finally {
+            setGettingProduct(false)
         }
     };
 
@@ -280,6 +292,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
 
     return (
         <div className="space-y-6">
+
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
                     <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Batch Management</h1>
@@ -288,13 +301,18 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                 {/* create batch dialog */}
                 <Dialog open={isCreateBatchOpen} onOpenChange={setIsCreateBatchOpen}>
                     <DialogTrigger asChild>
-                        <Button className="cursor-pointer w-full sm:w-auto" disabled={products.length === 0}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            <span className="hidden sm:inline">Create Batch</span>
-                            <span className="sm:hidden">New Batch</span>
-                            {products.length === 0 && <span className="hidden sm:inline"> (No products)</span>}
+                        <Button className="cursor-pointer w-full sm:w-auto" disabled={gettingProduct || products.length === 0}>
+                            {!gettingProduct && <Plus className="h-4 w-4" />}
+                            {gettingProduct ? <span>Loading Product...</span> : 
+                                <>
+                                    <span className="hidden sm:inline">Create Batch</span>
+                                    <span className="sm:hidden">New Batch</span>
+                                </>
+                            }
+                            {gettingProduct || (products.length === 0 && <span className="hidden sm:inline"> (No products)</span>)}
                         </Button>
                     </DialogTrigger>
+                    
                     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Create New Batch</DialogTitle>

@@ -24,18 +24,25 @@ export default function LoginPage() {
   const { user, isSignedIn } = useUser()
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    if (!signIn) return
+
+    e.preventDefault();
+
+    setIsLoading(true);
+    
+    if (!signIn) return;
+
     try {
       const result = await signIn.create({ identifier: email, password })
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId })
         toast.success("Successfully signed in!")
       }
-    } catch (err) {
+    }
+    catch (err) {
+      console.log(err)
       toast.error(err instanceof Error ? err.message : String(err))
-    } finally {
+    }
+    finally {
       setIsLoading(false)
     }
   }
