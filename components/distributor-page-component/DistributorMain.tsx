@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { LoadingSpinner } from "@/components/ui/loading"
+import { LoadingTable } from "@/components/ui/loading"
 import { Package, AlertTriangle, TrendingUp, Truck, Building2, QrCode } from "lucide-react";
 import { ManufacturerTab } from "@/utils";
 import { useEffect, useState } from "react"
@@ -90,10 +90,19 @@ const DistributorMain = ({ setActiveTab, orgId }: {
 
     if (loading) {
         return (
-            <div className="space-y-8">
-                <h1 className="font-bold text-2xl sm:text-3xl text-foreground">Distributor Dashboard</h1>
-                <div className="flex items-center justify-center p-8">
-                    <LoadingSpinner size="large" text="Loading dashboard..." />
+            <div className="space-y-6">
+                <div className="skeleton h-7 w-48 rounded" aria-hidden="true" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="bg-card border border-border rounded-lg p-5">
+                            <div className="skeleton h-3 w-24 rounded mb-4" />
+                            <div className="skeleton h-7 w-16 rounded mb-2" />
+                            <div className="skeleton h-3 w-32 rounded" />
+                        </div>
+                    ))}
+                </div>
+                <div className="bg-card border border-border rounded-lg p-5">
+                    <LoadingTable rows={3} columns={2} />
                 </div>
             </div>
         );

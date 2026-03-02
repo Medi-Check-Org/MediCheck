@@ -34,7 +34,6 @@ export default function DrugDistributorDashboard() {
 
   useEffect(() => {
     if (scannedQRcodeResult) {
-      console.log(scannedQRcodeResult);
       window.location.href = scannedQRcodeResult;
     }
   }, [scannedQRcodeResult])

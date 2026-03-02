@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Pill, Package, AlertTriangle, TrendingUp, Clock, CheckCircle, Search, QrCode, Building2, FileText, Activity } from "lucide-react"
 import { PharmacySidebar } from "@/components/pharmacy-sidebar"
 import { TeamMemberManagement } from "@/components/team-member-management"
+import { UniversalLoader } from "@/components/ui/universal-loader"
 import { toast } from "react-toastify"
 
 export default function PharmacyDashboard() {
@@ -69,11 +70,11 @@ export default function PharmacyDashboard() {
   ]
 
   const handleFillPrescription = () => {
-    alert("Opening prescription filling interface...")
+    setActiveTab("prescriptions")
   }
 
   const handleVerifyMedication = () => {
-    alert("Opening medication verification scanner...")
+    toast.info("Please use the QR scanner on a mobile device to verify medication.")
   }
 
   const handleCheckInventory = () => {
@@ -251,10 +252,10 @@ export default function PharmacyDashboard() {
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <div>
-                  <h1 className="font-sans font-bold text-3xl text-foreground">Prescription Management</h1>
+                  <h1 className="font-semibold text-xl text-foreground tracking-tight">Prescription Management</h1>
                   <p className="text-muted-foreground">Search and manage all prescriptions</p>
                 </div>
-                <Button onClick={() => alert("Adding new prescription...")}>
+                <Button>
                   <Pill className="h-4 w-4 mr-2" />
                   New Prescription
                 </Button>
@@ -274,7 +275,7 @@ export default function PharmacyDashboard() {
                         onChange={(e) => setPrescriptionSearch(e.target.value)}
                       />
                     </div>
-                    <Button onClick={() => alert(`Searching for: ${prescriptionSearch}`)}>
+                    <Button onClick={() => toast.info("Searching for: " + prescriptionSearch)}>
                       <Search className="h-4 w-4 mr-2" />
                       Search
                     </Button>
@@ -316,7 +317,7 @@ export default function PharmacyDashboard() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <Button size="sm" onClick={() => alert(`Viewing details for ${prescription.id}`)}>
+                            <Button size="sm" onClick={() => toast.info("Viewing details for " + prescription.id)}>
                               View
                             </Button>
                           </TableCell>
@@ -333,10 +334,10 @@ export default function PharmacyDashboard() {
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <div>
-                  <h1 className="font-sans font-bold text-3xl text-foreground">Inventory Management</h1>
+                  <h1 className="font-semibold text-xl text-foreground tracking-tight">Inventory Management</h1>
                   <p className="text-muted-foreground">Current medication stock and ordering</p>
                 </div>
-                <Button onClick={() => alert("Adding new medication to inventory...")}>
+                <Button>
                   <Package className="h-4 w-4 mr-2" />
                   Add Stock
                 </Button>
@@ -386,7 +387,7 @@ export default function PharmacyDashboard() {
                           <TableCell>
                             <Button
                               size="sm"
-                              onClick={() => alert(`Reordering ${item.medication}...`)}
+                              onClick={() => toast.info("Reordering " + item.medication)}
                               disabled={item.status === "Good"}
                             >
                               Reorder
@@ -410,7 +411,7 @@ export default function PharmacyDashboard() {
 
           {activeTab === "reports" && (
             <div className="space-y-6">
-              <h1 className="font-sans font-bold text-3xl text-foreground">Reports & Analytics</h1>
+              <h1 className="font-semibold text-xl text-foreground tracking-tight">Reports &amp; Analytics</h1>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
@@ -434,7 +435,7 @@ export default function PharmacyDashboard() {
                       </div>
                       <div className="pt-4 border-t">
                         <p className="text-sm text-muted-foreground">
-                          <span className="text-green-600">+12.4%</span> increase from last month
+                          <span className="text-status-verified font-medium">+12.4%</span> increase from last month
                         </p>
                       </div>
                     </div>
@@ -487,7 +488,7 @@ export default function PharmacyDashboard() {
                         <span>Next Renewal</span>
                         <span className="text-sm">January 2025</span>
                       </div>
-                      <Button className="w-full mt-4" onClick={() => alert("Generating compliance report...")}>
+                      <Button className="w-full mt-4" onClick={() => toast.info("Generating compliance report...")}>
                         Generate Report
                       </Button>
                     </div>
@@ -500,15 +501,15 @@ export default function PharmacyDashboard() {
                     <CardDescription>Download detailed reports</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <Button variant="outline" className="w-full justify-start" onClick={() => alert("Exporting sales report...")}>
+                    <Button variant="outline" className="w-full justify-start" onClick={() => toast.info("Exporting sales report...")}>
                       <FileText className="h-4 w-4 mr-2" />
                       Sales Report (PDF)
                     </Button>
-                    <Button variant="outline" className="w-full justify-start" onClick={() => alert("Exporting inventory report...")}>
+                    <Button variant="outline" className="w-full justify-start" onClick={() => toast.info("Exporting inventory report...")}>
                       <Package className="h-4 w-4 mr-2" />
                       Inventory Report (Excel)
                     </Button>
-                    <Button variant="outline" className="w-full justify-start" onClick={() => alert("Exporting prescription report...")}>
+                    <Button variant="outline" className="w-full justify-start" onClick={() => toast.info("Exporting prescription report...")}>
                       <Pill className="h-4 w-4 mr-2" />
                       Prescription Report (PDF)
                     </Button>
@@ -520,7 +521,7 @@ export default function PharmacyDashboard() {
 
           {activeTab === "settings" && (
             <div className="space-y-6">
-              <h1 className="font-sans font-bold text-3xl text-foreground">Settings</h1>
+              <h1 className="font-semibold text-xl text-foreground tracking-tight">Settings</h1>
               <Card>
                 <CardHeader>
                   <CardTitle>Pharmacy Settings</CardTitle>
@@ -544,7 +545,7 @@ export default function PharmacyDashboard() {
                       <Label htmlFor="address">Address</Label>
                       <Textarea id="address" value="123 Victoria Island, Lagos, Nigeria" rows={3} />
                     </div>
-                    <Button onClick={() => alert("Settings saved successfully!")}>Save Settings</Button>
+                    <Button onClick={() => toast.success("Settings saved.")}>Save Settings</Button>
                   </div>
                 </CardContent>
               </Card>

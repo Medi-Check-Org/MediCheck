@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { LoadingTable } from "@/components/ui/loading"
 import { Shield, AlertTriangle, FileText, TrendingUp, Clock, CheckCircle, XCircle, Eye, Building2 } from "lucide-react";
 import { ManufacturerTab } from "@/utils";
 
@@ -63,10 +63,8 @@ const RegulatorMain = ({ setActiveTab }: {
 
     const handleStartInvestigation = () => {
         if (investigationNotes.trim()) {
-            alert(`New investigation started: ${investigationNotes}`)
             setInvestigationNotes("")
-        } else {
-            alert("Please enter investigation details.")
+            setActiveTab("investigations")
         }
     }
 
@@ -162,11 +160,8 @@ const RegulatorMain = ({ setActiveTab }: {
                 <CardContent>
                     <div className="space-y-3">
                         {loading ? (
-                            <div className="flex items-center justify-center py-8">
-                                <div className="flex items-center space-x-2">
-                                    <div className="w-4 h-4 bg-destructive rounded-full animate-pulse"></div>
-                                    <span className="text-muted-foreground">Loading alerts...</span>
-                                </div>
+                            <div className="py-4">
+                                <LoadingTable rows={3} columns={3} />
                             </div>
                         ) : alerts.length === 0 ? (
                             <div className="text-center py-8">
@@ -208,11 +203,9 @@ const RegulatorMain = ({ setActiveTab }: {
                                                     setActiveTab("compliance")
                                                 } else if (alert.type === 'license_expiring') {
                                                     setActiveTab("entities")
-                                                } else {
-                                                    if (typeof window !== "undefined") {
-                                                        window.alert(`Investigating ${alert.id}: ${alert.message}`)
-                                                    }
-                                                }
+                                } else {
+                                    setActiveTab("investigations" as ManufacturerTab)
+                                }
                                             }}
                                         >
                                             {alert.type === 'counterfeit_report' ? 'Investigate' :

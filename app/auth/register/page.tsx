@@ -97,8 +97,6 @@ export default function RegisterPage() {
       // Force Clerk to update the active session token with new metadata
       await clerk.session?.reload();
 
-      console.log("clerkresult", result)
-
       if (result.status === "complete") {
 
         // 2. Create user in your DB
@@ -132,11 +130,7 @@ export default function RegisterPage() {
           }),
         });
 
-        console.log("initiating api post reqest")
-
         const data = await res.json();
-        
-        console.log("API response:", data);
 
         if (!res.ok) throw new Error(data.error || "Registration failed");
 
@@ -146,8 +140,6 @@ export default function RegisterPage() {
         await user?.reload();
 
         const redirectPath = getRedirectPath(accountType === "organization" ? UserRole.ORGANIZATION_MEMBER : UserRole.CONSUMER, formData.organizationType.toUpperCase());
-
-        console.log(redirectPath)
         
         router.push(redirectPath);
   

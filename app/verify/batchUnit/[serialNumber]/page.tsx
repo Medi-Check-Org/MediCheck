@@ -60,7 +60,6 @@ export default function VerifyUnitPage() {
                 return;
             }
             try {
-                console.log("Verifying unit:", serialNumber, "with sig:", sig, "at location:", latitude, longitude);
 
                 const res = await fetch(`/api/web/verify/unit/${serialNumber}?sig=${sig}&lat=${latitude}&long=${longitude}`);
 
@@ -77,7 +76,7 @@ export default function VerifyUnitPage() {
             }
             catch (err) {
                 setError("Something went wrong during verification");
-                alert(err)
+                console.error("Verification error:", err)
             }
             finally {
                 setLoading(false);
