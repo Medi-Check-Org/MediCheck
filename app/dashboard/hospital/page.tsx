@@ -14,6 +14,7 @@ import QRScanner from "@/components/qr-scanner";
 import { TeamMemberManagement } from "@/components/team-member-management";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { Button } from "@/components/ui/button";
+import { UniversalLoader } from "@/components/ui/universal-loader";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Menu, Shield, X } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -109,14 +110,7 @@ export default function HospitalDashboard() {
 
   // 3️⃣ Guard rendering while loading
   if (orgLoading || batchesLoading || !orgId) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="flex items-center gap-3">
-          <div className="w-5 h-5 border-2 border-border border-t-primary rounded-full animate-spin" />
-          <p className="text-muted-foreground text-sm">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+    return <UniversalLoader text="Loading dashboard..." />
   }
 
   return (
@@ -124,30 +118,36 @@ export default function HospitalDashboard() {
 
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border">
-        <div className="flex items-center justify-between px-4 h-14">
-          <Button variant="ghost" size="sm" onClick={() => setIsMobileMenuOpen(true)} className="h-8 w-8 p-0">
-            <Menu className="h-5 w-5" />
-          </Button>
+        <div className="flex items-center justify-between px-4 h-12">
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="flex items-center justify-center h-8 w-8 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
           <div className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-primary" />
-            <span className="font-bold text-sm tracking-tight">MediCheck</span>
+            <div className="h-6 w-6 bg-primary rounded flex items-center justify-center">
+              <Shield className="h-3.5 w-3.5 text-primary-foreground" />
+            </div>
+            <span className="font-semibold text-sm text-foreground tracking-tight">MediCheck</span>
           </div>
           <ThemeToggle />
         </div>
       </div>
 
       {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:flex lg:flex-shrink-0">
         <HospitalSidebar activeTab={activeTab} setActiveTab={setActiveTab} orgId={orgId} />
       </div>
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-foreground/20 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}>
-          <div className="fixed left-0 top-0 bottom-0 w-72 bg-sidebar shadow-xl border-r border-sidebar-border" onClick={e => e.stopPropagation()}>
-            <HospitalSidebar 
-              activeTab={activeTab} 
-              setActiveTab={setActiveTab} 
+        <div className="lg:hidden fixed inset-0 z-50 bg-foreground/20" onClick={() => setIsMobileMenuOpen(false)}>
+          <div className="fixed left-0 top-0 bottom-0 w-60 bg-sidebar shadow-lg border-r border-sidebar-border" onClick={(e) => e.stopPropagation()}>
+            <HospitalSidebar
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
               orgId={orgId}
               isMobile={true}
               onTabSelect={() => setIsMobileMenuOpen(false)}
@@ -156,9 +156,9 @@ export default function HospitalDashboard() {
         </div>
       )}
 
-      <main className="flex-1 overflow-y-auto relative z-10 lg:ml-0">
+      <main className="flex-1 overflow-y-auto relative z-10">
 
-        <div className="p-4 sm:p-6 lg:p-8 mt-16 lg:mt-0">
+        <div className="p-5 sm:p-6 lg:p-8 mt-12 lg:mt-0">
 
           {activeTab === "dashboard" && (
             <HospitalMain setActiveTab={setActiveTab} orgId={orgId} />

@@ -85,88 +85,80 @@ export default function PharmacyDashboard() {
   }
 
   if (orgLoading || !orgId) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto"></div>
-          <p className="text-muted-foreground font-medium">Loading pharmacy dashboard...</p>
-        </div>
-      </div>
-    );
+    return <UniversalLoader text="Loading dashboard..." />
   }
 
   return (
-    <div className="flex h-screen bg-background relative overflow-hidden">
-      {/* Background Decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-24 right-24 w-64 h-64 bg-accent/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-24 left-24 w-80 h-80 bg-primary/3 rounded-full blur-2xl"></div>
-        <div className="absolute top-3/4 right-1/3 w-44 h-44 bg-accent/7 rounded-full blur-xl"></div>
-      </div>
-      
+    <div className="flex h-screen bg-background">
       <PharmacySidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      <main className="flex-1 overflow-y-auto relative z-10">
-        <div className="p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 overflow-y-auto">
+        <div className="p-5 sm:p-6 lg:p-8">
           {activeTab === "dashboard" && (
-            <div className="space-y-8">
+            <div className="space-y-6">
               {/* Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h1 className="font-bold text-2xl sm:text-3xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Pharmacy Dashboard</h1>
-                  <p className="text-muted-foreground mt-2 text-sm sm:text-base">Welcome to MedPlus Pharmacy - Victoria Island</p>
+                  <h1 className="font-semibold text-xl text-foreground tracking-tight">Pharmacy Dashboard</h1>
+                  <p className="text-muted-foreground mt-1 text-sm">Welcome to MedPlus Pharmacy — Victoria Island</p>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <Badge variant="secondary" className="px-3 py-1 bg-primary/10 text-primary border-primary/20 text-sm">
-                    <Building2 className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
-                    Pharmacy
-                  </Badge>
-                </div>
+                <Badge variant="outline" className="border-role-consumer text-role-consumer">
+                  <Building2 className="h-3 w-3 mr-1.5" />
+                  Pharmacy
+                </Badge>
               </div>
 
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="border border-border">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Prescriptions Filled</CardTitle>
-                    <Pill className="h-4 w-4 text-primary" />
+                    <CardTitle className="text-xs font-medium text-muted-foreground">Prescriptions Filled</CardTitle>
+                    <div className="h-7 w-7 rounded bg-primary/10 flex items-center justify-center">
+                      <Pill className="h-3.5 w-3.5 text-primary" />
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{stats.prescriptionsFilled}</div>
                     <p className="text-xs text-muted-foreground">
-                      <span className="text-accent font-medium">+8%</span> from last week
+                      <span className="text-status-verified font-medium">+8%</span> from last week
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card className="border border-border">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Medications Verified</CardTitle>
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CardTitle className="text-xs font-medium text-muted-foreground">Medications Verified</CardTitle>
+                    <div className="h-7 w-7 rounded bg-status-verified/10 flex items-center justify-center">
+                      <CheckCircle className="h-3.5 w-3.5 text-status-verified" />
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-foreground">{stats.medicationsVerified}</div>
                     <p className="text-xs text-muted-foreground">
-                      <span className="text-primary font-medium">+12</span> more than yesterday
+                      <span className="text-status-verified font-medium">+12</span> more than yesterday
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card className="border border-border">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Pending Orders</CardTitle>
-                    <Clock className="h-4 w-4 text-orange-500" />
+                    <CardTitle className="text-xs font-medium text-muted-foreground">Pending Orders</CardTitle>
+                    <div className="h-7 w-7 rounded bg-status-warning/10 flex items-center justify-center">
+                      <Clock className="h-3.5 w-3.5 text-status-warning" />
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-orange-600">{stats.pendingOrders}</div>
+                    <div className="text-2xl font-bold text-status-warning">{stats.pendingOrders}</div>
                     <p className="text-xs text-muted-foreground">Awaiting processing</p>
                   </CardContent>
                 </Card>
 
-                <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card className="border border-border">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">Low Stock Alerts</CardTitle>
-                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                    <CardTitle className="text-xs font-medium text-muted-foreground">Low Stock Alerts</CardTitle>
+                    <div className="h-7 w-7 rounded bg-destructive/10 flex items-center justify-center">
+                      <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-destructive">{stats.lowStockAlerts}</div>

@@ -1,61 +1,83 @@
-import React from 'react';
+import React from "react"
 
 interface LoadingSpinnerProps {
-  size?: 'small' | 'medium' | 'large';
-  text?: string;
-  className?: string;
+  size?: "small" | "medium" | "large"
+  text?: string
+  className?: string
 }
 
-export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
-  size = 'medium', 
-  text = 'Loading...', 
-  className = '' 
+/**
+ * LoadingSpinner — inline, non-blocking loading indicator.
+ * Used inside cards, tables, and content areas.
+ */
+export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
+  size = "medium",
+  text = "Loading...",
+  className = "",
 }) => {
   const sizeClasses = {
-    small: 'w-4 h-4',
-    medium: 'w-6 h-6', 
-    large: 'w-8 h-8'
-  };
+    small: "w-4 h-4 border",
+    medium: "w-5 h-5 border-2",
+    large: "w-6 h-6 border-2",
+  }
 
   return (
-    <div className={`flex flex-col items-center justify-center space-y-3 ${className}`}>
-      <div className={`${sizeClasses[size]} border-2 border-primary/20 border-t-primary rounded-full animate-spin`}></div>
-      {text && <p className="text-muted-foreground animate-pulse font-medium">{text}</p>}
+    <div
+      className={`flex flex-col items-center justify-center gap-3 ${className}`}
+      role="status"
+      aria-label={text}
+    >
+      <div
+        className={`${sizeClasses[size]} border-border border-t-accent rounded-full animate-spin`}
+      />
+      {text && (
+        <p className="text-xs text-muted-foreground font-medium">{text}</p>
+      )}
+      <span className="sr-only">{text}</span>
     </div>
-  );
-};
+  )
+}
 
 interface LoadingCardProps {
-  className?: string;
+  className?: string
 }
 
-export const LoadingCard: React.FC<LoadingCardProps> = ({ className = '' }) => {
+export const LoadingCard: React.FC<LoadingCardProps> = ({ className = "" }) => {
   return (
-    <div className={`animate-pulse bg-card/50 rounded-lg p-4 border border-border/50 ${className}`}>
-      <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-      <div className="h-3 bg-muted rounded w-1/2 mb-2"></div>
-      <div className="h-3 bg-muted rounded w-2/3"></div>
+    <div
+      className={`bg-card rounded border border-border p-4 ${className}`}
+      aria-hidden="true"
+    >
+      <div className="skeleton h-3 rounded w-3/4 mb-3" />
+      <div className="skeleton h-3 rounded w-1/2 mb-2" />
+      <div className="skeleton h-3 rounded w-2/3" />
     </div>
-  );
-};
+  )
+}
 
 interface LoadingTableProps {
-  rows?: number;
-  columns?: number;
+  rows?: number
+  columns?: number
 }
 
-export const LoadingTable: React.FC<LoadingTableProps> = ({ rows = 5, columns = 4 }) => {
+export const LoadingTable: React.FC<LoadingTableProps> = ({
+  rows = 5,
+  columns = 4,
+}) => {
   return (
-    <div className="animate-pulse space-y-3">
+    <div className="space-y-2" aria-hidden="true">
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex space-x-4 p-3 bg-card/50 rounded-lg border border-border/50">
+        <div
+          key={i}
+          className="flex gap-4 px-3 py-3 border border-border rounded bg-card"
+        >
           {Array.from({ length: columns }).map((_, j) => (
-            <div key={j} className="flex-1 h-4 bg-muted rounded"></div>
+            <div key={j} className="skeleton flex-1 h-3 rounded" />
           ))}
         </div>
       ))}
     </div>
-  );
-};
+  )
+}
 
-export default LoadingSpinner;
+export default LoadingSpinner

@@ -24,25 +24,18 @@ export default function LoginPage() {
   const { user, isSignedIn } = useUser()
 
   const handleSubmit = async (e: React.FormEvent) => {
-
-    e.preventDefault();
-
-    setIsLoading(true);
-    
-    if (!signIn) return;
-
+    e.preventDefault()
+    setIsLoading(true)
+    if (!signIn) return
     try {
       const result = await signIn.create({ identifier: email, password })
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId })
-        toast.success("Successfully signed in!")
+        toast.success("Signed in successfully.")
       }
-    }
-    catch (err) {
-      console.log(err)
+    } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err))
-    }
-    finally {
+    } finally {
       setIsLoading(false)
     }
   }
@@ -57,83 +50,94 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* CAPTCHA element for Clerk Smart CAPTCHA */}
       <div id="clerk-captcha" />
 
-      {/* Left Panel — Brand / Trust */}
-      <div className="hidden lg:flex lg:w-[45%] bg-primary flex-col justify-between p-10 xl:p-14">
+      {/* Left Panel */}
+      <div className="hidden lg:flex lg:w-[44%] bg-primary flex-col justify-between p-10 xl:p-12">
         <div>
-          <div className="flex items-center gap-2.5 mb-16">
-            <Shield className="h-6 w-6 text-primary-foreground" />
-            <span className="font-bold text-lg text-primary-foreground tracking-tight">MediCheck</span>
+          <div className="flex items-center gap-2.5 mb-14">
+            <div className="h-7 w-7 bg-accent rounded flex items-center justify-center flex-shrink-0">
+              <Shield className="h-4 w-4 text-white" />
+            </div>
+            <span className="font-semibold text-sm text-white tracking-tight">MediCheck</span>
           </div>
-          <h1 className="text-3xl xl:text-4xl font-bold text-primary-foreground leading-tight text-balance mb-4">
-            Secure Medication<br />Verification Platform
-          </h1>
-          <p className="text-primary-foreground/70 text-base leading-relaxed max-w-sm">
-            Blockchain-backed traceability for Africa&apos;s pharmaceutical supply chain.
-            Trusted by manufacturers, hospitals, and regulators.
-          </p>
+
+          <div className="mb-10">
+            <p className="text-xs font-mono text-white/40 uppercase tracking-widest mb-4">Regulatory Platform</p>
+            <h1 className="text-2xl xl:text-3xl font-semibold text-white leading-snug text-balance mb-4">
+              Medication Verification & Supply Chain Intelligence
+            </h1>
+            <p className="text-sm text-white/60 leading-relaxed max-w-xs">
+              Blockchain-backed traceability for Africa&apos;s pharmaceutical supply chain. Trusted by manufacturers, hospitals, and regulatory authorities.
+            </p>
+          </div>
         </div>
 
-        <div className="space-y-3">
-          {[
-            { icon: CheckCircle, text: "Immutable blockchain event logging" },
-            { icon: Lock, text: "Enterprise-grade 256-bit encryption" },
-            { icon: Shield, text: "NAFDAC regulatory compliance ready" },
-          ].map(({ icon: Icon, text }) => (
-            <div key={text} className="flex items-center gap-3">
-              <Icon className="h-4 w-4 text-accent flex-shrink-0" />
-              <span className="text-sm text-primary-foreground/80">{text}</span>
-            </div>
-          ))}
-          <div className="pt-6 border-t border-primary-foreground/20">
-            <p className="text-xs text-primary-foreground/50 font-mono">
-              &copy; 2025 MediCheck. All rights reserved.
-            </p>
+        <div>
+          <div className="space-y-3 mb-8">
+            {[
+              { icon: CheckCircle, text: "Immutable blockchain event logging" },
+              { icon: Lock, text: "256-bit enterprise encryption" },
+              { icon: Shield, text: "NAFDAC regulatory compliance" },
+            ].map(({ icon: Icon, text }) => (
+              <div key={text} className="flex items-center gap-3">
+                <Icon className="h-3.5 w-3.5 text-accent flex-shrink-0" />
+                <span className="text-xs text-white/70">{text}</span>
+              </div>
+            ))}
+          </div>
+          <div className="pt-5 border-t border-white/10">
+            <p className="text-xs text-white/30 font-mono">&copy; 2025 MediCheck. All rights reserved.</p>
           </div>
         </div>
       </div>
 
-      {/* Right Panel — Form */}
-      <div className="flex-1 flex flex-col">
-        {/* Top Nav */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <Link href="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm">
-            <ArrowLeft className="h-4 w-4" />
+      {/* Right Panel */}
+      <div className="flex-1 flex flex-col bg-background">
+        {/* Top Bar */}
+        <div className="flex items-center justify-between px-6 py-3 border-b border-border">
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-xs"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
             <span>Back to Home</span>
           </Link>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-          </div>
+          <ThemeToggle />
         </div>
 
-        {/* Form Content */}
+        {/* Form */}
         <div className="flex-1 flex items-center justify-center px-6 sm:px-10 py-12">
           <div className="w-full max-w-sm">
-            {/* Mobile brand mark */}
+            {/* Mobile brand */}
             <div className="lg:hidden flex items-center gap-2 mb-8">
-              <div className="bg-primary p-1.5 rounded-md">
+              <div className="h-7 w-7 bg-primary rounded flex items-center justify-center">
                 <Shield className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="font-bold text-base text-foreground tracking-tight">MediCheck</span>
+              <span className="font-semibold text-sm text-foreground tracking-tight">MediCheck</span>
             </div>
 
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-foreground mb-1.5 tracking-tight">Sign in to your account</h2>
-              <p className="text-muted-foreground text-sm">Enter your credentials to access the dashboard.</p>
+            <div className="mb-7">
+              <h2 className="text-xl font-semibold text-foreground mb-1 tracking-tight">
+                Sign in to your account
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Enter your credentials to access the platform.
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-sm font-medium text-foreground">Email address</Label>
+                <Label htmlFor="email" className="text-xs font-medium text-foreground">
+                  Email address
+                </Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@organization.com"
-                  className="h-10"
+                  className="h-9 text-sm"
                   required
                   autoComplete="email"
                 />
@@ -141,8 +145,13 @@ export default function LoginPage() {
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-sm font-medium text-foreground">Password</Label>
-                  <Link href="/auth/forgot-password" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  <Label htmlFor="password" className="text-xs font-medium text-foreground">
+                    Password
+                  </Label>
+                  <Link
+                    href="/auth/forgot-password"
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
                     Forgot password?
                   </Link>
                 </div>
@@ -153,7 +162,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
-                    className="h-10 pr-10"
+                    className="h-9 text-sm pr-10"
                     required
                     autoComplete="current-password"
                   />
@@ -163,7 +172,7 @@ export default function LoginPage() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                   </button>
                 </div>
               </div>
@@ -172,7 +181,7 @@ export default function LoginPage() {
                 disabled={isLoading}
                 type="submit"
                 variant="default"
-                className="w-full h-10 mt-1"
+                className="w-full h-9 mt-1 text-sm"
               >
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
@@ -184,14 +193,13 @@ export default function LoginPage() {
                 <span className="text-xs text-muted-foreground">or</span>
                 <div className="flex-1 h-px bg-border" />
               </div>
-              <Button variant="outline" asChild className="w-full h-10">
+              <Button variant="outline" asChild className="w-full h-9 text-sm">
                 <Link href="/auth/team-member-login" className="flex items-center justify-center gap-2">
-                  <Users className="h-4 w-4" />
+                  <Users className="h-3.5 w-3.5" />
                   <span>Team Member Login</span>
                 </Link>
               </Button>
-
-              <p className="text-sm text-muted-foreground text-center">
+              <p className="text-xs text-muted-foreground text-center">
                 {"Don't have an account? "}
                 <Link href="/auth/register" className="text-foreground hover:underline font-medium">
                   Register your organization

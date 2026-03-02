@@ -16,6 +16,7 @@ import RegulatorAnalytics from "@/components/regulator-page-component/RegulatorA
 import { TeamMemberManagement } from "@/components/team-member-management";
 import { ManufacturerTab } from "@/utils";
 import { ThemeToggle } from "@/components/theme-toggle"
+import { UniversalLoader } from "@/components/ui/universal-loader"
 import { toast } from "react-toastify";
 // 
 
@@ -45,14 +46,7 @@ export default function RegulatorDashboard() {
   }, []);
 
   if (orgLoading || !orgId) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="flex items-center gap-3">
-          <div className="w-5 h-5 border-2 border-border border-t-primary rounded-full animate-spin" />
-          <p className="text-muted-foreground text-sm">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+    return <UniversalLoader text="Loading dashboard..." />
   }
 
   return (
@@ -70,19 +64,25 @@ export default function RegulatorDashboard() {
         
         {/* Mobile Header */}
         <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-card border-b border-border">
-          <div className="flex items-center justify-between px-4 h-14">
-            <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(true)} className="h-8 w-8 p-0">
-              <Menu className="h-5 w-5" />
-            </Button>
+          <div className="flex items-center justify-between px-4 h-12">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="flex items-center justify-center h-8 w-8 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              aria-label="Open menu"
+            >
+              <Menu className="h-4 w-4" />
+            </button>
             <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-primary" />
-              <span className="font-bold text-sm tracking-tight">MediCheck</span>
+              <div className="h-6 w-6 bg-primary rounded flex items-center justify-center">
+                <Shield className="h-3.5 w-3.5 text-primary-foreground" />
+              </div>
+              <span className="font-semibold text-sm text-foreground tracking-tight">MediCheck</span>
             </div>
             <ThemeToggle />
           </div>
         </div>
 
-        <div className="p-4 lg:p-8 mt-14 lg:mt-0">
+        <div className="p-5 sm:p-6 lg:p-8 mt-12 lg:mt-0">
 
           {activeTab === "dashboard" && (
             <RegulatorMain setActiveTab={setActiveTab} />

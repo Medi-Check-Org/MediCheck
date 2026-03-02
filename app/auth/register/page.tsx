@@ -708,21 +708,21 @@ export default function RegisterPage() {
 
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="border-b border-border bg-card/95 backdrop-blur-sm fixed top-0 left-0 right-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-14">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="bg-primary p-1.5 rounded-md">
+      <nav className="border-b border-border bg-card fixed top-0 left-0 right-0 z-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-12">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="h-7 w-7 bg-primary rounded flex items-center justify-center">
                 <Shield className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="font-bold text-base text-foreground tracking-tight">MediCheck</span>
+              <span className="font-semibold text-sm text-foreground tracking-tight">MediCheck</span>
             </Link>
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <Link href="/">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-1.5" />
-                  <span>Back</span>
+                <Button variant="ghost" size="sm" className="text-xs h-8 px-3">
+                  <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
+                  Back
                 </Button>
               </Link>
             </div>
@@ -731,45 +731,45 @@ export default function RegisterPage() {
       </nav>
 
       {/* Main Content */}
-      <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
+      <section className="pt-20 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto">
           {!accountType ? (
-            <div className="max-w-xl mx-auto">
-              <div className="mb-10">
-                <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest block mb-3">Getting Started</span>
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2 tracking-tight">
-                  Create Your Account
+            <div className="max-w-lg mx-auto">
+              <div className="mb-8">
+                <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-3">Getting Started</p>
+                <h1 className="text-xl font-semibold text-foreground mb-1.5 tracking-tight">
+                  Create your account
                 </h1>
-                <p className="text-muted-foreground text-sm">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   Select the account type that matches your role in the medication supply chain.
                 </p>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-2 gap-3">
                 <button
                   type="button"
-                  className="text-left border border-border rounded-lg p-6 bg-card hover:border-primary hover:bg-muted/30 transition-colors cursor-pointer group"
+                  className="text-left border border-border rounded bg-card hover:border-primary hover:bg-muted/40 transition-colors cursor-pointer p-5"
                   onClick={() => setAccountType("organization")}
                 >
-                  <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center mb-4">
-                    <Building2 className="h-5 w-5 text-primary" />
+                  <div className="h-8 w-8 rounded bg-muted flex items-center justify-center mb-3">
+                    <Building2 className="h-4 w-4 text-primary" />
                   </div>
-                  <h3 className="font-semibold text-base text-foreground mb-1.5">Organization</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
+                  <h3 className="font-semibold text-sm text-foreground mb-1">Organization</h3>
+                  <p className="text-muted-foreground text-xs leading-relaxed">
                     Manufacturers, distributors, hospitals, pharmacies, and regulatory agencies.
                   </p>
                 </button>
 
                 <button
                   type="button"
-                  className="text-left border border-border rounded-lg p-6 bg-card hover:border-accent hover:bg-muted/30 transition-colors cursor-pointer group"
+                  className="text-left border border-border rounded bg-card hover:border-accent hover:bg-muted/40 transition-colors cursor-pointer p-5"
                   onClick={() => setAccountType("consumer")}
                 >
-                  <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center mb-4">
-                    <User className="h-5 w-5 text-accent" />
+                  <div className="h-8 w-8 rounded bg-muted flex items-center justify-center mb-3">
+                    <User className="h-4 w-4 text-accent" />
                   </div>
-                  <h3 className="font-semibold text-base text-foreground mb-1.5">Consumer</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
+                  <h3 className="font-semibold text-sm text-foreground mb-1">Consumer</h3>
+                  <p className="text-muted-foreground text-xs leading-relaxed">
                     Patients and individuals who want to verify medication authenticity.
                   </p>
                 </button>

@@ -1,9 +1,6 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { LoadingSpinner } from "@/components/ui/loading"
+import { UniversalLoader } from "@/components/ui/universal-loader"
 import {
   Shield,
   LayoutDashboard,
@@ -13,15 +10,14 @@ import {
   AlertTriangle,
   Settings,
   LogOut,
-  Building2,
   Truck,
   Camera,
-  Users
+  Users,
+  X,
 } from "lucide-react"
-import Link from "next/link";
-import { useClerk } from "@clerk/nextjs";
-import { authRoutes } from "@/utils";
-import { ManufacturerTab } from "@/utils";
+import Link from "next/link"
+import { useClerk } from "@clerk/nextjs"
+import { authRoutes, ManufacturerTab } from "@/utils"
 import { useState, useEffect } from "react"
 
 interface HospitalSidebarProps {
@@ -33,121 +29,105 @@ interface HospitalSidebarProps {
 }
 
 export function HospitalSidebar({ activeTab, setActiveTab, orgId, isMobile, onTabSelect }: HospitalSidebarProps) {
-
-  const { signOut } = useClerk();
+  const { signOut } = useClerk()
   const [orgName, setOrgName] = useState("Loading...")
   const [isSigningOut, setIsSigningOut] = useState(false)
 
-  // Fetch organization info
   useEffect(() => {
-    const fetchOrgInfo = async () => {
-      if (!orgId) return
-      
-      try {
-        const response = await fetch(`/api/web/organizations/info?orgId=${orgId}`)
-        if (response.ok) {
-          const data = await response.json()
-          setOrgName(data.companyName)
-        }
-      } catch (error) {
-        console.error('Error fetching organization info:', error)
-        setOrgName("Hospital")
-      }
-    }
-
-    fetchOrgInfo()
+    if (!orgId) return
+    fetch(`/api/web/organizations/info?orgId=${orgId}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => d && setOrgName(d.companyName))
+      .catch(() => setOrgName("Hospital"))
   }, [orgId])
 
   const handleSignOut = async () => {
     setIsSigningOut(true)
-    try {
-      await signOut({ redirectUrl: authRoutes.login })
-    } catch (error) {
-      console.error('Error signing out:', error)
-      setIsSigningOut(false)
-    }
+    try { await signOut({ redirectUrl: authRoutes.login }) }
+    catch { setIsSigningOut(false) }
   }
 
   const menuItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "inventory", label: "Inventory", icon: Package },
-    // { id: "patients", label: "Patient Records", icon: Users },
-    { id: "team", label: "Team Members", icon: Users },
-    { id: "analytics", label: "Analytics", icon: TrendingUp },
-    { id: "reports", label: "Reports", icon: BarChart3 },
-    { id: "qr-scanner", label: "Qr Scanner", icon: Camera },
-    { id: "transfers", label: "Batch Transfers", icon: Truck },
-    { id: "alerts", label: "Alerts", icon: AlertTriangle },
-    { id: "settings", label: "Settings", icon: Settings },
+    { id: "dashboard",   label: "Dashboard",       icon: LayoutDashboard },
+    { id: "inventory",   label: "Inventory",        icon: Package },
+    { id: "team",        label: "Team",             icon: Users },
+    { id: "analytics",   label: "Analytics",       icon: TrendingUp },
+    { id: "reports",     label: "Reports",          icon: BarChart3 },
+    { id: "qr-scanner",  label: "QR Scanner",      icon: Camera },
+    { id: "transfers",   label: "Batch Transfers", icon: Truck },
+    { id: "alerts",      label: "Alerts",           icon: AlertTriangle },
+    { id: "settings",    label: "Settings",         icon: Settings },
   ]
 
   const handleTabClick = (tab: ManufacturerTab) => {
-    setActiveTab(tab as ManufacturerTab);
-    if (isMobile && onTabSelect) {
-      onTabSelect();
-    }
-  };
+    setActiveTab(tab)
+    if (isMobile && onTabSelect) onTabSelect()
+  }
+
+  if (isSigningOut) return <UniversalLoader text="Signing out..." />
 
   return (
-    <>
-      {/* Full-page loading overlay when signing out */}
-      {isSigningOut && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-card p-8 rounded-lg shadow-lg border">
-            <LoadingSpinner size="large" text="Signing out..." />
+    <div className="w-60 bg-sidebar border-r border-sidebar-border flex flex-col h-full flex-shrink-0">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3.5 border-b border-sidebar-border flex-shrink-0">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="h-6 w-6 bg-sidebar-primary rounded flex items-center justify-center flex-shrink-0">
+            <Shield className="h-3.5 w-3.5 text-white" />
           </div>
-        </div>
-      )}
-      
-      {/* Sidebar */}
-      <div className={`${isMobile ? 'w-full h-full flex flex-col' : 'w-64 h-screen'} bg-sidebar border-r border-sidebar-border shadow-lg flex flex-col`}>
-        {/* Sidebar Header */}
-        <div className="px-5 py-4 border-b border-sidebar-border flex-shrink-0 flex items-center">
-          <Link href="/" className="flex items-center gap-2.5">
-            <Shield className="h-6 w-6 text-sidebar-primary flex-shrink-0" />
-            <span className="font-bold text-base text-sidebar-foreground tracking-tight">MediCheck</span>
-          </Link>
-        </div>
-        {/* Organization Card */}
-        <div className="px-5 py-4 border-b border-sidebar-border flex-shrink-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <div className="h-1.5 w-1.5 rounded-full bg-role-hospital flex-shrink-0" />
-            <span className="text-xs font-medium text-role-hospital uppercase tracking-widest">Hospital</span>
-          </div>
-          <span className="block font-semibold text-sm text-sidebar-foreground truncate mt-1">{orgName}</span>
-          <span className="text-xs text-sidebar-foreground/50">Active Organization</span>
-        </div>
-        {/* Navigation */}
-        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
-          {menuItems.map((item) => {
-            const Icon = item.icon
-            const isActive = activeTab === item.id
-            return (
-              <Button
-                key={item.id}
-                variant="ghost"
-                className={`w-full justify-start cursor-pointer h-9 px-3 text-sm font-medium transition-colors duration-150 ${isActive ? 'bg-sidebar-accent text-sidebar-foreground border-l-2 border-role-hospital rounded-l-none pl-[10px]' : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50'} ${isMobile ? 'h-11 text-base' : ''}`}
-                onClick={() => handleTabClick(item.id as ManufacturerTab)}
-              >
-                <Icon className={`flex-shrink-0 ${isMobile ? 'h-5 w-5 mr-3' : 'h-4 w-4 mr-2.5'} ${isActive ? 'text-role-hospital' : ''}`} />
-                <span>{item.label}</span>
-              </Button>
-            )
-          })}
-        </nav>
-        {/* Sign Out */}
-        <div className="px-3 py-3 border-t border-sidebar-border flex-shrink-0">
-          <Button
-            variant="ghost"
-            className="w-full justify-start h-9 px-3 text-sm text-sidebar-foreground/60 hover:text-destructive hover:bg-destructive/10 cursor-pointer transition-colors"
-            onClick={handleSignOut}
-            disabled={isSigningOut}
+          <span className="font-semibold text-sm text-sidebar-foreground tracking-tight">MediCheck</span>
+        </Link>
+        {isMobile && (
+          <button
+            aria-label="Close sidebar"
+            className="text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors"
+            onClick={() => onTabSelect?.()}
           >
-            <LogOut className="h-4 w-4 mr-2.5 flex-shrink-0" />
-            <span>Sign Out</span>
-          </Button>
-        </div>
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
-    </>
+
+      {/* Org badge */}
+      <div className="px-4 py-3 border-b border-sidebar-border flex-shrink-0">
+        <p className="text-[10px] font-semibold text-role-hospital uppercase tracking-widest mb-0.5">
+          Hospital
+        </p>
+        <p className="text-xs font-medium text-sidebar-foreground truncate">{orgName}</p>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 px-2 py-2 overflow-y-auto scrollbar-hide">
+        {menuItems.map((item) => {
+          const Icon = item.icon
+          const isActive = activeTab === item.id
+          return (
+            <button
+              key={item.id}
+              className={`w-full flex items-center gap-2.5 px-3 h-8 rounded text-xs font-medium transition-colors duration-100 cursor-pointer mb-0.5 ${
+                isActive
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+              }`}
+              onClick={() => handleTabClick(item.id as ManufacturerTab)}
+            >
+              <Icon className={`h-3.5 w-3.5 flex-shrink-0 ${isActive ? "text-role-hospital" : ""}`} />
+              <span>{item.label}</span>
+            </button>
+          )
+        })}
+      </nav>
+
+      {/* Sign Out */}
+      <div className="px-2 py-2 border-t border-sidebar-border flex-shrink-0">
+        <button
+          className="w-full flex items-center gap-2.5 px-3 h-8 rounded text-xs font-medium text-sidebar-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+          onClick={handleSignOut}
+          disabled={isSigningOut}
+        >
+          <LogOut className="h-3.5 w-3.5 flex-shrink-0" />
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </div>
   )
 }
