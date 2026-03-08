@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     );
   }
   // 3. create the api key
-  const rawKey = apiKeyRepository.createKey(
+  const rawKey = await apiKeyRepository.createKey(
     organizationId,
     name,
     permissions,

@@ -13,8 +13,10 @@ import {
   Truck,
   Users,
   BarChart3,
+  Code,
   PillBottle,
   X,
+  Key,
 } from "lucide-react"
 import Link from "next/link"
 import { useClerk } from "@clerk/nextjs"
@@ -64,8 +66,9 @@ export function ManufacturerSidebar({
     { id: "products",     label: "Product Catalog",  icon: Factory },
     { id: "transfers",    label: "Batch Transfers",  icon: Truck },
     { id: "qr-generator", label: "QR Generator",     icon: QrCode },
-    { id: "analytics",   label: "Analytics",        icon: BarChart3 },
+    { id: "analytics",    label: "Analytics",        icon: BarChart3 },
     { id: "team",         label: "Team",             icon: Users },
+    { id: "api-keys",     label: "API & Integrations",icon: Code },
     { id: "settings",     label: "Settings",         icon: Settings },
   ]
 

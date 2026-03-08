@@ -5,7 +5,7 @@ import { ManufacturerSidebar } from "@/components/manufacturer-page-component/ma
 import { TeamMemberManagement } from "@/components/team-member-management";
 import QRGenerationComponent from "@/components/QRGenerationComponent";
 import ManufacturerReports from "@/components/manufacturer-page-component/ManufacturerReports";
-import ManufacturerSettings from "@/components/manufacturer-page-component/ManufacturerSettings";
+import { ManufacturerApiKeys } from "@/components/manufacturer-page-component/ManufacturerApiKeys";
 import ManufacturerTransport from "@/components/manufacturer-page-component/ManufacturerTransport";
 import ManufacturerQuality from "@/components/manufacturer-page-component/ManufacturerQuality";
 import ManufacturerProducts from "@/components/manufacturer-page-component/ManufacturerProducts";
@@ -13,8 +13,10 @@ import ManufacturerBatch from "@/components/manufacturer-page-component/Manufact
 import UnitFlowManagement from "@/components/manufacturer-page-component/UnitFlowManagement";
 import Transfers from "@/components/Transfers";
 import ManufacturerMain from "@/components/manufacturer-page-component/ManufacturerMain"
+import ManufacturerSettings from "@/components/manufacturer-page-component/ManufacturerSettings"
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard"
 import { UniversalLoader } from "@/components/ui/universal-loader"
+import { SectionErrorBoundary } from "@/components/ui/error-boundary"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 // icons
@@ -162,57 +164,87 @@ export default function ManufacturerDashboard() {
         <div className="p-5 sm:p-6 lg:p-8 page-enter mt-12 lg:mt-0">
 
           {activeTab === "dashboard" && (
-            <ManufacturerMain setActiveTab={setActiveTab} orgId={orgId} />
+            <SectionErrorBoundary context="the manufacturer dashboard">
+              <ManufacturerMain setActiveTab={setActiveTab} orgId={orgId} />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "batches" && (
-            <ManufacturerBatch orgId={orgId} allBatches={batches} loadBatches={loadBatches} />
+            <SectionErrorBoundary context="batch management">
+              <ManufacturerBatch orgId={orgId} allBatches={batches} loadBatches={loadBatches} />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "products" && (
-            <ManufacturerProducts orgId={orgId} />
+            <SectionErrorBoundary context="products">
+              <ManufacturerProducts orgId={orgId} />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "transfers" && (
-            <Transfers orgId={orgId} allBatches={batches} loadBatches={loadBatches} />
+            <SectionErrorBoundary context="transfers">
+              <Transfers orgId={orgId} allBatches={batches} loadBatches={loadBatches} />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "units" && (
-            <UnitFlowManagement orgId={orgId} />
+            <SectionErrorBoundary context="unit flow management">
+              <UnitFlowManagement orgId={orgId} />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "quality" && (
-            <ManufacturerQuality />
+            <SectionErrorBoundary context="quality control">
+              <ManufacturerQuality />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "transport" && (
-            <ManufacturerTransport setActiveTab={setActiveTab} />
+            <SectionErrorBoundary context="transport management">
+              <ManufacturerTransport setActiveTab={setActiveTab} />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "qr-generator" && (
-            <QRGenerationComponent allBatches={batches} />
+            <SectionErrorBoundary context="QR code generation">
+              <QRGenerationComponent allBatches={batches} />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "team" && (
-            <TeamMemberManagement 
-              organizationType="MANUFACTURER" 
-              organizationId={orgId}
-            />
+            <SectionErrorBoundary context="team management">
+              <TeamMemberManagement 
+                organizationType="MANUFACTURER" 
+                organizationId={orgId}
+              />
+            </SectionErrorBoundary>
+          )}
+
+          {activeTab === "api-keys" && (
+            <SectionErrorBoundary context="Integrations">
+              <ManufacturerApiKeys />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "analytics" && (
-            <AnalyticsDashboard 
-              dashboardType="manufacturer"
-              title="Manufacturing Analytics"
-            />
+            <SectionErrorBoundary context="manufacturing analytics">
+              <AnalyticsDashboard 
+                dashboardType="manufacturer"
+                title="Manufacturing Analytics"
+              />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "reports" && (
-            <ManufacturerReports />
+            <SectionErrorBoundary context="reports">
+              <ManufacturerReports />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "settings" && (
-            <ManufacturerSettings />
+            <SectionErrorBoundary context="settings">
+              <ManufacturerSettings />
+            </SectionErrorBoundary>
           )}
         </div>
       </main>

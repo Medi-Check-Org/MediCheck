@@ -13,6 +13,7 @@ import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UniversalLoader } from "@/components/ui/universal-loader";
+import { SectionErrorBoundary } from "@/components/ui/error-boundary";
 import { Menu, Shield} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "react-toastify";
@@ -125,29 +126,59 @@ export default function DrugDistributorDashboard() {
       )}
       <main className="flex-1 overflow-y-auto">
         <div className="p-5 sm:p-6 lg:p-8 mt-12 lg:mt-0">
-          {activeTab === "dashboard" && (<DistributorMain setActiveTab={setActiveTab} orgId={orgId} />)}
-          {activeTab === "inventory" && (<DistributorInventory orgId={orgId} />)}
-          {activeTab === "team" && (<TeamMemberManagement organizationType="distributor" organizationId={orgId} />)}
-          {activeTab === "analytics" && (<AnalyticsDashboard dashboardType="distributor" title="Distributor Analytics" />)}
-          {activeTab === "alerts" && (<DistributorAlerts />)}
-          {activeTab === "transfers" && (<Transfers orgId={orgId} allBatches={batches} loadBatches={loadBatches} />)}
-          {activeTab === "qr-scanner" && (
-            <div className="flex justify-center items-center min-h-[500px]">
-              <div className="hidden lg:block w-full max-w-[600px]">
-                <Card className="border border-border shadow-sm">
-                  <CardContent>
-                    <div className="flex justify-center items-center">
-                      <QRScanner onScan={handleQRScan} />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-              <div className="block lg:hidden w-full">
-                <QRScanner onScan={handleQRScan} />
-              </div>
-            </div>
+          {activeTab === "dashboard" && (
+            <SectionErrorBoundary context="the distributor dashboard">
+              <DistributorMain setActiveTab={setActiveTab} orgId={orgId} />
+            </SectionErrorBoundary>
           )}
-          {activeTab === "settings" && (<DistributorSettings />)}
+          {activeTab === "inventory" && (
+            <SectionErrorBoundary context="inventory">
+              <DistributorInventory orgId={orgId} />
+            </SectionErrorBoundary>
+          )}
+          {activeTab === "team" && (
+            <SectionErrorBoundary context="team management">
+              <TeamMemberManagement organizationType="distributor" organizationId={orgId} />
+            </SectionErrorBoundary>
+          )}
+          {activeTab === "analytics" && (
+            <SectionErrorBoundary context="distributor analytics">
+              <AnalyticsDashboard dashboardType="distributor" title="Distributor Analytics" />
+            </SectionErrorBoundary>
+          )}
+          {activeTab === "alerts" && (
+            <SectionErrorBoundary context="alerts">
+              <DistributorAlerts />
+            </SectionErrorBoundary>
+          )}
+          {activeTab === "transfers" && (
+            <SectionErrorBoundary context="transfers">
+              <Transfers orgId={orgId} allBatches={batches} loadBatches={loadBatches} />
+            </SectionErrorBoundary>
+          )}
+          {activeTab === "qr-scanner" && (
+            <SectionErrorBoundary context="QR scanner">
+              <div className="flex justify-center items-center min-h-[500px]">
+                <div className="hidden lg:block w-full max-w-[600px]">
+                  <Card className="border border-border shadow-sm">
+                    <CardContent>
+                      <div className="flex justify-center items-center">
+                        <QRScanner onScan={handleQRScan} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                <div className="block lg:hidden w-full">
+                  <QRScanner onScan={handleQRScan} />
+                </div>
+              </div>
+            </SectionErrorBoundary>
+          )}
+          {activeTab === "settings" && (
+            <SectionErrorBoundary context="settings">
+              <DistributorSettings />
+            </SectionErrorBoundary>
+          )}
         </div>
       </main>
     </div>
