@@ -1,4 +1,11 @@
 import React from "react"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 
 interface LoadingSpinnerProps {
   size?: "small" | "medium" | "large"
@@ -66,23 +73,15 @@ export function SectionLoadingCard({
   className = "",
 }: SectionLoadingCardProps) {
   return (
-    <div
-      data-slot="card"
-      className={`bg-card text-card-foreground flex flex-col gap-6 rounded-lg border border-border py-6 shadow-none ${className}`}
-      aria-hidden="true"
-    >
-      <div className="px-6 grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5">
-        <div data-slot="card-title" className="leading-none font-semibold">
-          {title}
-        </div>
-        <div data-slot="card-description" className="text-muted-foreground text-sm">
-          {message}
-        </div>
-      </div>
-      <div className="px-6 flex flex-col items-center justify-center min-h-[200px]">
+    <Card className={className} aria-hidden="true">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{message}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center justify-center min-h-[200px]">
         <LoadingSpinner size="large" text={message} />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }
 

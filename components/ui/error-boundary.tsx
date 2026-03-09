@@ -2,6 +2,7 @@
 
 import React from "react"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -159,9 +160,6 @@ export class ErrorBoundary extends React.Component<
 
 // ─── Convenience wrapper for section-level boundaries ────────
 
-const sectionCardClassName =
-  "bg-card text-card-foreground flex flex-col gap-6 rounded-lg border border-border py-6 shadow-none min-h-0"
-
 /**
  * Wraps any section in an ErrorBoundary with card styling matching ui/card.
  * Use for dashboard tab content so errors are contained and UI is consistent.
@@ -180,14 +178,14 @@ export function SectionErrorBoundary({
       context={context}
       onError={onError}
       fallback={(error, reset) => (
-        <div className={sectionCardClassName}>
+        <Card className="min-h-0">
           <DefaultFallback error={error} context={context} onReset={reset} />
-        </div>
+        </Card>
       )}
     >
-      <div className={sectionCardClassName}>
+      <Card className="min-h-0">
         {children}
-      </div>
+      </Card>
     </ErrorBoundary>
   )
 }

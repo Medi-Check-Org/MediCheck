@@ -385,6 +385,7 @@ export function ManufacturerApiKeys() {
                 size="icon"
                 onClick={() => copyToClipboard(rawKeyModal.key)}
                 title="Copy"
+                aria-label="Copy API key to clipboard"
                 className="cursor-pointer shrink-0 h-10 w-10 sm:h-11 sm:w-11"
               >
                 <Copy className="h-4 w-4" />

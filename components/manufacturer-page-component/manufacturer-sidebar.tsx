@@ -67,7 +67,7 @@ export function ManufacturerSidebar({
     { id: "qr-generator", label: "QR Generator",     icon: QrCode },
     { id: "analytics",    label: "Analytics",        icon: BarChart3 },
     { id: "team",         label: "Team",             icon: Users },
-    { id: "api-keys",     label: "API & Integrations",icon: Code },
+    { id: "api-keys",     label: "API & Integrations", icon: Code },
     { id: "settings",     label: "Settings",         icon: Settings },
   ]
 

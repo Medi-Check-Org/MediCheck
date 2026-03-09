@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 /** Where clause: key is not expired (no expiry or expiresAt > now). Use so listKeys, findById, findByHashedKey, validateKey treat expiresAt: null as valid. */
 function validExpiryWhere() {
     const now = new Date();
-    return { OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] as const };
+    return { OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] };
 }
 
 interface ApiKeyRecord {
