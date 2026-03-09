@@ -52,6 +52,18 @@ const KNOWN_SCOPES = [
   "transfers:initiate",
 ];
 
+/** Extract user-facing message from API error response (supports both { error: string } and toErrorResponse shape). */
+function apiErrorMessage(data: unknown, fallback: string): string {
+  if (data && typeof data === "object" && "error" in data) {
+    const e = (data as { error: unknown }).error;
+    if (typeof e === "string") return e;
+    if (e && typeof e === "object" && "message" in e && typeof (e as { message: unknown }).message === "string") {
+      return (e as { message: string }).message;
+    }
+  }
+  return fallback;
+}
+
 export function ManufacturerApiKeys() {
   const [keys, setKeys] = useState<ApiKeyRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,6 +72,7 @@ export function ManufacturerApiKeys() {
   const [creating, setCreating] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [rotatingId, setRotatingId] = useState<string | null>(null);
+  const isMutating = revokingId !== null || rotatingId !== null;
 
   const [newName, setNewName] = useState("");
   const [newScopes, setNewScopes] = useState<string[]>([]);
@@ -71,7 +84,7 @@ export function ManufacturerApiKeys() {
       const res = await fetch("/api/web/api-keys");
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to load API keys");
+        throw new Error(apiErrorMessage(data, "Failed to load API keys"));
       }
       const data: ApiKeyRecord[] = await res.json();
       setKeys(Array.isArray(data) ? data : []);
@@ -104,7 +117,7 @@ export function ManufacturerApiKeys() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create API key");
+      if (!res.ok) throw new Error(apiErrorMessage(data, "Failed to create API key"));
       const created = data as CreateKeyResponse;
       setCreateOpen(false);
       setNewName("");
@@ -126,7 +139,7 @@ export function ManufacturerApiKeys() {
     try {
       const res = await fetch(`/api/web/api-keys/${id}/revoke`, { method: "POST" });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Failed to revoke key");
+      if (!res.ok) throw new Error(apiErrorMessage(data, "Failed to revoke key"));
       toast.success("API key revoked");
       loadKeys();
     } catch (err) {
@@ -142,8 +155,14 @@ export function ManufacturerApiKeys() {
     try {
       const res = await fetch(`/api/web/api-keys/${id}/rotate`, { method: "POST" });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Failed to rotate key");
-      const newKey = data.newApiKey as string;
+      if (!res.ok) throw new Error(apiErrorMessage(data, "Failed to rotate key"));
+      const newKey =
+        typeof data.newApiKey === "string" && data.newApiKey.length > 0
+          ? data.newApiKey
+          : null;
+      if (!newKey) {
+        throw new Error("Invalid response: missing new API key");
+      }
       const keyRecord = keys.find((k) => k.id === id);
       setRawKeyModal({ key: newKey, label: `New key for: ${keyRecord?.name ?? id}` });
       loadKeys();
@@ -337,18 +356,18 @@ export function ManufacturerApiKeys() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleRotate(k.id)}
-                            disabled={rotatingId !== null}
-                            className="cursor-pointer"
-                          >
+                          disabled={isMutating}
+                          className="cursor-pointer"
+                        >
                           <RotateCcw className="h-3.5 w-3.5 mr-1" />
                           {rotatingId === k.id ? "Rotating…" : "Rotate"}
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                            className="text-destructive hover:text-destructive cursor-pointer"
+                          className="text-destructive hover:text-destructive cursor-pointer"
                           onClick={() => handleRevoke(k.id)}
-                          disabled={revokingId !== null}
+                          disabled={isMutating}
                         >
                           <Trash2 className="h-3.5 w-3.5 mr-1" />
                           {revokingId === k.id ? "Revoking…" : "Revoke"}
