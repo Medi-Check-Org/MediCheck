@@ -2,6 +2,12 @@ import { generateApiKey } from "@/lib/auth/apiKeyGenerator";
 import { hashApiKey } from "@/lib/auth/hashApiKey";
 import { prisma } from "@/lib/prisma";
 
+/** Where clause: key is not expired (no expiry or expiresAt > now). Use so listKeys, findById, findByHashedKey, validateKey treat expiresAt: null as valid. */
+function validExpiryWhere() {
+    const now = new Date();
+    return { OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] as const };
+}
+
 interface ApiKeyRecord {
     id: string;
     name: string;
@@ -40,10 +46,7 @@ export class ApiKeyRepository {
             where: {
                 organizationId,
                 revokedAt: null,
-                OR: [
-                    { expiresAt: null },
-                    { expiresAt: { gt: new Date() } }
-                ]
+                ...validExpiryWhere()
             },
             select: {
                 id: true,
@@ -65,7 +68,7 @@ export class ApiKeyRepository {
             where: {
                 id,
                 revokedAt: null,
-                expiresAt: { gt: new Date() }
+                ...validExpiryWhere()
             },
             select: {
                 id: true,
@@ -89,7 +92,7 @@ export class ApiKeyRepository {
             where: {
                 hashedKey,
                 revokedAt: null,
-                expiresAt: { gt: new Date() }
+                ...validExpiryWhere()
             },
             select: {
                 id: true,
@@ -112,12 +115,12 @@ export class ApiKeyRepository {
         // steps:
         // 1. hash raw key
         const hashedKey = hashApiKey(rawKey)
-        // 2. query key by hashedKey where revokedAt is null and expiresAt > now
+        // 2. query key by hashedKey where revokedAt is null and (no expiry or not expired)
         const apiKey = await prisma.apiKey.findFirst({
             where: {
                 hashedKey,
                 revokedAt: null,
-                expiresAt: { gt: new Date() }
+                ...validExpiryWhere()
             },
             select: {
                 id: true,
