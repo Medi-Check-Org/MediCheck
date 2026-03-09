@@ -16,7 +16,6 @@ import {
   Code,
   PillBottle,
   X,
-  Key,
 } from "lucide-react"
 import Link from "next/link"
 import { useClerk } from "@clerk/nextjs"

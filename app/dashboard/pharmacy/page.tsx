@@ -332,7 +332,7 @@ export default function PharmacyDashboard() {
                 </Card>
               </div>
             </SectionErrorBoundary>
-          )})}
+          )}
 
           {activeTab === "inventory" && (
             <SectionErrorBoundary context="inventory">
