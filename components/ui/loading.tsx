@@ -42,7 +42,7 @@ interface LoadingCardProps {
 export const LoadingCard: React.FC<LoadingCardProps> = ({ className = "" }) => {
   return (
     <div
-      className={`bg-card rounded-lg border border-border py-6 shadow-none p-4 ${className}`}
+      className={`bg-card rounded-lg border border-border px-4 py-6 shadow-none ${className}`}
       aria-hidden="true"
     >
       <div className="skeleton h-3 rounded w-3/4 mb-3" />

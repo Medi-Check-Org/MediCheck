@@ -17,9 +17,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         );
     }
 
-    // revoke the key
-    await apiKeyRepository.revokeKey(id);
+    const key = await apiKeyRepository.findByIdForAuth(id);
+    if (!key || key.organizationId !== organizationId) {
+        return NextResponse.json({ error: "API key not found" }, { status: 404 });
+    }
 
-    // return success response
+    await apiKeyRepository.revokeKey(id);
     return NextResponse.json({ message: "API key revoked successfully" });
 }

@@ -35,12 +35,15 @@ export class ApiKeyRepository {
 
     async listKeys(organizationId: string): Promise<ApiKeyRecord[]> {
         // steps:
-        // 1. query all keys for org ID where revokedAt is null
+        // 1. query all keys for org ID where revokedAt is null and (no expiry or not yet expired)
         const apiKeys = await prisma.apiKey.findMany({
             where: {
                 organizationId,
                 revokedAt: null,
-                expiresAt: { gt: new Date() }
+                OR: [
+                    { expiresAt: null },
+                    { expiresAt: { gt: new Date() } }
+                ]
             },
             select: {
                 id: true,
@@ -132,6 +135,15 @@ export class ApiKeyRepository {
         }
 
         return apiKey;
+    }
+
+    /** Returns key ownership for auth check; does not filter by revoked/expired. */
+    async findByIdForAuth(id: string): Promise<{ organizationId: string } | null> {
+        const key = await prisma.apiKey.findUnique({
+            where: { id },
+            select: { organizationId: true }
+        });
+        return key;
     }
 
     async revokeKey(id: string) {

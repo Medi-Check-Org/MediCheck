@@ -16,7 +16,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             { status: 400 }
         );
     }
-    // rotate the key
+
+    const key = await apiKeyRepository.findByIdForAuth(id);
+    if (!key || key.organizationId !== organizationId) {
+        return NextResponse.json({ error: "API key not found" }, { status: 404 });
+    }
+
     const newRawKey = await apiKeyRepository.rotateKey(id);
     // return the new raw key
     return NextResponse.json(

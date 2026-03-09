@@ -69,8 +69,8 @@ function DefaultFallback({
           An unexpected error occurred while loading {context}.
         </p>
 
-        {/* Error message — for developer context */}
-        {error.message && (
+        {/* Error message — only in development to avoid leaking sensitive details */}
+        {typeof process !== "undefined" && process.env.NODE_ENV !== "production" && error.message && (
           <p className="text-xs text-muted-foreground/70 font-mono bg-muted rounded px-2.5 py-1.5 mt-2 mb-5 text-left break-all select-all">
             {error.message}
           </p>
