@@ -2,13 +2,16 @@
 import { hedera2Client } from "./hedera2Client";
 import { HCS2RegistryType } from "@hashgraphonline/standards-sdk";
 import { HederaLogPayload } from "@/utils";
-
+import {
+  hederaEvents,
+  HederaUnitSafetyCheckPayload,
+} from "@/utils/types/hedera";
 
 // Creates a new batch registry on Hedera blockchain for tracking medication batches
 export async function createBatchRegistry(
   batchId: string,
   orgId?: string,
-  drugName?: string
+  drugName?: string,
 ) {
   // Create registry topic on Hedera
   const registry = await hedera2Client.createRegistry({
@@ -40,7 +43,6 @@ export async function createBatchRegistry(
   return registry;
 }
 
-
 // Creates organization-wide registry for managing all batches
 export async function createOrgManagedRegistry(orgId: string, orgName: string) {
   const registry = await hedera2Client.createRegistry({
@@ -71,10 +73,9 @@ export async function createOrgManagedRegistry(orgId: string, orgName: string) {
   return registryTopicId;
 }
 
-
 export async function registerUnitOnBatch(
   registryTopicId: string,
-  unit: { serialNumber: string; drugName: string; batchId: string }
+  unit: { serialNumber: string; drugName: string; batchId: string },
 ): Promise<number> {
   const message = JSON.stringify({
     type: "UNIT",
@@ -95,9 +96,14 @@ export async function registerUnitOnBatch(
 
 export async function registerUnitOnOrganizationManagedRegistry(
   registryTopicId: string,
-  unit: { serialNumber: string; drugName: string; mintedUnitId: string, orgId: string, productId: string },
+  unit: {
+    serialNumber: string;
+    drugName: string;
+    mintedUnitId: string;
+    orgId: string;
+    productId: string;
+  },
 ): Promise<number> {
-  
   const message = JSON.stringify({
     type: "MINTED_UNIT",
     ...unit,
@@ -117,13 +123,7 @@ export async function registerUnitOnOrganizationManagedRegistry(
 
 export async function logBatchEvent(
   topicId: string,
-  eventType:
-    | "BATCH_CREATED"
-    | "BATCH_OWNERSHIP"
-    | "BATCH_FLAG"
-    | "BATCH_UNITS_REGISTERED"
-    | "BATCH_TRANSFER_INITIATION"
-    | "TRANSFER_CANCELLED",
+  eventType: hederaEvents,
   payload: HederaLogPayload,
 ) {
   const message = JSON.stringify({
@@ -138,8 +138,6 @@ export async function logBatchEvent(
     metadata: message,
   });
 
-  console.log("responseresponseresponse", response);
-
   if (!response.success) {
     throw new Error(`Failed to log event to Hedera topic ${topicId}`);
   }
@@ -147,15 +145,10 @@ export async function logBatchEvent(
   return response.sequenceNumber;
 }
 
-
-export async function logOrgMintingUnitEvent(
+export async function logOrgMintedUnitEvent(
   topicId: string,
-  eventType: "UNIT_MINTED",
-  payload: {
-     organizationId: string;
-    units: string[];
-    count: number;
-  },
+  eventType: "UNIT_MINTED" | "UNIT_SCANNED" | "UNIT_FLAGGED",
+  payload: HederaUnitSafetyCheckPayload,
 ) {
   const message = JSON.stringify({
     type: "EVENT_LOG",
@@ -169,7 +162,6 @@ export async function logOrgMintingUnitEvent(
     metadata: message,
   });
 
-
   if (!response.success) {
     throw new Error(`Failed to log event to Hedera topic ${topicId}`);
   }
@@ -177,11 +169,10 @@ export async function logOrgMintingUnitEvent(
   return response.sequenceNumber;
 }
 
-
 /**
- * Fetch all EVENT_LOG messages from a Hedera topic using the batch registryId
+ * Fetch all EVENT_LOG messages from a Hedera topic using the registryId
  */
-export const getBatchEventLogs = async (topicId: string) => {
+export const getAllEventLogs = async (topicId: string) => {
   const messages = await hedera2Client.getRegistry(topicId, {
     limit: 100,
     order: "asc",
@@ -189,4 +180,3 @@ export const getBatchEventLogs = async (topicId: string) => {
 
   return messages.entries;
 };
-

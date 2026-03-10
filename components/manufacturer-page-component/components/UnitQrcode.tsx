@@ -1,66 +1,84 @@
+// Treasure Mazeedah Adekanye: 2026-03-05
+"use client"
 import QRCode from 'react-qr-code';
-import { FileDown, FileSpreadsheet, ArrowLeft, Printer } from 'lucide-react';
+import { FileDown, FileSpreadsheet, ArrowLeft, Printer, ShieldCheck } from 'lucide-react';
 import { MedicationUnit } from '@/lib/generated/prisma/browser';
 
-const UnitQrcode = ({ units, onBack }: { units: MedicationUnit[];  onBack: () => void }) => {
-
-    const downloadExcel = () => {
-        console.log("Exporting unit data to CSV/Excel...");
-    };
-
-    const downloadPDF = () => {
-        window.print();
-    };
+const UnitQrcode = ({ units, onBack }: { units: MedicationUnit[]; onBack: () => void }) => {
+    const downloadExcel = () => console.log("Exporting to CSV...");
+    const downloadPDF = () => window.print();
 
     return (
-        <div className="w-full bg-white border border-slate-200 rounded-xl shadow-lg flex flex-col h-fit max-h-[90vh">
-            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-xl">
-                <div>
-                    <h2 className="text-lg font-bold text-slate-800 text-cyan-700">Batch Registry</h2>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Ready for Carton Printing</p>
+        <div className="w-full mx-auto bg-card border border-border rounded-xl shadow-sm overflow-hidden animate-in fade-in duration-500">
+            {/* Header: Integrated & Clean */}
+            <div className="px-6 py-5 border-b border-border flex justify-between items-center bg-muted/20">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={onBack}
+                        className="p-2 hover:bg-background rounded-full transition-colors group"
+                    >
+                        <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
+                    </button>
+                    <div>
+                        <h2 className="text-lg font-bold text-foreground">Batch Registry</h2>
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                            <ShieldCheck className="w-3 h-3" />
+                            Ready for Carton Printing
+                        </div>
+                    </div>
                 </div>
-                <button onClick={onBack} className="p-2 hover:bg-slate-200 rounded-full transition-colors cursor-pointer">
-                    <ArrowLeft className="w-4 h-4 text-slate-600" />
-                </button>
+                <div className="text-right hidden sm:block">
+                    <span className="text-[10px] text-muted-foreground uppercase font-mono">Total Units</span>
+                    <p className="text-lg font-bold text-foreground">{units.length}</p>
+                </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            {/* Scrollable List: Card-in-Card style */}
+            <div className="max-h-[50vh] overflow-y-auto p-6 space-y-3 bg-background/50">
                 {units.map((u) => (
-                    <div key={u.id} className="flex items-center gap-4 p-3 border border-slate-100 rounded-lg hover:border-cyan-100 transition-all bg-white shadow-sm">
-                        <div className="bg-white p-1 border border-slate-100 rounded">
-                            <QRCode value={u.qrCode || ""} size={60} />
+                    <div
+                        key={u.id}
+                        className="flex items-center gap-5 p-4 bg-card border border-border rounded-lg hover:border-primary/30 transition-all group shadow-sm"
+                    >
+                        <div className="bg-white p-2 rounded-md border border-border group-hover:scale-105 transition-transform">
+                            <QRCode value={u.qrCode || ""} size={56} level="H" />
                         </div>
-                        <div className="flex-1 overflow-hidden">
-                            <span className="text-xs font-bold text-slate-400 block uppercase">Serial Number</span>
-                            <span className="text-sm font-bold text-slate-800 block truncate">UNIT-{u.mintedUnitId}</span>
-                            <span className="text-[10px] text-cyan-600 font-mono truncate block mt-1">
+                        <div className="flex-1 min-w-0">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">Serial Number</span>
+                            <h3 className="text-base font-bold text-foreground truncate uppercase tracking-wide">
+                                UNIT-{u.mintedUnitId}
+                            </h3>
+                            <p className="text-[10px] font-mono text-primary truncate mt-0.5 opacity-60">
                                 {u.qrCode}
-                            </span>
+                            </p>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div className="p-5 border-t border-slate-100 bg-slate-50 rounded-b-xl space-y-3">
-                <button
-                    onClick={downloadExcel}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium shadow-sm transition-all"
-                >
-                    <FileSpreadsheet className="w-4 h-4" />
-                    Export CSV for Printer
-                </button>
+            {/* Actions: System-unified Buttons */}
+            <div className="p-6 border-t border-border bg-muted/20 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                        onClick={downloadExcel}
+                        className="flex items-center justify-center gap-2 py-3 px-4 bg-primary text-primary-foreground rounded-lg text-xs font-bold uppercase tracking-wider hover:opacity-90 active:scale-[0.98] transition-all shadow-md"
+                    >
+                        <FileSpreadsheet className="w-4 h-4" />
+                        Export CSV for Printer
+                    </button>
 
-                <button
-                    onClick={downloadPDF}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-white border border-slate-300 hover:border-cyan-500 hover:text-cyan-600 text-slate-700 rounded-lg text-sm font-medium transition-all"
-                >
-                    <FileDown className="w-4 h-4" />
-                    Download PDF Labels
-                </button>
+                    <button
+                        onClick={downloadPDF}
+                        className="flex items-center justify-center gap-2 py-3 px-4 bg-card border border-border text-foreground rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-muted active:scale-[0.98] transition-all"
+                    >
+                        <FileDown className="w-4 h-4" />
+                        Download PDF Labels
+                    </button>
+                </div>
 
-                <div className="flex items-center gap-2 justify-center py-1 text-[10px] text-slate-400 italic">
+                <div className="flex items-center gap-2 justify-center pt-2 text-[10px] text-muted-foreground/60 font-medium italic">
                     <Printer className="w-3 h-3" />
-                    Standard GS1-Compliant Output [cite: 8]
+                    Standard GS1-Compliant Output Format
                 </div>
             </div>
         </div>

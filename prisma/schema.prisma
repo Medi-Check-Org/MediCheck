@@ -66,6 +66,7 @@ model Organization {
   updatedAt         DateTime         @updatedAt
 
   medicationBatches MedicationBatch[]
+  medicationUnits    MedicationUnit[]
   users             User                @relation(fields: [adminId], references: [id], onDelete: Cascade)
   transfersFrom     OwnershipTransfer[] @relation("TransferFrom")
   transfersTo       OwnershipTransfer[] @relation("TransferTo")
@@ -177,6 +178,7 @@ model MedicationBatch {
 model MedicationUnit {
   id               String     @id @default(cuid()) // Primary key
   batchId          String?    // FK to MedicationBatch
+  orgId            String?    // FK to Organization
   productId        String
   serialNumber     String     @unique // Unique identifier per unit
   mintedUnitId     String?
@@ -192,6 +194,7 @@ model MedicationUnit {
   // Relationship
   product          Product?  @relation(fields: [productId], references: [id])
   batch            MedicationBatch? @relation(fields: [batchId], references: [id])
+  organization     Organization? @relation(fields: [orgId], references: [id])
   scanHistory      ScanHistory[]
 
   @@map("medication_units")
@@ -350,6 +353,7 @@ enum UnitStatus {
   DISPATCHED
   SOLD
   RETURNED
+  FLAGGED
   LOST
 }
 

@@ -11,16 +11,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 
 interface GeminiResponse {
     Title: [string, string];
-    Summary: [string, string]; 
-    Reasons: [string, string[]]; 
+    Summary: [string, string];
+    Reasons: [string, string[]];
     RecommendedAction: [string, string[]];
 }
 
 export default function VerifyUnitPage() {
+
     const params = useParams();
+
     const searchParams = useSearchParams();
 
     const serialNumber = params.serialNumber as string;
+
     const sig = searchParams.get("sig");
 
     const [loading, setLoading] = useState(true);
@@ -52,42 +55,133 @@ export default function VerifyUnitPage() {
         }
     }, [authenticityResultCheck, language]);
 
-    useEffect(() => {
-        const verifyUnit = async (latitude: number, longitude: number) => {
-            if (!serialNumber || !sig) {
-                setError("Missing serial number or signature");
-                setLoading(false);
-                return;
-            }
-            try {
+    // Compose a unique key for this scan
+    const getLocalStorageKey = (serial: string, sig: string | null) =>
+        `authCheck_${serial}_${sig}`;
 
-                const res = await fetch(`/api/web/verify/unit/${serialNumber}?sig=${sig}&lat=${latitude}&long=${longitude}`);
+    // Save full verification result to localStorage
+    const saveAuthCheckToLocal = (serial: string, sig: string | null, data: {
+        valid: boolean;
+        authenticityResultCheck: object;
+        unit?: any;
+        batch?: any;
+    }) => {
+        const key = getLocalStorageKey(serial, sig);
+        localStorage.setItem(key, JSON.stringify(data));
+    };
 
-                const data = await res.json();
-                
-                if (!res.ok) {
-                    setError(data.error || "Verification failed");
-                } else {
-                    setValid(data.valid);
-                    setUnit(data.unit);
-                    setBatch(data.batch);
-                    setAuthenticityResultCheck(data.authenticityResultCheck);
-                }
-            }
-            catch (err) {
-                setError("Something went wrong during verification");
-                console.error("Verification error:", err)
-            }
-            finally {
-                setLoading(false);
-            }
-        };
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
-                const { latitude, longitude } = position.coords;
-                verifyUnit(latitude, longitude);
-            });
+    // Load full verification result from localStorage
+    const loadAuthCheckFromLocal = (serial: string, sig: string | null) => {
+        const key = getLocalStorageKey(serial, sig);
+        const stored = localStorage.getItem(key);
+        return stored ? JSON.parse(stored) : null;
+    };
+
+    const verifyUnit = async (latitude: number | null, longitude: number | null) => {
+        if (!serialNumber || !sig) {
+            setError("Missing serial number or signature");
+            setLoading(false);
+            return;
         }
+
+        // --- Check localStorage first ---
+        const cached = loadAuthCheckFromLocal(serialNumber, sig);
+        if (cached) {
+            console.log("Using cached verification data from localStorage");
+
+            setValid(cached.valid);
+            setUnit(cached.unit ?? null);
+            setBatch(cached.batch ?? null);
+            setAuthenticityResultCheck(cached.authenticityResultCheck);
+            setLoading(false);
+            return;
+        }
+
+        // --- No cached data, fetch from API ---
+        try {
+            console.log("verifyUnit running", latitude, longitude);
+
+            const res = await fetch(
+                `/api/web/verify/unit/${serialNumber}?sig=${encodeURIComponent(sig)}&lat=${latitude}&long=${longitude}`
+            );
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setError(data.error || "Verification failed");
+            } else {
+                setValid(data.valid);
+                setUnit(data.unit);
+                setBatch(data.batch);
+                setAuthenticityResultCheck(data.authenticityResultCheck);
+
+                // --- Save full data to localStorage ---
+                saveAuthCheckToLocal(serialNumber, sig, {
+                    valid: data.valid,
+                    unit: data.unit,
+                    batch: data.batch,
+                    authenticityResultCheck: data.authenticityResultCheck
+                });
+            }
+        } catch (err) {
+            console.error("Verification error:", err);
+            setError("Something went wrong during verification");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getLocationAndVerify = () => {
+
+        if (!navigator.geolocation) {
+            console.warn("Geolocation not supported, verifying without location");
+            verifyUnit(null, null);
+            return;
+        }
+
+        const highAccuracyOptions = { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 };
+        const fallbackOptions = { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 };
+
+        // First attempt: high accuracy
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                console.log("High accuracy location acquired", latitude, longitude);
+                verifyUnit(latitude, longitude);
+            },
+            (error) => {
+                console.warn("High accuracy failed:", error.message);
+
+                // Second attempt: fallback to network location
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        console.log("Fallback location acquired", latitude, longitude);
+                        verifyUnit(latitude, longitude);
+                    },
+                    (err) => {
+                        console.error("All geolocation attempts failed:", err.message);
+                        // Last resort: verify without location
+                        verifyUnit(null, null);
+                    },
+                    fallbackOptions
+                );
+            },
+            highAccuracyOptions
+        );
+    };
+
+    useEffect(() => {
+        if (!serialNumber || !sig) {
+            setError("Missing serial number or signature");
+            setLoading(false);
+            return;
+        }
+
+        console.log("Starting geolocation + verification flow");
+        setLoading(true);
+
+        getLocationAndVerify();
     }, [serialNumber, sig]);
 
     // Mobile header (like manufacturer dashboard)
@@ -226,7 +320,7 @@ export default function VerifyUnitPage() {
                                         </p>
                                     </CardContent>
                                 </Card>
-                                
+
                                 <Card>
                                     <CardHeader>
                                         <CardTitle className="text-lg sm:text-xl text-primary">
@@ -277,7 +371,7 @@ export default function VerifyUnitPage() {
                                                 </ul>
                                             </CardContent>
                                         </Card>
-                                        
+
                                         <Card>
                                             <CardHeader>
                                                 <CardTitle className="text-lg sm:text-xl text-primary">
@@ -299,7 +393,7 @@ export default function VerifyUnitPage() {
                                             </CardContent>
                                         </Card>
                                     </div>
-                                    
+
                                     {/* Show Less Button - At the bottom of expanded content */}
                                     <div className="flex justify-center lg:justify-start">
                                         <button
