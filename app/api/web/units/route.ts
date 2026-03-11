@@ -86,7 +86,9 @@ export async function POST(req: Request) {
       },
     });
 
-    const lastNumber = lastUnit ? parseInt(lastUnit?.mintedUnitId ?? "", 10) : 0;
+    const lastNumber = lastUnit
+      ? parseInt(lastUnit?.mintedUnitId ?? "", 10)
+      : 0;
 
     // Start new mint sequence
     const startIndex = lastNumber + 1;
@@ -106,7 +108,6 @@ export async function POST(req: Request) {
     const concurrency = UNIT_REG_CONCURRENCY > 0 ? UNIT_REG_CONCURRENCY : 10;
 
     await runInBatches<number>(unitIndexes, concurrency, async (i) => {
-
       const numericId = startIndex + i;
 
       const mintedUnitId = String(numericId).padStart(4, "0");
@@ -188,6 +189,61 @@ export async function POST(req: Request) {
     console.error("Product Creation Error:", error);
     return NextResponse.json(
       { error: "Failed to mint units" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function GET(req: Request) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const url = new URL(req.url);
+
+    const orgId = url.searchParams.get("orgId") ?? "";
+    
+    const organization = await prisma.organization.findUnique({
+      where: { id: orgId },
+    });
+
+
+    if (!organization) {
+      return NextResponse.json(
+        { error: "Organization not found" },
+        { status: 404 },
+      );
+    }
+
+    const units = await prisma.medicationUnit.findMany({
+      where: {
+        orgId,
+      },
+      include: {
+        product: true,
+      },
+      orderBy: {
+        mintedUnitId: "asc",
+      },
+    });
+
+    return NextResponse.json(
+      {
+        success: true,
+        units,
+        message: "Units fetched successfully",
+      },
+      { status: 200 },
+    );
+
+
+  }
+  catch (error: unknown) {
+    return NextResponse.json(
+      { error: "Failed to get units" },
       { status: 500 },
     );
   }

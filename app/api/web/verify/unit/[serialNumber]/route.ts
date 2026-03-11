@@ -339,7 +339,8 @@ export async function GET(
       batch: unit.batch,
       authenticityResultCheck: authenticityResultCheck,
     });
-  } else if (!splitSerialNumber.includes("BATCH")) {
+  }
+  else if (!splitSerialNumber.includes("BATCH")) {
     // reconstruct the batchid
     const organizationIdFromUrl = splitSerialNumber[1];
 
@@ -435,7 +436,8 @@ export async function GET(
       batch: unit.batch,
       authenticityResultCheck: unitValidityChecks,
     });
-  } else {
+  }
+  else {
     return NextResponse.json(
       { valid: false, error: "Invalid verification url." },
       { status: 400 },
