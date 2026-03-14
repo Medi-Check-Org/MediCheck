@@ -7,33 +7,32 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "react-toastify"
 import {
     Plus,
     Search,
     Eye,
     ArrowUpRight,
-    CheckCircle,
     Clock,
-    XCircle,
     Zap,
 } from "lucide-react";
 import { MedicationBatchInfoProps } from "@/utils";
 import { OrganizationProp } from "@/utils/types/schemType";
 import { Product, $Enums } from "@/lib/generated/prisma/browser"
-
-
-// Safe date display: avoid "Invalid Date" when product or date is null
-const formatProductDate = (date: Date | string | null | undefined): string => {
-    if (date == null) return "—";
-    const d = new Date(date);
-    return isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
-};
+import CreateBatchModal from "./components/CreateBatchSelection"
+import { getStatusIcon, getStatusDisplay, getStatusColor } from "@/utils/helpers/getHelpers"
+import CreateNewBatchForm from "./components/CreateNewBatchForm"
+import { formatProductDate } from "@/utils/helpers/formatters"
+import AttachUnitsContainer from "./components/AttachExistingUnitToBatch";
 
 const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; allBatches: MedicationBatchInfoProps[]; loadBatches: () => void }) => {
 
     const [isCreateBatchOpen, setIsCreateBatchOpen] = useState(false);
+
+    const [openBatchCreationModal, setOpenBatchCreationModal] = useState(false);
+
+    const [selectedCreationModal, setSelectedCreationModal] = useState<'attach-existing' | 'create-new' | "">("")
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -145,11 +144,13 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
         batch.drugName.toLowerCase().includes(searchQuery.toLowerCase())
     ) ?? [];
 
+
     const [transferForm, setTransferForm] = useState({
         toOrganization: "",
         transferReason: "",
         notes: "",
     })
+
 
     // Batch viewing state
     const [isViewBatchOpen, setIsViewBatchOpen] = useState(false);
@@ -180,6 +181,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
             loadOrganizations();
         }
     }, [isTransferOpen]);
+
 
     // Handle batch transfer
     const handleTransferBatch = async () => {
@@ -233,144 +235,56 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
         }
     };
 
-    const getStatusColor = (status: string) => {
-        // use enum value instead of hardcoding
-        switch (status) {
-            case $Enums.BatchStatus.DELIVERED:
-                return "default"
-            case $Enums.BatchStatus.CREATED:
-                return "secondary"
-            case $Enums.BatchStatus.IN_TRANSIT:
-                return "outline"
-            case $Enums.BatchStatus.FLAGGED:
-                return "destructive"
-            case $Enums.BatchStatus.EXPIRED:
-                return "destructive"
-            case $Enums.BatchStatus.RECALLED:
-                return "destructive"
-            default:
-                return "secondary"
-        }
-    }
-
-    const getStatusIcon = (status: string) => {
-        // use enum value instead of hardcoding
-        switch (status) {
-            case $Enums.BatchStatus.DELIVERED:
-                return <CheckCircle className="h-4 w-4" />
-            case $Enums.BatchStatus.CREATED:
-            case $Enums.BatchStatus.IN_TRANSIT:
-                return <Clock className="h-4 w-4" />
-            case $Enums.BatchStatus.EXPIRED:
-            case $Enums.BatchStatus.FLAGGED:
-            case $Enums.BatchStatus.RECALLED:
-                return <XCircle className="h-4 w-4" />
-            default:
-                return <Clock className="h-4 w-4" />
-        }
-    }
-
-    const getStatusDisplay = (status: string) => {
-        // use enum value instead of hardcoding
-        switch (status) {
-            case $Enums.BatchStatus.DELIVERED:
-                return "Delivered"
-            case $Enums.BatchStatus.CREATED:
-                return "Created"
-            case $Enums.BatchStatus.IN_TRANSIT:
-                return "In Transit"
-            case $Enums.BatchStatus.FLAGGED:
-                return "Flagged"
-            case $Enums.BatchStatus.EXPIRED:
-                return "Expired"
-            case $Enums.BatchStatus.RECALLED:
-                return "Recalled"
-            default:
-                return status
-        }
-    }
 
     return (
         <div className="space-y-6">
+
+            {/* Modal */}
+            {openBatchCreationModal && <CreateBatchModal isOpen={openBatchCreationModal} onClose={() => setOpenBatchCreationModal(false)} onSelect={setSelectedCreationModal} />}
+            
+             {selectedCreationModal === 'create-new' && (
+                <CreateNewBatchForm
+                    newBatch={newBatch}
+                    setNewBatch={setNewBatch}
+                    products={products}
+                    orgId={orgId}
+                    handleCreateBatch={handleCreateBatch}
+                    setIsCreateBatchOpen={() => setSelectedCreationModal("")}
+                    isLoading={isLoading}
+                />
+            )}
+
+            {selectedCreationModal === "attach-existing" && (
+                <AttachUnitsContainer
+                    onSuccess={async () => {
+                        setSelectedCreationModal("");
+                        loadBatches();
+                    }}
+                    onCancel={() => setSelectedCreationModal("")}
+                    orgId={orgId}
+                />
+            )}                
+
 
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
                     <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Batch Management</h1>
                     <p className="text-muted-foreground text-sm sm:text-base">Create, view, and manage product batches</p>
                 </div>
-                {/* create batch dialog */}
-                <Dialog open={isCreateBatchOpen} onOpenChange={setIsCreateBatchOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="cursor-pointer w-full sm:w-auto" disabled={gettingProduct || products.length === 0}>
-                            {!gettingProduct && <Plus className="h-4 w-4" />}
-                            {gettingProduct ? <span>Loading Product...</span> : 
-                                <>
-                                    <span className="hidden sm:inline">Create Batch</span>
-                                    <span className="sm:hidden">New Batch</span>
-                                </>
-                            }
-                            {gettingProduct || (products.length === 0 && <span className="hidden sm:inline"> (No products)</span>)}
-                        </Button>
-                    </DialogTrigger>
-                    
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle>Create New Batch</DialogTitle>
-                            <DialogDescription>Create a new manufacturing batch</DialogDescription>
-                        </DialogHeader>
-                        <form onSubmit={handleCreateBatch} method="post">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="product">Product</Label>
-                                    <Select
-                                        value={newBatch.drugName}
-                                        onValueChange={(value) => setNewBatch({ ...newBatch, drugName: value })}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select product" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {products.length > 0 ? (
-                                                products.map((product) => (
-                                                    <SelectItem key={product.id} value={product.name}>
-                                                        {product.name} ({product.category})
-                                                    </SelectItem>
-                                                ))
-                                            ) : (
-                                                <SelectItem value="no-products" disabled>
-                                                    No products available - Create products first
-                                                </SelectItem>
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="quantity">Batch Size</Label>
-                                    <Input
-                                        id="quantity"
-                                        type="number"
-                                        placeholder="Enter quantity"
-                                        max={products.find((product) => product.name === newBatch.drugName && product.organizationId === orgId)?.numberOfProductAvailable}
-                                        min={0}
-                                        value={newBatch.batchSize}
-                                        onChange={(e) => setNewBatch({ ...newBatch, batchSize: e.target.value })}
-                                    />
-                        <p
-                        className="text-xs text-muted-foreground"
-                        >
-                                        max batch size:
-                                        {products.find((product) => product.name === newBatch.drugName && product.organizationId === orgId)?.numberOfProductAvailable}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex justify-end space-x-2 mt-4">
-                                <Button className="cursor-pointer" variant="outline" onClick={() => setIsCreateBatchOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button className="cursor-pointer">{isLoading ? "Creating..." : "Create Batch"}</Button>
-                            </div>
-                        </form>
-                    </DialogContent>
-                </Dialog>
+                <Button
+                    className="cursor-pointer w-full sm:w-auto"
+                    disabled={gettingProduct || products.length === 0}
+                    onClick={() => setOpenBatchCreationModal(true)}
+                >
+                    {!gettingProduct && <Plus className="h-4 w-4" />}
+                    {gettingProduct ? <span>Loading Product...</span> :
+                        <>
+                            <span className="hidden sm:inline">Create Batch</span>
+                            <span className="sm:hidden">New Batch</span>
+                        </>
+                    }
+                    {gettingProduct || (products.length === 0 && <span className="hidden sm:inline"> (No products)</span>)}
+                </Button>
             </div>
 
             {/* Batch Overview Stats */}
@@ -803,6 +717,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                     </div>
                 </DialogContent>
             </Dialog>
+
         </div>
     )
 }

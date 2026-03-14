@@ -1,9 +1,8 @@
 // Treasure Mazeedah Adekanye: 2026-02-22
 "use client"
 import { useState } from 'react';
-import { Layers, Save, AlertCircle } from 'lucide-react';
-import LoadingSpinner from '@/components/ui/loading';
-import { Product, UnitStatus, MedicationUnit } from '@/lib/generated/prisma/browser';
+import { Layers, PlusCircle, AlertCircle } from 'lucide-react';
+import { Product, MedicationUnit } from '@/lib/generated/prisma/browser';
 import { toast } from 'react-toastify';
 
 interface Props {
@@ -13,30 +12,27 @@ interface Props {
 }
 
 const UnitRangeSelection = ({ products, onSuccess, orgId }: Props) => {
-
     const [selectedProductId, setSelectedProductId] = useState(products[0]?.id);
     const [quantity, setQuantity] = useState(0);
     const [error, setError] = useState('');
     const [creating, setCreating] = useState(false);
+
     const selectedProduct = products.find(p => p.id === selectedProductId) ?? products[0];
 
     const handleMint = async () => {
-
         if (creating) return;
-
         if (quantity > selectedProduct?.numberOfProductAvailable) {
-            setError(`Insufficient units. Only ${selectedProduct?.numberOfProductAvailable} available in pool.`);
+            setError(`Insufficient units. Only ${selectedProduct?.numberOfProductAvailable} available.`);
             return;
         }
 
-        setCreating(true)
-
+        setCreating(true);
         try {
             const createBody = {
                 orgId: orgId,
                 productId: selectedProductId,
                 productQuantity: quantity,
-            }
+            };
 
             const res = await fetch("/api/web/units", {
                 method: "POST",
@@ -45,91 +41,103 @@ const UnitRangeSelection = ({ products, onSuccess, orgId }: Props) => {
             });
 
             const data = await res.json();
-
-            console.log("Unit Creation Response:", data);
-
-            if (res.ok  && data.success) {
-
-                toast.success("Product created successfully");
-
+            if (res.ok && data.success) {
+                toast.success("Units created successfully");
                 onSuccess(data.units);
-            }
-            else {
-                setError(String(data.error) || "Failed to create product");
+            } else {
+                setError(String(data.error) || "Failed to create units");
             }
         } catch (error) {
-            setError("Failed to create product");
+            setError("Connection error. Please try again.");
         } finally {
             setCreating(false);
         }
-
     };
 
-
     return (
-        <div className="w-full bg-card border border-border rounded-xl shadow-sm p-6 page-transition">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                    <Layers className="w-5 h-5 text-primary" />
+        <div className="w-full h-full bg-card border border-border rounded-xl shadow-sm overflow-hidden animate-in fade-in duration-500">
+            {/* Simple, Non-Technical Header */}
+            <div className="px-6 py-5 border-b border-border flex items-center gap-4 bg-muted/10">
+                <div className="p-2 bg-primary rounded-lg text-primary-foreground">
+                    <Layers className="w-5 h-5" />
                 </div>
-                <h2 className="text-xl font-bold tracking-tight">Mint Batch Units</h2>
+                <div>
+                    <h2 className="text-lg font-bold text-foreground">Mint Batch Units</h2>
+                    <p className="text-xs text-muted-foreground">Create individual drug units for tracking</p>
+                </div>
             </div>
 
-            <div className="space-y-5">
-                <div>
-                    <label className="text-xs font-semibold uppercase text-muted-foreground mb-1.5 block">Select Product</label>
+            <div className="p-8 space-y-6">
+                {/* 01. Product Selection */}
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">Select Drug Batch</label>
                     <select
-                        className="w-full p-2.5 border border-gray-600 rounded-lg ring-transparent text-sm outline-none"
+                        className="w-full h-11 px-4 bg-background border border-input rounded-lg text-sm focus:ring-2 focus:ring-ring outline-none appearance-none transition-all cursor-pointer"
                         value={selectedProductId}
-                        onChange={(e) => setSelectedProductId(e.target.value)}
+                        onChange={(e) => {
+                            setSelectedProductId(e.target.value);
+                            setError("");
+                        }}
                     >
-                        {products.filter(product => product.numberOfProductAvailable > 0).map(p => (
-                            <option key={p.id} value={p.id}>{p.name} ({(p as any).numberOfProductAvailable} available)</option>
+                        {products.filter(p => p.numberOfProductAvailable > 0).map(p => (
+                            <option key={p.id} value={p.id}>
+                                {p.name} — ({p.numberOfProductAvailable} units remaining)
+                            </option>
                         ))}
                     </select>
                 </div>
 
-                <div>
-                    <label className="text-xs font-semibold uppercase text-muted-foreground mb-1.5 block">Batch Quantity</label>
-                    <div className="relative">
-                        <input
-                            type="number"
-                            className="w-full p-2.5 border border-gray-600 rounded-lg ring-transparent text-sm outline-none"
-                            placeholder="Enter amount to mint"
-                            value={quantity}
-                            max={products.find(p => p.id === selectedProductId)?.numberOfProductAvailable}
-                            min={1}
-                            onChange={(e) => {
-                                setQuantity(parseInt(e.target.value) || 0);
-                                setError("");
-                            }}
-                        />
+                {/* 02. Quantity Input */}
+                <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                        <label className="text-sm font-medium text-foreground">Quantity to Mint</label>
+                        {selectedProduct && (
+                            <span className="text-[11px] font-semibold text-muted-foreground bg-secondary px-2 py-0.5 rounded">
+                                Limit: {selectedProduct.numberOfProductAvailable}
+                            </span>
+                        )}
                     </div>
+                    <input
+                        type="number"
+                        className="w-full h-11 px-4 bg-background border border-input rounded-lg text-sm outline-none focus:ring-2 focus:ring-ring transition-all"
+                        placeholder="Enter amount"
+                        value={quantity || ''}
+                        max={selectedProduct.numberOfProductAvailable}
+                        min={0}
+                        onChange={(e) => {
+                            setQuantity(parseInt(e.target.value) || 0);
+                            setError("");
+                        }}
+                    />
                     {error && (
-                        <div className="flex items-center gap-1.5 mt-2 text-destructive text-xs font-medium">
+                        <div className="flex items-center gap-2 mt-2 text-destructive text-xs font-medium animate-in slide-in-from-top-1">
                             <AlertCircle className="w-3.5 h-3.5" />
                             {error}
                         </div>
                     )}
                 </div>
 
+                {/* Action Button - Using your primary brand color */}
                 <button
                     onClick={handleMint}
-                    disabled={!quantity || quantity <= 0}
-                    className="w-full mt-2 cursor-pointer bg-[#0891b2] text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-sm"
+                    disabled={!quantity || quantity <= 0 || creating}
+                    className="w-full h-12 mt-4 bg-primary text-primary-foreground font-bold rounded-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none shadow-sm"
                 >
                     {creating ? (
-                        <div className="flex items-center gap-2">
-                            <LoadingSpinner className="w-4 h-4 animate-spin" />
-                            Creating Units...
-                        </div>
+                        <>
+                            Processing...
+                        </>
                     ) : (
                         <>
-                            <Save className="w-4 h-4" />
+                            <PlusCircle className="w-4 h-4" />
                             Confirm & Mint Units
                         </>
                     )}
                 </button>
+
+                <p className="text-[11px] text-center text-muted-foreground/70">
+                    This action will generate verifiable records for each individual unit.
+                </p>
             </div>
         </div>
     );

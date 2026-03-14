@@ -29,7 +29,10 @@ import {
   createBatchRegistry,
   logBatchEvent,
 } from "@/lib/hedera";
-import { generateQRPayload, generateBatchQRPayload } from "@/lib/qrPayload";
+import {
+  generateBatchUnitQRPayload,
+  generateBatchQRPayload,
+} from "@/lib/qrPayload";
 import { prisma } from "@/lib/prisma";
 import { MedicationBatch } from "@/lib/generated/prisma/client";
 import { runInBatches } from "@/utils/helpers/batch";
@@ -38,7 +41,10 @@ const QR_SECRET = process.env.QR_SECRET || "dev-secret";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-const UNIT_REG_CONCURRENCY = parseInt(process.env.UNIT_REG_CONCURRENCY || "10", 10);
+const UNIT_REG_CONCURRENCY = parseInt(
+  process.env.UNIT_REG_CONCURRENCY || "10",
+  10,
+);
 
 export interface CreateBatchOutput {
   batch: MedicationBatch;
@@ -47,23 +53,18 @@ export interface CreateBatchOutput {
   batchEventSeq: number;
 }
 
-
-
-
 /**
  * Create Batch Use Case
  *
  * Dependencies injected for testability and loose coupling
  */
 export class CreateBatchUseCase {
-
   constructor(
     private readonly batchRepo: BatchRepository,
-    private readonly orgRepo: OrganizationRepository
+    private readonly orgRepo: OrganizationRepository,
   ) {}
 
   async execute(rawInput: unknown, actor: Actor): Promise<CreateBatchOutput> {
-
     // 1. Validate input
     const input = validateInput(CreateBatchSchema, rawInput);
 
@@ -75,7 +76,7 @@ export class CreateBatchUseCase {
     // 3. Verify actor belongs to the organization
     if (actor.organizationId !== input.organizationId) {
       throw new ForbiddenError(
-        "Actor does not have access to this organization"
+        "Actor does not have access to this organization",
       );
     }
 
@@ -87,7 +88,7 @@ export class CreateBatchUseCase {
     // Check if batch size is reasonable (at least 1, checked by schema, but double-check)
     if (input.batchSize < 1 || input.batchSize > 100) {
       throw new BusinessRuleViolationError(
-        "Batch size must be between 1 and 100 units"
+        "Batch size must be between 1 and 100 units",
       );
     }
 
@@ -98,7 +99,7 @@ export class CreateBatchUseCase {
     const existingBatch = await this.batchRepo.findByBatchId(batchId);
     if (existingBatch) {
       throw new BusinessRuleViolationError(
-        `Batch ID ${batchId} already exists. Please try again.`
+        `Batch already exists. Please try again.`,
       );
     }
 
@@ -114,14 +115,14 @@ export class CreateBatchUseCase {
       registryTopicId = (await createBatchRegistry(
         batchId,
         org.id,
-        input.drugName
+        input.drugName,
       )) as RegistryResult;
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       throw new ExternalServiceError(
         "Hedera",
-        `Failed to create batch registry: ${errorMessage}`
+        `Failed to create batch registry: ${errorMessage}`,
       );
     }
 
@@ -132,7 +133,7 @@ export class CreateBatchUseCase {
       },
     });
 
-    console.log(product)
+    console.log(product);
 
     if (!product) {
       throw new DomainError("Product does not exist", "PRODUCT_NOT_FOUND", 404);
@@ -143,7 +144,7 @@ export class CreateBatchUseCase {
       batchId,
       QR_SECRET,
       BASE_URL,
-      registryTopicId.topicId as string
+      registryTopicId.topicId as string,
     );
 
     // 8. Create batch record in database
@@ -167,8 +168,12 @@ export class CreateBatchUseCase {
         organizationId: input.organizationId,
         drugName: input.drugName,
         batchSize: String(input.batchSize),
-        manufacturingDate: product.manufacturingDate ? new Date(product.manufacturingDate).toISOString() : "",
-        expiryDate: product.expiryDate ? new Date(product.expiryDate).toISOString() : "",
+        manufacturingDate: product.manufacturingDate
+          ? new Date(product.manufacturingDate).toISOString()
+          : "",
+        expiryDate: product.expiryDate
+          ? new Date(product.expiryDate).toISOString()
+          : "",
       },
     );
 
@@ -182,8 +187,12 @@ export class CreateBatchUseCase {
         organizationId: input.organizationId,
         drugName: input.drugName,
         batchSize: input.batchSize,
-        manufacturingDate: product.manufacturingDate ? new Date(product.manufacturingDate).toISOString() : "",
-        expiryDate: product.expiryDate ? new Date(product.expiryDate).toISOString() : "",
+        manufacturingDate: product.manufacturingDate
+          ? new Date(product.manufacturingDate).toISOString()
+          : "",
+        expiryDate: product.expiryDate
+          ? new Date(product.expiryDate).toISOString()
+          : "",
       },
       region: org?.state ?? "",
     });
@@ -194,7 +203,6 @@ export class CreateBatchUseCase {
     const concurrency = UNIT_REG_CONCURRENCY > 0 ? UNIT_REG_CONCURRENCY : 10;
 
     await runInBatches<number>(unitIndexes, concurrency, async (i) => {
-
       const unitNumber = String(i + 1).padStart(4, "0");
       const randomSuffix = nanoid(3);
       const serialNumber = `UNIT-${batchId}-${unitNumber}${randomSuffix}`;
@@ -206,15 +214,15 @@ export class CreateBatchUseCase {
           serialNumber,
           drugName: input.drugName,
           batchId,
-        }
+        },
       );
 
-      const qrUnitPayload = generateQRPayload(
+      const qrUnitPayload = generateBatchUnitQRPayload(
         serialNumber,
         batchId,
         seq,
         QR_SECRET,
-        BASE_URL
+        BASE_URL,
       );
 
       unitsData.push({
@@ -225,7 +233,6 @@ export class CreateBatchUseCase {
         productId: input.productId,
         qrSignature: qrUnitPayload.signature,
       });
-
     });
 
     // 13. Bulk insert units to database
@@ -242,7 +249,7 @@ export class CreateBatchUseCase {
         organizationId: org.id,
         units: unitsData.map((u) => u.serialNumber),
         count: unitsData.length,
-      }
+      },
     );
 
     await this.batchRepo.createEvent({
@@ -269,23 +276,19 @@ export class CreateBatchUseCase {
       registryTopicId: registryTopicId.topicId as string,
       batchEventSeq: eventSeq ?? 0,
     };
-
   }
 }
-
 
 // Create singleton instance with injected dependencies
 export const createBatchUseCase = new CreateBatchUseCase(
   batchRepository,
-  organizationRepository
+  organizationRepository,
 );
-
 
 // Export convenience function
 export async function createBatch(
   input: unknown,
-  actor: Actor
+  actor: Actor,
 ): Promise<CreateBatchOutput> {
   return createBatchUseCase.execute(input, actor);
 }
-

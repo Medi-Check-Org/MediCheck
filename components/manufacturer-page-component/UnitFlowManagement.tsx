@@ -6,6 +6,7 @@ import { Product, MedicationUnit } from '@/lib/generated/prisma/browser';
 import { toast } from 'react-toastify';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { AlertCircle, RefreshCcw } from 'lucide-react';
+import UniversalLoader from '@/components/ui/universal-loader';
 
 const UnitFlowManagement = ({ orgId }: { orgId: string }) => {
     const [step, setStep] = useState(1);
@@ -53,9 +54,7 @@ const UnitFlowManagement = ({ orgId }: { orgId: string }) => {
     };
 
     if (loading) return (
-        <div className="flex justify-end min-h-full w-full p-6">
-            <LoadingSpinner text="Accessing Product Pool..." />
-        </div>
+        <UniversalLoader />
     );
 
     if (error) return (
@@ -78,20 +77,22 @@ const UnitFlowManagement = ({ orgId }: { orgId: string }) => {
     );
 
     return (
-        <div className="flex justify-end min-h-full w-full">
-            {step === 1 ? (
-                <UnitRangeSelection
-                    products={products}
-                    onSuccess={handleMintingComplete}
-                    orgId={orgId}
-                />
-            ) : (
-                <UnitQrcode
-                    units={mintedUnits}
-                    onBack={() => setStep(1)}
-                />
-            )}
-        </div>
+        <>            
+            <div className="flex justify-end min-h-full w-full">
+                {step === 1 ? (
+                    <UnitRangeSelection
+                        products={products}
+                        onSuccess={handleMintingComplete}
+                        orgId={orgId}
+                    />
+                ) : (
+                    <UnitQrcode
+                        units={mintedUnits}
+                        onBack={() => setStep(1)}
+                    />
+                )}
+            </div>
+        </>
     );
 };
 

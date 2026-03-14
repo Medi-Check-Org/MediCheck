@@ -2,15 +2,16 @@ import { HederaLogPayload } from "@/utils";
 import { prisma } from "./prisma";
 import { hedera2Client } from "./hedera2Client";
 
-export async function autoFlagBatch(
+export async function autoFlagBatchUnit(
   batchId: string,
+  unitId: string,
   topicId: string,
   organizationId: string,
-  flagReason: string
+  flagReason: string,
 ) {
-  // 1. Update the batch in Postgres first
-  await prisma.medicationBatch.update({
-    where: { batchId: batchId },
+  // 1. Update the unit in Postgres first
+  await prisma.medicationUnit.update({
+    where: { id: unitId },
     data: {
       status: "FLAGGED",
     },
@@ -19,6 +20,7 @@ export async function autoFlagBatch(
   // prepare payload for log event
   const payload: HederaLogPayload = {
     batchId,
+    unitId,
     organizationId,
     flagReason,
   };
@@ -26,7 +28,7 @@ export async function autoFlagBatch(
   // Compose event message
   const message = JSON.stringify({
     type: "EVENT_LOG",
-    eventType: "BATCH_FLAG",
+    eventType: "UNIT_FLAGGED",
     timestamp: new Date().toISOString(),
     ...payload,
   });
@@ -37,9 +39,8 @@ export async function autoFlagBatch(
     metadata: message,
   });
 
+  //
   if (!response.success) {
-    throw new Error(`Failed to auto-flag batch ${batchId}`);
+    throw new Error(`Failed to auto-flag unit ${unitId}`);
   }
-
-  return response.sequenceNumber;
 }

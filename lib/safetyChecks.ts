@@ -1,24 +1,8 @@
-import { prisma } from "./prisma";
-import { autoFlagBatch } from "./autoFlagBatch";
-export interface HederaEvent {
-  eventType: "BATCH_CREATED" | "BATCH_OWNERSHIP" | "BATCH_FLAG" | "BATCH_UNITS_REGISTERED";
-  timestamp: string;
-  batchId: string;
-  topicId: string;
-  organizationId: string;
-  drugName?: string;
-  batchSize?: string;
-  manufacturingDate?: string;
-  expiryDate?: string;
-  transferFrom?: string;
-  transferTo?: string;
-  qrSignature?: string;
-  flagReason?: string;
-}
-
+import { autoFlagBatchUnit } from "./autoFlagBatch";
+import { HederaSafetyCheckPayload } from "@/utils/types/hedera";
 
 // Check 1: Batch Flagged
-export function checkFlagged(events: HederaEvent[]) {
+export function checkFlagged(events: HederaSafetyCheckPayload[]) {
   // Collect all flag events
   const flaggedEvents = events.filter((e) => e.eventType === "BATCH_FLAG");
 
@@ -32,8 +16,7 @@ export function checkFlagged(events: HederaEvent[]) {
 
     return {
       passed: false,
-      reasonIfFail: reasons.join("; "), // combined string
-      reasonsArray: reasons, // optional: raw array if needed
+      reasonIfFail: reasons.join("; "),
     };
   }
 
@@ -41,13 +24,11 @@ export function checkFlagged(events: HederaEvent[]) {
   return {
     passed: true,
     reasonIfFail: "",
-    reasonsArray: [],
   };
 }
 
 // Check 2: Check if this unit didgital footprint contains it's birth
-export function checkBatchCreated(events: HederaEvent[]) {
-  // Look for at least one BATCH_CREATED event
+export function checkBatchCreated(events: HederaSafetyCheckPayload[]) {
   const createdEvent = events.find((e) => e.eventType === "BATCH_CREATED");
 
   if (!createdEvent) {
@@ -65,20 +46,17 @@ export function checkBatchCreated(events: HederaEvent[]) {
 }
 
 // Check 3: Checks if one transfer ownership event has occured before it gets to the consumer
-export function checkAtLeastOneTransfer(events: HederaEvent[]) {
-  console.log("EVENTS", events)
+export function checkAtLeastOneTransfer(events: HederaSafetyCheckPayload[]) {
   // Look for ownership transfers
   const transferEvents = events.filter(
-    (e) => e.eventType === "BATCH_OWNERSHIP"
+    (e) => e.eventType === "BATCH_OWNERSHIP",
   );
-
-  console.log("TRANSFER EVENTS", transferEvents)
 
   if (transferEvents.length === 0) {
     return {
       passed: false,
       reasonIfFail:
-        "No ownership transfer found — this unit has not yet entered the supply chain from the manufacturer.",
+        "No ownership transfer found — this unit's batch has not yet entered the supply chain from the manufacturer.",
     };
   }
 
@@ -89,75 +67,77 @@ export function checkAtLeastOneTransfer(events: HederaEvent[]) {
 }
 
 // Check 4: Expiry Date
-export function checkExpired(events: HederaEvent[]) {
+export function checkExpired(events: HederaSafetyCheckPayload[]) {
   const created = events.find((e) => e.eventType === "BATCH_CREATED");
+
   if (created?.expiryDate && new Date(created.expiryDate) < new Date()) {
     return {
       passed: false,
       reasonIfFail: `Batch expired on ${created.expiryDate}.`,
     };
   }
-    console.log("check 4");
+
   return { passed: true, reasonIfFail: "" };
 }
 
 // Check 5: Ownership Transfer Complete
-export function checkOwnership(events: HederaEvent[]) {
+export function checkOwnership(events: HederaSafetyCheckPayload[]) {
   const ownershipTransfers = events.filter(
-    (e) => e.eventType === "BATCH_OWNERSHIP"
+    (e) => e.eventType === "BATCH_OWNERSHIP",
   );
+
   const incomplete = ownershipTransfers.some(
-    (t) => !t.transferFrom || !t.transferTo
+    (t) => !t.transferFrom || !t.transferTo,
   );
-    console.log("check 5");
+
   return incomplete
     ? { passed: false, reasonIfFail: "Ownership transfer mismatch detected." }
     : { passed: true, reasonIfFail: "" };
 }
 
-// Check 6: Duplicate Scan (you’ll implement based on your DB)
+// Check 6: Duplicate Scan
 export async function checkDuplicateScan(
+  events: HederaSafetyCheckPayload[],
   unitId: string,
   batchId: string,
   organizationId: string,
-  topicId: string
+  topicId: string,
 ) {
-  // Fetch the last scan record from your DB
-  const lastScan = await prisma.scanHistory.findFirst({
-    where: { unitId },
-  });
+  const previouslyScanned = events.find((e) => e.eventType === "UNIT_SCANNED");
 
-  if (lastScan) {
+  if (previouslyScanned) {
     // Build reason for the failure
-    const reason = `Duplicate scan detected. Unit previously scanned at lat: ${lastScan.latitude}, long: ${lastScan.longitude} on ${lastScan.timestamp}.`;
+    const reason = `Duplicate scan detected. Unit previously scanned at lat: ${previouslyScanned.latitude}, long: ${previouslyScanned.longitude} on ${previouslyScanned.timestamp}.`;
 
-    // Auto-flag the batch immediately with reason
-    await autoFlagBatch(batchId, topicId ?? "", organizationId, reason);
+    // Auto-flag the batch immediately with reason should a back up if it does not work
+    await autoFlagBatchUnit(
+      batchId,
+      unitId,
+      topicId ?? "",
+      organizationId,
+      reason,
+    );
 
-    console.log("check 6");
-    
     return {
       passed: false,
       reasonIfFail: reason,
-      flagged: true,
+      duplicateScan: true,
     };
   }
 
-    console.log("check 6");
-  // No previous scan found
   return {
     passed: true,
     reasonIfFail: "",
-    flagged: false,
+    duplicateScan: false,
   };
 }
 
 export async function runAllUnitAuthenticityChecks(
-  events: HederaEvent[],
+  events: HederaSafetyCheckPayload[],
   unitId: string,
   batchId: string,
   organizationId: string,
-  topicId: string
+  topicId: string,
 ) {
   // --- Sync checks first ---
   const syncChecks = [
@@ -168,17 +148,16 @@ export async function runAllUnitAuthenticityChecks(
     checkOwnership(events),
   ];
 
-  console.log(syncChecks);
-
   // --- Async checks ---
   let duplicateCheckResult = null;
-  console.log(unitId, batchId, organizationId, topicId)
+
   if (unitId && batchId && organizationId && topicId) {
     duplicateCheckResult = await checkDuplicateScan(
+      events,
       unitId,
       batchId,
       organizationId,
-      topicId
+      topicId,
     );
   }
 
@@ -188,7 +167,7 @@ export async function runAllUnitAuthenticityChecks(
     : syncChecks;
 
   // Gather failed checks
-  const failedChecks = allChecks.filter((c) => !c.passed);
+  const failedChecks = allChecks.filter((checks) => !checks.passed);
 
   // Status logic
   const status: string = failedChecks.length ? "NOT_SAFE" : "AUTHENTIC";
@@ -208,8 +187,8 @@ export async function runAllUnitAuthenticityChecks(
     status,
     reasons,
     recommendedAction,
+    duplicateScan: duplicateCheckResult?.duplicateScan,
   };
-  console.log("results yess")
+
   return restul;
 }
-

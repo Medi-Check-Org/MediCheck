@@ -64,7 +64,7 @@ export interface TransferProps {
 export interface HederaLogPayload {
   batchId: string;
   organizationId?: string;
-  timestamp?: string;
+  timestamp?: string | Date;
   // specific to batch unit creation
   units?: string[];
   count?: number;
@@ -79,7 +79,12 @@ export interface HederaLogPayload {
   transferTo?: string; // for transfer initiation or confirmation
   qrSignature?: string;
   // flag
+  unitId?: string
   flagReason?: string;
+  // unit-scan
+  scanResult?: "GENUINE" | "SUSPICIOUS";
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface MyPublicMetadata {

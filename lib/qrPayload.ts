@@ -1,6 +1,5 @@
 import crypto from "crypto";
 
-
 export interface QRPayload {
   s: string; // serialNumber
   b: string; // batchId
@@ -9,14 +8,14 @@ export interface QRPayload {
   sig?: string;
 }
 
-
-export function generateQRPayload(
+export function generateBatchUnitQRPayload(
   serialNumber: string,
   batchId: string,
   registrySequence: number,
   secret: string,
   baseUrl: string,
 ) {
+  
   // 1️⃣ Create a signed hash
 
   const data = `${serialNumber}|${batchId}|${registrySequence}`;
@@ -40,7 +39,7 @@ export function generateQRPayload(
 
 export function generateMintedUnitQRPayload(
   serialNumber: string,
-  orgId: string ,
+  orgId: string,
   registrySequence: number,
   secret: string,
   baseUrl: string,
@@ -66,7 +65,6 @@ export function generateMintedUnitQRPayload(
   };
 }
 
-
 // batch QR payload generation
 export function generateBatchQRPayload(
   batchId: string,
@@ -74,7 +72,6 @@ export function generateBatchQRPayload(
   baseUrl: string,
   registryTopicId: string,
 ) {
-
   const data = `BATCH|${batchId}|${registryTopicId}`;
 
   const signature = crypto
@@ -90,4 +87,3 @@ export function generateBatchQRPayload(
     signature,
   };
 }
-

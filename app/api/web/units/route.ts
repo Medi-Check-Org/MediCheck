@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { nanoid } from "nanoid";
 import {
   registerUnitOnOrganizationManagedRegistry,
-  logOrgMintingUnitEvent,
+  logOrgMintedUnitEvent,
 } from "@/lib/hedera";
 import { generateMintedUnitQRPayload } from "@/lib/qrPayload";
 import { runInBatches } from "@/utils/helpers/batch";
@@ -43,8 +43,6 @@ export async function POST(req: Request) {
       include: { users: true },
     });
 
-    console.log("Organization found:", organization);
-
     if (organization?.users.clerkUserId !== userId) {
       return NextResponse.json(
         { error: "User does not belong to this organization" },
@@ -74,21 +72,26 @@ export async function POST(req: Request) {
       );
     }
 
-    const updatedProduct = await prisma.product.update({
-      where: { id: product.id },
-      data: {
-        mintedUnitCounter: {
-          increment: productQuantity,
-        },
+    // Find last minted unit for this org + product
+    const lastUnit = await prisma.medicationUnit.findFirst({
+      where: {
+        orgId,
+        productId,
+      },
+      orderBy: {
+        mintedUnitId: "desc",
       },
       select: {
-        mintedUnitCounter: true,
+        mintedUnitId: true,
       },
     });
 
-    const newCounter = updatedProduct.mintedUnitCounter;
-    
-    const startIndex = newCounter - productQuantity + 1;
+    const lastNumber = lastUnit
+      ? parseInt(lastUnit?.mintedUnitId ?? "", 10)
+      : 0;
+
+    // Start new mint sequence
+    const startIndex = lastNumber + 1;
 
     const unitsData: Array<{
       serialNumber: string;
@@ -97,6 +100,7 @@ export async function POST(req: Request) {
       productId: string;
       qrSignature: string;
       mintedUnitId: string;
+      orgId: string;
     }> = [];
 
     const unitIndexes = Array.from({ length: productQuantity }, (_, i) => i);
@@ -108,7 +112,7 @@ export async function POST(req: Request) {
 
       const mintedUnitId = String(numericId).padStart(4, "0");
 
-      const unitNumber = String(i + 1).padStart(4, "0");
+      const unitNumber = String(numericId + i).padStart(4, "0");
 
       const randomSuffix = nanoid(3);
 
@@ -141,22 +145,24 @@ export async function POST(req: Request) {
         productId,
         qrSignature: qrUnitPayload.signature,
         mintedUnitId,
+        orgId: organization.id,
       });
-        
     });
-      
-    await logOrgMintingUnitEvent(
+
+    await logOrgMintedUnitEvent(
       organization.managedRegistry as string,
       "UNIT_MINTED",
       {
         organizationId: organization.id,
-        units: unitsData.map((u) => u.serialNumber),
-        count: unitsData.length,
+        units: unitsData.map((u) => ({
+          serialNumber: u.serialNumber,
+          mintedId: u.mintedUnitId,
+          orgId: u.orgId,
+        })),
       },
     );
 
     await prisma.$transaction([
-        
       prisma.medicationUnit.createMany({
         data: unitsData,
       }),
@@ -179,11 +185,65 @@ export async function POST(req: Request) {
       },
       { status: 201 },
     );
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     console.error("Product Creation Error:", error);
     return NextResponse.json(
-      { error: "Failed to create product" },
+      { error: "Failed to mint units" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function GET(req: Request) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const url = new URL(req.url);
+
+    const orgId = url.searchParams.get("orgId") ?? "";
+    
+    const organization = await prisma.organization.findUnique({
+      where: { id: orgId },
+    });
+
+
+    if (!organization) {
+      return NextResponse.json(
+        { error: "Organization not found" },
+        { status: 404 },
+      );
+    }
+
+    const units = await prisma.medicationUnit.findMany({
+      where: {
+        orgId,
+      },
+      include: {
+        product: true,
+      },
+      orderBy: {
+        mintedUnitId: "asc",
+      },
+    });
+
+    return NextResponse.json(
+      {
+        success: true,
+        units,
+        message: "Units fetched successfully",
+      },
+      { status: 200 },
+    );
+
+
+  }
+  catch (error: unknown) {
+    return NextResponse.json(
+      { error: "Failed to get units" },
       { status: 500 },
     );
   }
