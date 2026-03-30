@@ -28,8 +28,6 @@ import AttachUnitsContainer from "./components/AttachExistingUnitToBatch";
 
 const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; allBatches: MedicationBatchInfoProps[]; loadBatches: () => void }) => {
 
-    const [isCreateBatchOpen, setIsCreateBatchOpen] = useState(false);
-
     const [openBatchCreationModal, setOpenBatchCreationModal] = useState(false);
 
     const [selectedCreationModal, setSelectedCreationModal] = useState<'attach-existing' | 'create-new' | "">("")
@@ -124,8 +122,6 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
             }
 
             toast.success("Batch created successfully!");
-
-            setIsCreateBatchOpen(false);
 
             loadBatches()
 
@@ -262,6 +258,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                     }}
                     onCancel={() => setSelectedCreationModal("")}
                     orgId={orgId}
+                    products={products}
                 />
             )}                
 
