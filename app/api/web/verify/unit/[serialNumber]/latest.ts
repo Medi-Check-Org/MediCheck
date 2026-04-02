@@ -6,10 +6,10 @@ import { runAllUnitAuthenticityChecks } from "@/lib/safetyChecks";
 import { auth } from "@clerk/nextjs/server";
 import { logBatchEvent, logOrgMintedUnitEvent } from "@/lib/hedera";
 import { runUnitOriginChecks } from "@/lib/independentUnitSafetyCheck";
+// import { runHybridUnitChecks } from "@/lib/hybridSafetyCheck";
 import { runHybridUnitChecks } from "@/lib/hybridSafetyCheck";
 import { runMLInference } from "@/lib/ml-background";
 import { getRegionFromCoords } from "@/lib/geocoding";
-import { getFullLineageTopicIds } from "@/lib/hierarchy";
 
 const QR_SECRET = process.env.QR_SECRET || "dev-secret";
 
@@ -25,7 +25,6 @@ export async function GET(
   req: Request,
   context: { params: Promise<{ serialNumber: string }> },
 ) {
-
   const { userId } = await auth();
   const { serialNumber } = await context.params;
   const { searchParams } = new URL(req.url);
@@ -39,6 +38,7 @@ export async function GET(
       { status: 400 },
     );
 
+  // 1. Fetch unit with ALL possible relations
   const unit = await prisma.medicationUnit.findUnique({
     where: { serialNumber },
     include: {
@@ -53,100 +53,101 @@ export async function GET(
       { status: 404 },
     );
 
+  // 2. Identify State & Signature Context
   const isBatched = !!unit.batchId;
-
   const isHybrid = isBatched && !!unit.organization?.managedRegistry;
 
+  /**
+   * CONTEXT LOGIC:
+   * If Hybrid: Context is ALWAYS OrgID (because it was printed at birth).
+   * If Pure Batch: Context is BatchID.
+   * If Pure Independent: Context is OrgID.
+   */
   const contextId =
     isHybrid || !isBatched ? unit.organization?.id : unit.batch?.batchId;
-  
+
   const topicId = isBatched
     ? unit.batch?.registryTopicId
     : unit.organization?.managedRegistry;
 
-  if (!topicId || !contextId)
+  if (!topicId || !contextId) {
     return NextResponse.json(
       { valid: false, error: "Registry context incomplete" },
       { status: 400 },
     );
+  }
 
+  // 3. Cryptographic Signature Check
   const data = `${unit.serialNumber}|${contextId}|${unit.registrySequence}`;
 
   const isValidSig = verifySignature(data, sig, QR_SECRET);
 
-  if (!isValidSig)
+  if (!isValidSig) {
     return NextResponse.json(
-      { valid: false, error: "Tampered signature" },
+      { valid: false, error: "Tampered QR code signature" },
       { status: 400 },
     );
+  }
 
-  // --- NEW: RECURSIVE LINEAGE FETCHING ---
-  const allTopicIds = isBatched
-    ? await getFullLineageTopicIds(unit.batchId!)
-    : [unit.organization?.managedRegistry!];
-
-  const allRawLogs = await Promise.all(
-    allTopicIds.map((id) => getAllEventLogs(id)),
-  );
-
-  const flattenedBatchLogs = allRawLogs
-    .flat()
-    .map(parseMetadata)
-    .filter((e) => e?.type === "EVENT_LOG");
-
+  // 4. Multi-Registry Safety Checks
   let safetyResult;
 
   if (isHybrid) {
-
-    // For Hybrid, we still need the Org logs for the Birth Certificate
-    const rawOrgLogs = await getAllEventLogs(
-      unit.organization!.managedRegistry!,
-    );
-
-    const orgLogs = rawOrgLogs
-      .map(parseMetadata)
-      .filter((e) => e?.type === "EVENT_LOG");
+    // HYBRID: Requires Birth Certificate (Org) + Lifecycle (Batch)
+    const [rawOrgLogs, rawBatchLogs] = await Promise.all([
+      getAllEventLogs(unit.organization!.managedRegistry!),
+      getAllEventLogs(unit.batch!.registryTopicId ?? ""),
+    ]);
 
     safetyResult = await runHybridUnitChecks({
-      orgLogs,
-      batchLogs: flattenedBatchLogs, // Now contains Parent Batch history too
+      orgLogs: rawOrgLogs
+        .map(parseMetadata)
+        .filter((e) => e?.type === "EVENT_LOG"),
+      batchLogs: rawBatchLogs
+        .map(parseMetadata)
+        .filter((e) => e?.type === "EVENT_LOG"),
       serialNumber,
       unitId: unit.id,
       batchId: unit.batchId!,
       organizationId: unit.organization!.id,
-      topicId: unit.batch!.registryTopicId!,
+      topicId: unit.batch!.registryTopicId ?? "",
       lat: latitude,
       long: longitude,
     });
-  }
-  else {
+  } else {
+    // STANDARD: Single Topic Fetch
+    const logEntries = await getAllEventLogs(topicId);
+    let eventLogs = logEntries
+      .map(parseMetadata)
+      .filter((e) => e?.type === "EVENT_LOG");
+
     if (isBatched) {
       safetyResult = await runAllUnitAuthenticityChecks(
-        flattenedBatchLogs,
+        eventLogs,
         unit.id,
         unit.batch!.batchId,
         unit.batch!.organizationId,
-        topicId!,
+        topicId,
         serialNumber,
       );
-    }
-    else {
-      const filteredOrgLogs = flattenedBatchLogs.filter((e) => {
+    } else {
+      // Independent filtering
+      eventLogs = eventLogs.filter((e) => {
         if (e.serialNumber === serialNumber) return true;
-        return (
-          Array.isArray(e.units) &&
-          e.units.some(
+        if (Array.isArray(e.units)) {
+          return e.units.some(
             (u: any) => u?.serialNumber === serialNumber || u === serialNumber,
-          )
-        );
+          );
+        }
+        return false;
       });
 
       safetyResult = await runUnitOriginChecks(
-        filteredOrgLogs,
+        eventLogs,
         serialNumber,
         latitude,
         longitude,
-        topicId!,
+        topicId,
         unit?.orgId ?? "",
         unit.id,
       );
@@ -156,7 +157,11 @@ export async function GET(
   const regionName = await getRegionFromCoords(latitude, longitude);
 
   // 5. Logging, ML, and Final Response
-  if (!safetyResult.duplicateScan) {
+  const isDuplicateScan = Boolean(
+    (safetyResult as Partial<{ duplicateScan: boolean }>).duplicateScan,
+  );
+
+  if (!isDuplicateScan) {
 
     const scanResult =
       safetyResult.status === "NOT_SAFE" ? "SUSPICIOUS" : "GENUINE";
@@ -169,20 +174,22 @@ export async function GET(
     const consumer = user
       ? await prisma.consumer.findUnique({ where: { userId: user.id } })
       : null;
-    
+
+    // Create DB History entry
     const savedScan = await prisma.scanHistory.create({
       data: {
         unitId: unit.id,
-        consumerId: consumer?.id || null,
+        consumerId: user ? consumer?.id : null,
         isAnonymous: !user,
         region: regionName,
         scanResult,
-        latitude,
-        longitude,
+        latitude: latitude,
+        longitude: longitude,
         timestamp: new Date(),
       },
     });
 
+    // Final Ledger Entry (Always log to the current Topic the unit lives in)
     const logPayload = {
       scanResult: scanResult as "SUSPICIOUS" | "GENUINE",
       serialNumber,
@@ -191,15 +198,14 @@ export async function GET(
       timestamp: new Date(),
     };
 
-    // Note: We always log the scan to the immediate topicId (the unit's current batch)
     if (isBatched) {
-      await logBatchEvent(topicId!, "UNIT_SCANNED", {
+      await logBatchEvent(topicId, "UNIT_SCANNED", {
         batchId: unit.batch!.batchId,
         ...logPayload,
       });
     }
     else {
-      await logOrgMintedUnitEvent(topicId!, "UNIT_SCANNED", {
+      await logOrgMintedUnitEvent(topicId, "UNIT_SCANNED", {
         organizationId: unit.organization!.id,
         ...logPayload,
       });

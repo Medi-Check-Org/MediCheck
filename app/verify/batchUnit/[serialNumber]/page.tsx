@@ -37,7 +37,9 @@ export default function VerifyUnitPage() {
     const [showFullDetails, setShowFullDetails] = useState(false);
 
     useEffect(() => {
+        console.log("authenticityResultCheck changed", authenticityResultCheck);
         if (authenticityResultCheck) {
+            console.log("authenticityResultCheck confirmed", authenticityResultCheck);
             setAiTranslation(undefined);
             const getComprehensiveInfoFromGemini = async () => {
                 const res = await fetch("/api/web/geminiTranslation", {
@@ -77,7 +79,9 @@ export default function VerifyUnitPage() {
         return stored ? JSON.parse(stored) : null;
     };
 
+
     const verifyUnit = async (latitude: number | null, longitude: number | null) => {
+
         if (!serialNumber || !sig) {
             setError("Missing serial number or signature");
             setLoading(false);
@@ -86,6 +90,7 @@ export default function VerifyUnitPage() {
 
         // --- Check localStorage first ---
         const cached = loadAuthCheckFromLocal(serialNumber, sig);
+
         if (cached) {
             console.log("Using cached verification data from localStorage");
 
@@ -97,7 +102,6 @@ export default function VerifyUnitPage() {
             return;
         }
 
-        // --- No cached data, fetch from API ---
         try {
             console.log("verifyUnit running", latitude, longitude);
 
@@ -106,6 +110,8 @@ export default function VerifyUnitPage() {
             );
 
             const data = await res.json();
+
+            console.log("Verification API response", data);
 
             if (!res.ok) {
                 setError(data.error || "Verification failed");
@@ -130,6 +136,7 @@ export default function VerifyUnitPage() {
             setLoading(false);
         }
     };
+
 
     const getLocationAndVerify = () => {
 
@@ -171,6 +178,7 @@ export default function VerifyUnitPage() {
         );
     };
 
+
     useEffect(() => {
         if (!serialNumber || !sig) {
             setError("Missing serial number or signature");
@@ -179,10 +187,13 @@ export default function VerifyUnitPage() {
         }
 
         console.log("Starting geolocation + verification flow");
+
         setLoading(true);
 
         getLocationAndVerify();
+
     }, [serialNumber, sig]);
+
 
     // Mobile header (like manufacturer dashboard)
     const MobileHeader = () => (

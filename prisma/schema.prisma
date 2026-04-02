@@ -172,6 +172,11 @@ model MedicationBatch {
   batchEvents         BatchEvent[]
   medicationUnits     MedicationUnit[]
 
+  // Hierarchy Fields
+  parentBatchId     String?
+  parentBatch       MedicationBatch?  @relation("BatchLineage", fields: [parentBatchId], references: [id])
+  childBatches      MedicationBatch[] @relation("BatchLineage")
+
   @@map("medication_batches")
 }
 

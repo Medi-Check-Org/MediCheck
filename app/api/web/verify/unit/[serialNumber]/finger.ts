@@ -114,6 +114,7 @@ export async function GET(
       unit.batch.batchId,
       unit.batch.organizationId,
       topicId,
+      unit.serialNumber
     );
 
     valid = authenticityResultCheck?.status === "NOT_SAFE" ? false : valid;

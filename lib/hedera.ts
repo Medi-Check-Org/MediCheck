@@ -73,6 +73,7 @@ export async function createOrgManagedRegistry(orgId: string, orgName: string) {
   return registryTopicId;
 }
 
+// this funtion allows uus to register a unit to the associated batch registry
 export async function registerUnitOnBatch(
   registryTopicId: string,
   unit: { serialNumber: string; drugName: string; batchId: string },
@@ -94,6 +95,7 @@ export async function registerUnitOnBatch(
   return response.sequenceNumber;
 }
 
+// this funtion allows uus to register an independed unit to the associated organization registry
 export async function registerUnitOnOrganizationManagedRegistry(
   registryTopicId: string,
   unit: {
@@ -121,6 +123,8 @@ export async function registerUnitOnOrganizationManagedRegistry(
   return response.sequenceNumber;
 }
 
+
+// we log batch related activies and the related unit
 export async function logBatchEvent(
   topicId: string,
   eventType: hederaEvents,
