@@ -25,6 +25,7 @@ import { getStatusIcon, getStatusDisplay, getStatusColor } from "@/utils/helpers
 import CreateNewBatchForm from "./components/CreateNewBatchForm"
 import { formatProductDate } from "@/utils/helpers/formatters"
 import AttachUnitsContainer from "./components/AttachExistingUnitToBatch";
+import BatchGrouping from "./components/BatchGrouping"
 
 const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; allBatches: MedicationBatchInfoProps[]; loadBatches: () => void }) => {
 
@@ -52,6 +53,8 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
     const [selectedBatch, setSelectedBatch] = useState<any>(null);
 
     const [organizations, setOrganizations] = useState<OrganizationProp[]>([]);
+
+    const [isGroupingModalOpen, setIsGroupingModalOpen] = useState(false)
 
     useEffect(() => {
         setBatches(allBatches);
@@ -260,7 +263,18 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                     orgId={orgId}
                     products={products}
                 />
-            )}                
+            )}        
+
+            {isGroupingModalOpen && (
+                <BatchGrouping
+                    products={products}
+                    availableBatches={batches}
+                    organizationId={orgId}
+                    onSuccess={loadBatches}
+                    onCancel={() => { setIsGroupingModalOpen(false); }}
+                />
+            )}
+
 
 
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
@@ -268,20 +282,35 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                     <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Batch Management</h1>
                     <p className="text-muted-foreground text-sm sm:text-base">Create, view, and manage product batches</p>
                 </div>
-                <Button
-                    className="cursor-pointer w-full sm:w-auto"
-                    disabled={gettingProduct || products.length === 0}
-                    onClick={() => setOpenBatchCreationModal(true)}
-                >
-                    {!gettingProduct && <Plus className="h-4 w-4" />}
-                    {gettingProduct ? <span>Loading Product...</span> :
-                        <>
-                            <span className="hidden sm:inline">Create Batch</span>
-                            <span className="sm:hidden">New Batch</span>
-                        </>
-                    }
-                    {gettingProduct || (products.length === 0 && <span className="hidden sm:inline"> (No products)</span>)}
-                </Button>
+
+                <div className="flex items-center gap-x-4">
+                    <Button
+                        className="cursor-pointer w-full sm:w-auto"
+                        disabled={gettingProduct || products.length === 0}
+                        onClick={() => setOpenBatchCreationModal(true)}
+                    >
+                        {!gettingProduct && <Plus className="h-4 w-4" />}
+                        {gettingProduct ? <span>Loading Product...</span> :
+                            <>
+                                <span className="hidden sm:inline">Create Batch</span>
+                                <span className="sm:hidden">New Batch</span>
+                            </>
+                        }
+                        {gettingProduct || (products.length === 0 && <span className="hidden sm:inline"> (No products)</span>)}
+                    </Button>
+
+                    <Button
+                        className="cursor-pointer w-full sm:w-auto"
+                        disabled={gettingProduct || products.length === 0}
+                        onClick={() => setIsGroupingModalOpen(true)}
+                    >
+                        {gettingProduct ? <span>Loading...</span> :
+                            <>
+                                <span className="hidden sm:inline">Group Batch</span>
+                            </>
+                        }
+                    </Button>
+                </div>
             </div>
 
             {/* Batch Overview Stats */}
@@ -433,6 +462,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="min-w-30">Batch ID</TableHead>
+                                    <TableHead className="min-w-30">Batch Type</TableHead>
                                     <TableHead className="min-w-37.5">Product</TableHead>
                                     <TableHead className="min-w-30 hidden sm:table-cell">Production Date</TableHead>
                                     <TableHead className="min-w-30 hidden md:table-cell">Expiry Date</TableHead>
@@ -445,6 +475,16 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                 {filteredBatches.map((batch) => (
                                     <TableRow key={batch.batchId}>
                                         <TableCell className="font-medium">{batch.batchId}</TableCell>
+                                        <TableCell className="font-medium flex gap-2 items-center">
+                                            <span>
+                                                {batch.parentBatchId ? "Grouped" : "Single"}
+                                            </span>
+                                            {filteredBatches.some(b => b.parentBatchId === batch.id) && (
+                                                <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold uppercase">
+                                                    Container Batch
+                                                </span>
+                                            )}
+                                        </TableCell>
                                         <TableCell className="font-medium">{batch.drugName}</TableCell>
                                         <TableCell className="hidden sm:table-cell">{formatProductDate(batch?.product?.manufacturingDate)}</TableCell>
                                         <TableCell className="hidden md:table-cell">{formatProductDate(batch?.product?.expiryDate)}</TableCell>
@@ -469,19 +509,21 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                                     <Eye className="h-4 w-4 mr-1" />
                                                     View
                                                 </Button>
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        setSelectedBatch(batch)
-                                                        setIsTransferOpen(true)
-                                                    }}
-                                                    // disabled={batch.status === "DELIVERED" || batch.status === "IN_TRANSIT"}
-                                                    disabled={batch.status === $Enums.BatchStatus.IN_TRANSIT}
-                                                    className="w-full sm:w-auto cursor-pointer"
-                                                >
-                                                    <ArrowUpRight className="h-4 w-4 mr-1" />
-                                                    {batch.status === $Enums.BatchStatus.IN_TRANSIT ? "In Transit" : "Transfer"}
-                                                </Button>
+                                                {!batch.parentBatchId && (
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            setSelectedBatch(batch)
+                                                            setIsTransferOpen(true)
+                                                        }}
+                                                        disabled={batch.status === $Enums.BatchStatus.IN_TRANSIT}
+                                                        className="w-full sm:w-auto cursor-pointer"
+                                                    >
+                                                        <ArrowUpRight className="h-4 w-4 mr-1" />
+                                                        {batch.status === $Enums.BatchStatus.IN_TRANSIT ? "In Transit" : "Transfer"}
+                                                    </Button>
+                                                )}
+                                   
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -518,10 +560,10 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                         <span className="text-muted-foreground">Batch Size:</span>
                                         <span className="ml-2 font-medium">{viewingBatch.batchSize.toLocaleString()} units</span>
                                     </div>
-                                    <div className="text-sm">
+                                    {/* <div className="text-sm">
                                         <span className="text-muted-foreground">Current Location:</span>
                                         <span className="ml-2 font-medium">{viewingBatch.currentLocation || 'Not specified'}</span>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
 

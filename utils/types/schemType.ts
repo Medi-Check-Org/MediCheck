@@ -159,6 +159,8 @@ export interface MedicationBatchProp {
     lastUpdate: Date;
   };
   product?: Product;
+  productId?: string;
+  parentBatchId?: string;
 }
 export interface MedicationUnitProp {
   id: string;

@@ -1,6 +1,7 @@
 import { prisma } from "./prisma";
 
 export async function getFullLineageTopicIds(batchId: string, topicIds: string[] = []): Promise<string[]> {
+    
   const batch = await prisma.medicationBatch.findUnique({
     where: { id: batchId },
     select: { registryTopicId: true, parentBatchId: true }
