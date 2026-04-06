@@ -1,6 +1,36 @@
 import { autoFlagBatchUnit } from "./autoFlagBatch";
 import { HederaSafetyCheckPayload } from "@/utils/types/hedera";
 
+// Check: Verify this specific serial number was registered in this batch
+export function checkUnitInBatch(events: any[], unitSerialNumber: string) {
+
+  const registrationEvent = events.find(
+    (e) => e.eventType === "BATCH_UNITS_REGISTERED"
+  );
+
+  if (!registrationEvent) {
+    return {
+      passed: false,
+      reasonIfFail: "Batch exists, but no units have been officially registered on the ledger yet.",
+    };
+  }
+
+  const isRegistered = registrationEvent.units?.includes(unitSerialNumber);
+
+  if (!isRegistered) {
+    return {
+      passed: false,
+      reasonIfFail: "Identity Mismatch: This serial number is not part of the officially registered units for this batch.",
+    };
+  }
+
+  return {
+    passed: true,
+    reasonIfFail: "",
+  };
+  
+}
+
 // Check 1: Batch Flagged
 export function checkFlagged(events: HederaSafetyCheckPayload[]) {
   // Collect all flag events
@@ -138,11 +168,13 @@ export async function runAllUnitAuthenticityChecks(
   batchId: string,
   organizationId: string,
   topicId: string,
+  serialNumber: string
 ) {
   // --- Sync checks first ---
   const syncChecks = [
     checkFlagged(events),
     checkBatchCreated(events),
+    checkUnitInBatch(events, serialNumber),
     checkAtLeastOneTransfer(events),
     checkExpired(events),
     checkOwnership(events),

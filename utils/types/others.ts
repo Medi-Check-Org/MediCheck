@@ -85,6 +85,7 @@ export interface HederaLogPayload {
   scanResult?: "GENUINE" | "SUSPICIOUS";
   latitude?: number | null;
   longitude?: number | null;
+  serialNumber?: string;
 }
 
 export interface MyPublicMetadata {

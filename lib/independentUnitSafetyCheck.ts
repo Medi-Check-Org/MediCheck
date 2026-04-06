@@ -5,15 +5,16 @@ export function checkUnitMinted(
   events: HederaUnitSafetyCheckPayload[],
   unitSerialNumber: string,
 ) {
-  const mintedEvents = events.filter(
-    (event) => event.eventType === "UNIT_MINTED",
-  );
 
-  const matchingUnits = mintedEvents.flatMap((event) =>
-    (event?.units ?? []).filter((unit) => unit.serialNumber === unitSerialNumber),
-  );
+  const mintedEvents = events.filter((event) => {
+    return (
+      event.eventType === "UNIT_MINTED" &&
+      Array.isArray(event.units) &&
+      event.units.some((u: any) => u.serialNumber === unitSerialNumber)
+    );
+  });
 
-  if (matchingUnits.length === 0) {
+  if (mintedEvents.length === 0) {
     return {
       passed: false,
       reasonIfFail:
@@ -21,7 +22,7 @@ export function checkUnitMinted(
     };
   }
 
-  if (matchingUnits.length > 1) {
+  if (mintedEvents.length > 1) {
     return {
       passed: false,
       reasonIfFail:
@@ -115,6 +116,7 @@ export async function checkUnitPreviouslyScanned(
   const flaggedEvent = events.filter(
     (event) => event.eventType === "UNIT_FLAGGED",
   );
+
   if (flaggedEvent.length === 0) {
     // only flag once no point doing this every time
     // Auto-flag the batch immediately with reason should a back up if it does not work

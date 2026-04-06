@@ -12,7 +12,7 @@ import {
   BatchStatus,
   Product,
 } from "@/lib/generated/prisma/client";
-import { Prisma } from "@prisma/client"; 
+import { Prisma } from "@/lib/generated/prisma/client";
 import { NotFoundError } from "@/utils/types/errors";
 
 export interface BatchWithRelations extends MedicationBatch {
@@ -63,6 +63,7 @@ export interface CreateUnitsData {
   registrySequence: number;
   qrCode: string;
   qrSignature: string;
+  productId: string;
 }
 
 export class BatchRepository {

@@ -108,6 +108,7 @@ export async function POST(req: Request) {
     const concurrency = UNIT_REG_CONCURRENCY > 0 ? UNIT_REG_CONCURRENCY : 10;
 
     await runInBatches<number>(unitIndexes, concurrency, async (i) => {
+      
       const numericId = startIndex + i;
 
       const mintedUnitId = String(numericId).padStart(4, "0");

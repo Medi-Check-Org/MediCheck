@@ -47,6 +47,7 @@ export interface HederaUnitSafetyCheckPayload {
   latitude?: number | null;
   longitude?: number | null;
   timestamp?: Date;
+  scanResult?: "GENUINE" | "SUSPICIOUS";
 
   // flag event
   unitId?: string;
