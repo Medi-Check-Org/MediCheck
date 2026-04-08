@@ -5,14 +5,14 @@ import { auth } from "@clerk/nextjs/server";
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Find or create User record
     let user = await prisma.user.findUnique({
-      where: { clerkUserId: userId }
+      where: { clerkUserId: userId },
     });
 
     if (!user) {
@@ -20,8 +20,8 @@ export async function GET(request: NextRequest) {
         data: {
           clerkUserId: userId,
           userRole: "SUPER_ADMIN",
-          isActive: true
-        }
+          isActive: true,
+        },
       });
     }
 
@@ -31,9 +31,9 @@ export async function GET(request: NextRequest) {
         organizationType: "REGULATOR",
         OR: [
           { adminId: user.id },
-          { teamMembers: { some: { userId: user.id } } }
-        ]
-      }
+          { teamMembers: { some: { userId: user.id } } },
+        ],
+      },
     });
 
     if (!organization) {
@@ -48,8 +48,9 @@ export async function GET(request: NextRequest) {
           agencyName: "NAFDAC",
           officialId: `REG-${Date.now()}`,
           isVerified: true,
-          isActive: true
-        }
+          isActive: true,
+          managedRegistry: "",
+        },
       });
     }
 
@@ -62,111 +63,110 @@ export async function GET(request: NextRequest) {
     const analytics = {
       // Scan activities by organization type
       scansByOrgType: await prisma.scanHistory.groupBy({
-        by: ['region'],
+        by: ["region"],
         where: {
-          scanDate: { gte: startOfMonth }
+          scanDate: { gte: startOfMonth },
         },
         _count: {
-          id: true
-        }
+          id: true,
+        },
       }),
 
       // Counterfeit reports by severity
       counterfeitBySeverity: await prisma.counterfeitReport.groupBy({
-        by: ['severity'],
+        by: ["severity"],
         where: {
-          createdAt: { gte: startOfMonth }
+          createdAt: { gte: startOfMonth },
         },
         _count: {
-          id: true
-        }
+          id: true,
+        },
       }),
 
       // Monthly trends for investigations
       monthlyInvestigations: await prisma.counterfeitReport.groupBy({
-        by: ['createdAt'],
+        by: ["createdAt"],
         where: {
-          createdAt: { gte: startOfYear }
+          createdAt: { gte: startOfYear },
         },
         _count: {
-          id: true
-        }
+          id: true,
+        },
       }),
 
       // Organization verification status
       organizationStats: await prisma.organization.groupBy({
-        by: ['organizationType', 'isVerified'],
+        by: ["organizationType", "isVerified"],
         where: {
-          organizationType: { not: 'REGULATOR' }
+          organizationType: { not: "REGULATOR" },
         },
         _count: {
-          id: true
-        }
+          id: true,
+        },
       }),
 
       // Transfer status distribution
       transferStats: await prisma.ownershipTransfer.groupBy({
-        by: ['status'],
+        by: ["status"],
         where: {
-          transferDate: { gte: startOfMonth }
+          transferDate: { gte: startOfMonth },
         },
         _count: {
-          id: true
-        }
+          id: true,
+        },
       }),
 
       // Batch status overview
       batchStats: await prisma.medicationBatch.groupBy({
-        by: ['status'],
+        by: ["status"],
         _count: {
-          id: true
-        }
+          id: true,
+        },
       }),
 
       // Geographic distribution of scans
       scansByRegion: await prisma.scanHistory.groupBy({
-        by: ['region'],
+        by: ["region"],
         where: {
           scanDate: { gte: startOfMonth },
-          region: { not: null }
+          region: { not: null },
         },
         _count: {
-          id: true
-        }
+          id: true,
+        },
       }),
 
       // Summary statistics
       summary: {
         totalOrganizations: await prisma.organization.count({
-          where: { organizationType: { not: 'REGULATOR' } }
+          where: { organizationType: { not: "REGULATOR" } },
         }),
         verifiedOrganizations: await prisma.organization.count({
-          where: { 
-            organizationType: { not: 'REGULATOR' },
-            isVerified: true 
-          }
+          where: {
+            organizationType: { not: "REGULATOR" },
+            isVerified: true,
+          },
         }),
         totalBatches: await prisma.medicationBatch.count(),
-        totalScans: await prisma.scanHistory.count({ 
-          where: { scanDate: { gte: startOfMonth } } 
+        totalScans: await prisma.scanHistory.count({
+          where: { scanDate: { gte: startOfMonth } },
         }),
         totalInvestigations: await prisma.counterfeitReport.count(),
         activeInvestigations: await prisma.counterfeitReport.count({
-          where: { status: { in: ['PENDING', 'INVESTIGATING'] } }
+          where: { status: { in: ["PENDING", "INVESTIGATING"] } },
         }),
         resolvedInvestigations: await prisma.counterfeitReport.count({
-          where: { status: 'RESOLVED' }
-        })
-      }
+          where: { status: "RESOLVED" },
+        }),
+      },
     };
 
     return NextResponse.json({ analytics });
-
   } catch (error) {
     console.error("Error fetching analytics:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

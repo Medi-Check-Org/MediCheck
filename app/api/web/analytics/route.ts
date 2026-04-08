@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@/lib/generated/prisma/client";
 
 /** Prisma groupBy result for status-like fields (batch, unit, transfer) */
 interface StatusGroupCount {

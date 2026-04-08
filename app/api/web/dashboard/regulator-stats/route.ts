@@ -5,7 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -13,16 +13,16 @@ export async function GET(request: NextRequest) {
     // Check if User record exists
     let user = await prisma.user.findFirst({
       where: {
-        clerkUserId: userId
-      }
+        clerkUserId: userId,
+      },
     });
 
     if (!user) {
       user = await prisma.user.create({
         data: {
           clerkUserId: userId,
-          userRole: "CONSUMER"
-        }
+          userRole: "CONSUMER",
+        },
       });
     }
 
@@ -32,9 +32,9 @@ export async function GET(request: NextRequest) {
         organizationType: "REGULATOR",
         OR: [
           { adminId: user.id },
-          { teamMembers: { some: { userId: user.id } } }
-        ]
-      }
+          { teamMembers: { some: { userId: user.id } } },
+        ],
+      },
     });
 
     if (!organization) {
@@ -49,8 +49,9 @@ export async function GET(request: NextRequest) {
           address: "NAFDAC Headquarters, Abuja",
           country: "Nigeria",
           state: "FCT",
-          isVerified: true
-        }
+          isVerified: true,
+          managedRegistry: "",
+        },
       });
     }
 
@@ -62,93 +63,110 @@ export async function GET(request: NextRequest) {
     const activeInvestigations = await prisma.counterfeitReport.count({
       where: {
         status: {
-          in: ["PENDING", "INVESTIGATING"]
-        }
-      }
+          in: ["PENDING", "INVESTIGATING"],
+        },
+      },
     });
 
     // Calculate investigation growth (this month vs last month)
     const thisMonthInvestigations = await prisma.counterfeitReport.count({
       where: {
         createdAt: { gte: startOfMonth },
-        status: { in: ["PENDING", "INVESTIGATING"] }
-      }
+        status: { in: ["PENDING", "INVESTIGATING"] },
+      },
     });
 
     const lastMonthInvestigations = await prisma.counterfeitReport.count({
       where: {
-        createdAt: { 
+        createdAt: {
           gte: lastMonthStart,
-          lt: startOfMonth
+          lt: startOfMonth,
         },
-        status: { in: ["PENDING", "INVESTIGATING"] }
-      }
+        status: { in: ["PENDING", "INVESTIGATING"] },
+      },
     });
 
-    const investigationGrowth = lastMonthInvestigations > 0 
-      ? Math.round(((thisMonthInvestigations - lastMonthInvestigations) / lastMonthInvestigations) * 100)
-      : thisMonthInvestigations > 0 ? 100 : 0;
+    const investigationGrowth =
+      lastMonthInvestigations > 0
+        ? Math.round(
+            ((thisMonthInvestigations - lastMonthInvestigations) /
+              lastMonthInvestigations) *
+              100,
+          )
+        : thisMonthInvestigations > 0
+          ? 100
+          : 0;
 
     // 2. Compliance Checks (total scan activities this month)
     const complianceChecks = await prisma.scanHistory.count({
       where: {
-        scanDate: { gte: startOfMonth }
-      }
+        scanDate: { gte: startOfMonth },
+      },
     });
 
     // Calculate compliance growth
     const lastMonthScans = await prisma.scanHistory.count({
       where: {
-        scanDate: { 
+        scanDate: {
           gte: lastMonthStart,
-          lt: startOfMonth
-        }
-      }
+          lt: startOfMonth,
+        },
+      },
     });
 
-    const complianceGrowth = lastMonthScans > 0 
-      ? Math.round(((complianceChecks - lastMonthScans) / lastMonthScans) * 100)
-      : complianceChecks > 0 ? 100 : 0;
+    const complianceGrowth =
+      lastMonthScans > 0
+        ? Math.round(
+            ((complianceChecks - lastMonthScans) / lastMonthScans) * 100,
+          )
+        : complianceChecks > 0
+          ? 100
+          : 0;
 
     // 3. Pending Reviews (pending ownership transfers that need regulatory approval)
     const pendingReviews = await prisma.ownershipTransfer.count({
       where: {
-        status: "PENDING"
-      }
+        status: "PENDING",
+      },
     });
 
     // Calculate pending review change
     const lastMonthPending = await prisma.ownershipTransfer.count({
       where: {
-        transferDate: { 
+        transferDate: {
           gte: lastMonthStart,
-          lt: startOfMonth
+          lt: startOfMonth,
         },
-        status: "PENDING"
-      }
+        status: "PENDING",
+      },
     });
 
-    const pendingGrowth = lastMonthPending > 0 
-      ? Math.round(((pendingReviews - lastMonthPending) / lastMonthPending) * 100)
-      : pendingReviews > 0 ? 100 : 0;
+    const pendingGrowth =
+      lastMonthPending > 0
+        ? Math.round(
+            ((pendingReviews - lastMonthPending) / lastMonthPending) * 100,
+          )
+        : pendingReviews > 0
+          ? 100
+          : 0;
 
     // 4. Violations Found (counterfeit reports marked as RESOLVED this month)
     const violationsFound = await prisma.counterfeitReport.count({
       where: {
         status: { in: ["RESOLVED", "ESCALATED"] },
-        updatedAt: { gte: startOfMonth }
-      }
+        updatedAt: { gte: startOfMonth },
+      },
     });
 
     // Calculate violations change
     const lastMonthViolations = await prisma.counterfeitReport.count({
       where: {
         status: { in: ["RESOLVED", "ESCALATED"] },
-        updatedAt: { 
+        updatedAt: {
           gte: lastMonthStart,
-          lt: startOfMonth
-        }
-      }
+          lt: startOfMonth,
+        },
+      },
     });
 
     const violationChange = violationsFound - lastMonthViolations;
@@ -161,16 +179,15 @@ export async function GET(request: NextRequest) {
       pendingReviews,
       pendingGrowth,
       violationsFound,
-      violationChange
+      violationChange,
     };
 
     return NextResponse.json(stats);
-
   } catch (error) {
     console.error("Error fetching regulator stats:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

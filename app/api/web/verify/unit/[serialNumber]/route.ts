@@ -99,7 +99,7 @@ export async function GET(
   if (isHybrid) {
 
     // For Hybrid, we still need the Org logs for the Birth Certificate
-    const rawOrgLogs = await getAllEventLogs(
+    const rawOrgLogs: any[] = await getAllEventLogs(
       unit.organization!.managedRegistry!,
     );
 
@@ -156,7 +156,7 @@ export async function GET(
   const regionName = await getRegionFromCoords(latitude, longitude);
 
   // 5. Logging, ML, and Final Response
-  if (!safetyResult.duplicateScan) {
+  if (!(safetyResult as any)?.duplicateScan) {
 
     const scanResult =
       safetyResult.status === "NOT_SAFE" ? "SUSPICIOUS" : "GENUINE";

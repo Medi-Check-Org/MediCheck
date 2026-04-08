@@ -5,14 +5,14 @@ import { auth } from "@clerk/nextjs/server";
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Find or create User record
     let user = await prisma.user.findUnique({
-      where: { clerkUserId: userId }
+      where: { clerkUserId: userId },
     });
 
     if (!user) {
@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
         data: {
           clerkUserId: userId,
           userRole: "SUPER_ADMIN", // Assuming regulators are super admins
-          isActive: true
-        }
+          isActive: true,
+        },
       });
     }
 
@@ -32,9 +32,9 @@ export async function GET(request: NextRequest) {
         organizationType: "REGULATOR",
         OR: [
           { adminId: user.id },
-          { teamMembers: { some: { userId: user.id } } }
-        ]
-      }
+          { teamMembers: { some: { userId: user.id } } },
+        ],
+      },
     });
 
     // If no regulator organization exists for this user, create one
@@ -50,8 +50,9 @@ export async function GET(request: NextRequest) {
           agencyName: "NAFDAC",
           officialId: `REG-${Date.now()}`,
           isVerified: true,
-          isActive: true
-        }
+          isActive: true,
+          managedRegistry: "",
+        },
       });
     }
 
@@ -65,10 +66,10 @@ export async function GET(request: NextRequest) {
             product: {
               select: {
                 manufacturingDate: true,
-                expiryDate: true
-              }
-            }
-          }
+                expiryDate: true,
+              },
+            },
+          },
         },
         fromOrg: {
           select: {
@@ -91,28 +92,25 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json({ transfers });
-
   } catch (error: unknown) {
     console.error("Error fetching transfers:", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Find or create User record
     let user = await prisma.user.findUnique({
-      where: { clerkUserId: userId }
+      where: { clerkUserId: userId },
     });
 
     if (!user) {
@@ -121,8 +119,8 @@ export async function PUT(request: NextRequest) {
         data: {
           clerkUserId: userId,
           userRole: "SUPER_ADMIN", // Assuming regulators are super admins
-          isActive: true
-        }
+          isActive: true,
+        },
       });
     }
 
@@ -132,9 +130,9 @@ export async function PUT(request: NextRequest) {
         organizationType: "REGULATOR",
         OR: [
           { adminId: user.id },
-          { teamMembers: { some: { userId: user.id } } }
-        ]
-      }
+          { teamMembers: { some: { userId: user.id } } },
+        ],
+      },
     });
 
     // If no regulator organization exists for this user, create one
@@ -150,8 +148,9 @@ export async function PUT(request: NextRequest) {
           agencyName: "NAFDAC",
           officialId: `REG-${Date.now()}`,
           isVerified: true,
-          isActive: true
-        }
+          isActive: true,
+          managedRegistry: "",
+        },
       });
     }
 
@@ -163,26 +162,26 @@ export async function PUT(request: NextRequest) {
       data: {
         status,
         notes,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       include: {
         batch: {
           select: {
             batchId: true,
-            drugName: true
-          }
+            drugName: true,
+          },
         },
         fromOrg: {
           select: {
-            companyName: true
-          }
+            companyName: true,
+          },
         },
         toOrg: {
           select: {
-            companyName: true
-          }
-        }
-      }
+            companyName: true,
+          },
+        },
+      },
     });
 
     // Log the action
@@ -197,19 +196,16 @@ export async function PUT(request: NextRequest) {
           fromOrg: updatedTransfer.fromOrg.companyName,
           toOrg: updatedTransfer.toOrg.companyName,
           status,
-          notes
-        }
-      }
+          notes,
+        },
+      },
     });
 
     return NextResponse.json({ transfer: updatedTransfer });
-
   } catch (error: unknown) {
     console.error("Error updating transfer:", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -205,7 +205,7 @@ export default function PrivacyPolicyPage() {
               </div>
               <div className="mt-6">
                 <Link href="/contact">
-                  <Button variant="gradient" className="cursor-pointer">
+                  <Button className="cursor-pointer">
                     Contact Support
                   </Button>
                 </Link>

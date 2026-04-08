@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@/lib/generated/prisma/client";
 
-type ReportData = 
+type ReportData =
   | Awaited<ReturnType<typeof generateInvestigationsReport>>
   | Awaited<ReturnType<typeof generateComplianceReport>>
   | Awaited<ReturnType<typeof generateEntitiesReport>>
@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
           officialId: `REG-${Date.now()}`,
           isVerified: true,
           isActive: true,
+          managedRegistry: "",
         },
       });
     }
@@ -90,16 +91,20 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate HTML content for the report
-    const htmlContent = generateHtmlReport(reportType, reportData, organization);
+    const htmlContent = generateHtmlReport(
+      reportType,
+      reportData,
+      organization,
+    );
 
     // Dynamic import puppeteer to avoid build issues
-    const puppeteerModule = await import('puppeteer');
+    const puppeteerModule = await import("puppeteer");
     const puppeteer = puppeteerModule.default || puppeteerModule;
-    
+
     // Launch Puppeteer and generate the PDF
     const browser = await (puppeteer as any).launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
     const page = await browser.newPage();
     await page.setContent(htmlContent);
@@ -115,19 +120,17 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: unknown) {
     console.error("Error generating PDF:", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 // Generate HTML content for different report types
 function generateHtmlReport(
-  reportType: string, 
-  reportData: ReportData, 
-  organization: Prisma.OrganizationGetPayload<{}>
+  reportType: string,
+  reportData: ReportData,
+  organization: Prisma.OrganizationGetPayload<{}>,
 ): string {
   const baseHtml = `
     <html>
@@ -164,20 +167,32 @@ function generateHtmlReport(
 function generateReportContent(reportType: string, data: ReportData): string {
   switch (reportType) {
     case "compliance":
-      return generateComplianceHtml(data as Awaited<ReturnType<typeof generateComplianceReport>>);
+      return generateComplianceHtml(
+        data as Awaited<ReturnType<typeof generateComplianceReport>>,
+      );
     case "investigations":
-      return generateInvestigationsHtml(data as Awaited<ReturnType<typeof generateInvestigationsReport>>);
+      return generateInvestigationsHtml(
+        data as Awaited<ReturnType<typeof generateInvestigationsReport>>,
+      );
     case "entities":
-      return generateEntitiesHtml(data as Awaited<ReturnType<typeof generateEntitiesReport>>);
+      return generateEntitiesHtml(
+        data as Awaited<ReturnType<typeof generateEntitiesReport>>,
+      );
     case "violations":
-      return generateViolationsHtml(data as Awaited<ReturnType<typeof generateViolationsReport>>);
+      return generateViolationsHtml(
+        data as Awaited<ReturnType<typeof generateViolationsReport>>,
+      );
     case "summary":
     default:
-      return generateSummaryHtml(data as Awaited<ReturnType<typeof generateSummaryReport>>);
+      return generateSummaryHtml(
+        data as Awaited<ReturnType<typeof generateSummaryReport>>,
+      );
   }
 }
 
-function generateComplianceHtml(data: Awaited<ReturnType<typeof generateComplianceReport>>): string {
+function generateComplianceHtml(
+  data: Awaited<ReturnType<typeof generateComplianceReport>>,
+): string {
   return `
     <h2>Compliance Summary</h2>
     <div class="summary-stats">
@@ -199,11 +214,13 @@ function generateComplianceHtml(data: Awaited<ReturnType<typeof generateComplian
       </div>
     </div>
     <h2>Recent Transfers</h2>
-    ${data.transfers.length === 0 ? '<p>No transfers found.</p>' : generateTransfersTable(data.transfers)}
+    ${data.transfers.length === 0 ? "<p>No transfers found.</p>" : generateTransfersTable(data.transfers)}
   `;
 }
 
-function generateInvestigationsHtml(data: Awaited<ReturnType<typeof generateInvestigationsReport>>): string {
+function generateInvestigationsHtml(
+  data: Awaited<ReturnType<typeof generateInvestigationsReport>>,
+): string {
   return `
     <h2>Investigation Summary</h2>
     <div class="summary-stats">
@@ -225,11 +242,13 @@ function generateInvestigationsHtml(data: Awaited<ReturnType<typeof generateInve
       </div>
     </div>
     <h2>Recent Investigations</h2>
-    ${data.investigations.length === 0 ? '<p>No investigations found.</p>' : generateInvestigationsTable(data.investigations)}
+    ${data.investigations.length === 0 ? "<p>No investigations found.</p>" : generateInvestigationsTable(data.investigations)}
   `;
 }
 
-function generateEntitiesHtml(data: Awaited<ReturnType<typeof generateEntitiesReport>>): string {
+function generateEntitiesHtml(
+  data: Awaited<ReturnType<typeof generateEntitiesReport>>,
+): string {
   return `
     <h2>Entity Summary</h2>
     <div class="summary-stats">
@@ -251,11 +270,13 @@ function generateEntitiesHtml(data: Awaited<ReturnType<typeof generateEntitiesRe
       </div>
     </div>
     <h2>Recent Organizations</h2>
-    ${data.organizations.length === 0 ? '<p>No organizations found.</p>' : generateOrganizationsTable(data.organizations)}
+    ${data.organizations.length === 0 ? "<p>No organizations found.</p>" : generateOrganizationsTable(data.organizations)}
   `;
 }
 
-function generateViolationsHtml(data: Awaited<ReturnType<typeof generateViolationsReport>>): string {
+function generateViolationsHtml(
+  data: Awaited<ReturnType<typeof generateViolationsReport>>,
+): string {
   return `
     <h2>Violation Summary</h2>
     <div class="summary-stats">
@@ -277,11 +298,13 @@ function generateViolationsHtml(data: Awaited<ReturnType<typeof generateViolatio
       </div>
     </div>
     <h2>Recent Violations</h2>
-    ${data.violations.length === 0 ? '<p>No violations found.</p>' : generateViolationsTable(data.violations)}
+    ${data.violations.length === 0 ? "<p>No violations found.</p>" : generateViolationsTable(data.violations)}
   `;
 }
 
-function generateSummaryHtml(data: Awaited<ReturnType<typeof generateSummaryReport>>): string {
+function generateSummaryHtml(
+  data: Awaited<ReturnType<typeof generateSummaryReport>>,
+): string {
   return `
     <h2>Overview</h2>
     <div class="summary-stats">
@@ -317,7 +340,9 @@ function generateSummaryHtml(data: Awaited<ReturnType<typeof generateSummaryRepo
 }
 
 // Helper functions for generating tables
-function generateTransfersTable(transfers: Awaited<ReturnType<typeof generateComplianceReport>>["transfers"]): string {
+function generateTransfersTable(
+  transfers: Awaited<ReturnType<typeof generateComplianceReport>>["transfers"],
+): string {
   return `
     <table>
       <thead>
@@ -330,21 +355,30 @@ function generateTransfersTable(transfers: Awaited<ReturnType<typeof generateCom
         </tr>
       </thead>
       <tbody>
-        ${transfers.slice(0, 10).map((t: typeof transfers[number]) => `
+        ${transfers
+          .slice(0, 10)
+          .map(
+            (t: (typeof transfers)[number]) => `
           <tr>
-            <td>${t.batch?.drugName || 'N/A'}</td>
-            <td>${t.batch?.batchId || 'N/A'}</td>
-            <td>${t.fromOrg?.companyName || 'Unknown'} → ${t.toOrg?.companyName || 'Unknown'}</td>
+            <td>${t.batch?.drugName || "N/A"}</td>
+            <td>${t.batch?.batchId || "N/A"}</td>
+            <td>${t.fromOrg?.companyName || "Unknown"} → ${t.toOrg?.companyName || "Unknown"}</td>
             <td>${formatDate(t.transferDate)}</td>
             <td>${t.status}</td>
           </tr>
-        `).join('')}
+        `,
+          )
+          .join("")}
       </tbody>
     </table>
   `;
 }
 
-function generateInvestigationsTable(investigations: Awaited<ReturnType<typeof generateInvestigationsReport>>["investigations"]): string {
+function generateInvestigationsTable(
+  investigations: Awaited<
+    ReturnType<typeof generateInvestigationsReport>
+  >["investigations"],
+): string {
   return `
     <table>
       <thead>
@@ -357,21 +391,30 @@ function generateInvestigationsTable(investigations: Awaited<ReturnType<typeof g
         </tr>
       </thead>
       <tbody>
-        ${investigations.slice(0, 10).map((inv: typeof investigations[number]) => `
+        ${investigations
+          .slice(0, 10)
+          .map(
+            (inv: (typeof investigations)[number]) => `
           <tr>
-            <td>${inv.batch?.drugName || 'N/A'}</td>
-            <td>${inv.batch?.batchId || 'N/A'}</td>
+            <td>${inv.batch?.drugName || "N/A"}</td>
+            <td>${inv.batch?.batchId || "N/A"}</td>
             <td>${inv.status}</td>
             <td>${inv.severity}</td>
             <td>${formatDate(inv.createdAt)}</td>
           </tr>
-        `).join('')}
+        `,
+          )
+          .join("")}
       </tbody>
     </table>
   `;
 }
 
-function generateOrganizationsTable(organizations: Awaited<ReturnType<typeof generateEntitiesReport>>["organizations"]): string {
+function generateOrganizationsTable(
+  organizations: Awaited<
+    ReturnType<typeof generateEntitiesReport>
+  >["organizations"],
+): string {
   return `
     <table>
       <thead>
@@ -383,20 +426,29 @@ function generateOrganizationsTable(organizations: Awaited<ReturnType<typeof gen
         </tr>
       </thead>
       <tbody>
-        ${organizations.slice(0, 10).map((org: typeof organizations[number]) => `
+        ${organizations
+          .slice(0, 10)
+          .map(
+            (org: (typeof organizations)[number]) => `
           <tr>
             <td>${org.companyName}</td>
             <td>${org.organizationType}</td>
             <td>${org.isVerified ? "Yes" : "No"}</td>
             <td>${org.isActive ? "Yes" : "No"}</td>
           </tr>
-        `).join('')}
+        `,
+          )
+          .join("")}
       </tbody>
     </table>
   `;
 }
 
-function generateViolationsTable(violations: Awaited<ReturnType<typeof generateViolationsReport>>["violations"]): string {
+function generateViolationsTable(
+  violations: Awaited<
+    ReturnType<typeof generateViolationsReport>
+  >["violations"],
+): string {
   return `
     <table>
       <thead>
@@ -409,15 +461,20 @@ function generateViolationsTable(violations: Awaited<ReturnType<typeof generateV
         </tr>
       </thead>
       <tbody>
-        ${violations.slice(0, 10).map((v: typeof violations[number]) => `
+        ${violations
+          .slice(0, 10)
+          .map(
+            (v: (typeof violations)[number]) => `
           <tr>
-            <td>${v.batch?.drugName || 'N/A'}</td>
-            <td>${v.batch?.batchId || 'N/A'}</td>
+            <td>${v.batch?.drugName || "N/A"}</td>
+            <td>${v.batch?.batchId || "N/A"}</td>
             <td>${v.severity}</td>
             <td>${v.status}</td>
             <td>${formatDate(v.createdAt)}</td>
           </tr>
-        `).join('')}
+        `,
+          )
+          .join("")}
       </tbody>
     </table>
   `;
@@ -435,7 +492,7 @@ function formatDate(date: string | Date) {
     month: "short",
     day: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
   });
 }
 
@@ -443,7 +500,7 @@ function formatDate(date: string | Date) {
 async function generateInvestigationsReport(startDate: Date) {
   const investigations = await prisma.counterfeitReport.findMany({
     where: {
-      createdAt: { gte: startDate }
+      createdAt: { gte: startDate },
     },
     include: {
       batch: {
@@ -453,36 +510,52 @@ async function generateInvestigationsReport(startDate: Date) {
           organization: {
             select: {
               companyName: true,
-              organizationType: true
-            }
-          }
-        }
+              organizationType: true,
+            },
+          },
+        },
       },
       consumers: {
         select: {
           fullName: true,
           country: true,
-          state: true
-        }
-      }
+          state: true,
+        },
+      },
     },
     orderBy: {
-      createdAt: "desc"
-    }
+      createdAt: "desc",
+    },
   });
 
   const summary = {
     total: investigations.length,
-    pending: investigations.filter((inv: typeof investigations[number]) => inv.status === "PENDING").length,
-    investigating: investigations.filter((inv: typeof investigations[number]) => inv.status === "INVESTIGATING").length,
-    resolved: investigations.filter((inv: typeof investigations[number]) => inv.status === "RESOLVED").length,
-    dismissed: investigations.filter((inv: typeof investigations[number]) => inv.status === "DISMISSED").length,
+    pending: investigations.filter(
+      (inv: (typeof investigations)[number]) => inv.status === "PENDING",
+    ).length,
+    investigating: investigations.filter(
+      (inv: (typeof investigations)[number]) => inv.status === "INVESTIGATING",
+    ).length,
+    resolved: investigations.filter(
+      (inv: (typeof investigations)[number]) => inv.status === "RESOLVED",
+    ).length,
+    dismissed: investigations.filter(
+      (inv: (typeof investigations)[number]) => inv.status === "DISMISSED",
+    ).length,
     bySeverity: {
-      critical: investigations.filter((inv: typeof investigations[number]) => inv.severity === "CRITICAL").length,
-      high: investigations.filter((inv: typeof investigations[number]) => inv.severity === "HIGH").length,
-      medium: investigations.filter((inv: typeof investigations[number]) => inv.severity === "MEDIUM").length,
-      low: investigations.filter((inv: typeof investigations[number]) => inv.severity === "LOW").length
-    }
+      critical: investigations.filter(
+        (inv: (typeof investigations)[number]) => inv.severity === "CRITICAL",
+      ).length,
+      high: investigations.filter(
+        (inv: (typeof investigations)[number]) => inv.severity === "HIGH",
+      ).length,
+      medium: investigations.filter(
+        (inv: (typeof investigations)[number]) => inv.severity === "MEDIUM",
+      ).length,
+      low: investigations.filter(
+        (inv: (typeof investigations)[number]) => inv.severity === "LOW",
+      ).length,
+    },
   };
 
   return { investigations, summary };
@@ -491,7 +564,7 @@ async function generateInvestigationsReport(startDate: Date) {
 async function generateComplianceReport(startDate: Date) {
   const transfers = await prisma.ownershipTransfer.findMany({
     where: {
-      transferDate: { gte: startDate }
+      transferDate: { gte: startDate },
     },
     include: {
       batch: {
@@ -501,38 +574,52 @@ async function generateComplianceReport(startDate: Date) {
           product: {
             select: {
               manufacturingDate: true,
-              expiryDate: true
-            }
-          }
-        }
+              expiryDate: true,
+            },
+          },
+        },
       },
       fromOrg: {
         select: {
           companyName: true,
           organizationType: true,
-          isVerified: true
-        }
+          isVerified: true,
+        },
       },
       toOrg: {
         select: {
           companyName: true,
           organizationType: true,
-          isVerified: true
-        }
-      }
+          isVerified: true,
+        },
+      },
     },
     orderBy: {
-      transferDate: "desc"
-    }
+      transferDate: "desc",
+    },
   });
 
   const summary = {
     total: transfers.length,
-    pending: transfers.filter((t: typeof transfers[number]) => t.status === "PENDING").length,
-    completed: transfers.filter((t: typeof transfers[number]) => t.status === "COMPLETED").length,
-    failed: transfers.filter((t: typeof transfers[number]) => t.status === "FAILED").length,
-    complianceRate: transfers.length > 0 ? 
-      Math.round((transfers.filter((t: typeof transfers[number]) => t.status === "COMPLETED").length / transfers.length) * 100) : 0
+    pending: transfers.filter(
+      (t: (typeof transfers)[number]) => t.status === "PENDING",
+    ).length,
+    completed: transfers.filter(
+      (t: (typeof transfers)[number]) => t.status === "COMPLETED",
+    ).length,
+    failed: transfers.filter(
+      (t: (typeof transfers)[number]) => t.status === "FAILED",
+    ).length,
+    complianceRate:
+      transfers.length > 0
+        ? Math.round(
+            (transfers.filter(
+              (t: (typeof transfers)[number]) => t.status === "COMPLETED",
+            ).length /
+              transfers.length) *
+              100,
+          )
+        : 0,
   };
 
   return { transfers, summary };
@@ -541,43 +628,59 @@ async function generateComplianceReport(startDate: Date) {
 async function generateEntitiesReport() {
   const organizations = await prisma.organization.findMany({
     where: {
-      organizationType: { not: "REGULATOR" }
+      organizationType: { not: "REGULATOR" },
     },
     include: {
       medicationBatches: {
         select: {
           id: true,
-          status: true
-        }
+          status: true,
+        },
       },
       transfersFrom: {
         select: {
           id: true,
-          status: true
-        }
+          status: true,
+        },
       },
       transfersTo: {
         select: {
           id: true,
-          status: true
-        }
-      }
+          status: true,
+        },
+      },
     },
     orderBy: {
-      createdAt: "desc"
-    }
+      createdAt: "desc",
+    },
   });
 
   const summary = {
     total: organizations.length,
-    verified: organizations.filter((org: typeof organizations[number]) => org.isVerified).length,
-    active: organizations.filter((org: typeof organizations[number]) => org.isActive).length,
+    verified: organizations.filter(
+      (org: (typeof organizations)[number]) => org.isVerified,
+    ).length,
+    active: organizations.filter(
+      (org: (typeof organizations)[number]) => org.isActive,
+    ).length,
     byType: {
-      manufacturers: organizations.filter((org: typeof organizations[number]) => org.organizationType === "MANUFACTURER").length,
-      distributors: organizations.filter((org: typeof organizations[number]) => org.organizationType === "DRUG_DISTRIBUTOR").length,
-      hospitals: organizations.filter((org: typeof organizations[number]) => org.organizationType === "HOSPITAL").length,
-      pharmacies: organizations.filter((org: typeof organizations[number]) => org.organizationType === "PHARMACY").length
-    }
+      manufacturers: organizations.filter(
+        (org: (typeof organizations)[number]) =>
+          org.organizationType === "MANUFACTURER",
+      ).length,
+      distributors: organizations.filter(
+        (org: (typeof organizations)[number]) =>
+          org.organizationType === "DRUG_DISTRIBUTOR",
+      ).length,
+      hospitals: organizations.filter(
+        (org: (typeof organizations)[number]) =>
+          org.organizationType === "HOSPITAL",
+      ).length,
+      pharmacies: organizations.filter(
+        (org: (typeof organizations)[number]) =>
+          org.organizationType === "PHARMACY",
+      ).length,
+    },
   };
 
   return { organizations, summary };
@@ -587,7 +690,7 @@ async function generateViolationsReport(startDate: Date) {
   const violations = await prisma.counterfeitReport.findMany({
     where: {
       createdAt: { gte: startDate },
-      severity: { in: ["HIGH", "CRITICAL"] }
+      severity: { in: ["HIGH", "CRITICAL"] },
     },
     include: {
       batch: {
@@ -596,33 +699,42 @@ async function generateViolationsReport(startDate: Date) {
             select: {
               companyName: true,
               organizationType: true,
-              contactEmail: true
-            }
-          }
-        }
+              contactEmail: true,
+            },
+          },
+        },
       },
       consumers: {
         select: {
           fullName: true,
           country: true,
-          state: true
-        }
-      }
+          state: true,
+        },
+      },
     },
     orderBy: {
-      createdAt: "desc"
-    }
+      createdAt: "desc",
+    },
   });
 
   const summary = {
     total: violations.length,
-    critical: violations.filter((v: typeof violations[number]) => v.severity === "CRITICAL").length,
-    high: violations.filter((v: typeof violations[number]) => v.severity === "HIGH").length,
-    resolved: violations.filter((v: typeof violations[number]) => v.status === "RESOLVED").length,
-    byType: violations.reduce((acc: Record<string, number>, violation: typeof violations[number]) => {
-      acc[violation.reportType] = (acc[violation.reportType] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>)
+    critical: violations.filter(
+      (v: (typeof violations)[number]) => v.severity === "CRITICAL",
+    ).length,
+    high: violations.filter(
+      (v: (typeof violations)[number]) => v.severity === "HIGH",
+    ).length,
+    resolved: violations.filter(
+      (v: (typeof violations)[number]) => v.status === "RESOLVED",
+    ).length,
+    byType: violations.reduce(
+      (acc: Record<string, number>, violation: (typeof violations)[number]) => {
+        acc[violation.reportType] = (acc[violation.reportType] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    ),
   };
 
   return { violations, summary };
@@ -639,41 +751,65 @@ async function generateSummaryReport(startOfMonth: Date, startOfYear: Date) {
     activeInvestigations,
     resolvedInvestigations,
     pendingTransfers,
-    completedTransfers
+    completedTransfers,
   ] = await Promise.all([
-    prisma.organization.count({ where: { organizationType: { not: "REGULATOR" } } }),
-    prisma.organization.count({ where: { organizationType: { not: "REGULATOR" }, isVerified: true } }),
+    prisma.organization.count({
+      where: { organizationType: { not: "REGULATOR" } },
+    }),
+    prisma.organization.count({
+      where: { organizationType: { not: "REGULATOR" }, isVerified: true },
+    }),
     prisma.medicationBatch.count(),
-    prisma.medicationBatch.count({ where: { status: { in: ["CREATED", "IN_TRANSIT", "DELIVERED"] } } }),
+    prisma.medicationBatch.count({
+      where: { status: { in: ["CREATED", "IN_TRANSIT", "DELIVERED"] } },
+    }),
     prisma.scanHistory.count({ where: { scanDate: { gte: startOfMonth } } }),
     prisma.scanHistory.count({ where: { scanDate: { gte: startOfYear } } }),
-    prisma.counterfeitReport.count({ where: { status: { in: ["PENDING", "INVESTIGATING"] } } }),
+    prisma.counterfeitReport.count({
+      where: { status: { in: ["PENDING", "INVESTIGATING"] } },
+    }),
     prisma.counterfeitReport.count({ where: { status: "RESOLVED" } }),
     prisma.ownershipTransfer.count({ where: { status: "PENDING" } }),
-    prisma.ownershipTransfer.count({ where: { status: "COMPLETED", transferDate: { gte: startOfMonth } } })
+    prisma.ownershipTransfer.count({
+      where: { status: "COMPLETED", transferDate: { gte: startOfMonth } },
+    }),
   ]);
 
   return {
     overview: {
       totalOrganizations,
       verifiedOrganizations,
-      verificationRate: totalOrganizations > 0 ? Math.round((verifiedOrganizations / totalOrganizations) * 100) : 0,
+      verificationRate:
+        totalOrganizations > 0
+          ? Math.round((verifiedOrganizations / totalOrganizations) * 100)
+          : 0,
       totalBatches,
       activeBatches,
       monthlyScans,
-      yearlyScans
+      yearlyScans,
     },
     compliance: {
       pendingTransfers,
       completedTransfers,
-      complianceRate: (pendingTransfers + completedTransfers) > 0 ? 
-        Math.round((completedTransfers / (pendingTransfers + completedTransfers)) * 100) : 0
+      complianceRate:
+        pendingTransfers + completedTransfers > 0
+          ? Math.round(
+              (completedTransfers / (pendingTransfers + completedTransfers)) *
+                100,
+            )
+          : 0,
     },
     investigations: {
       activeInvestigations,
       resolvedInvestigations,
-      resolutionRate: (activeInvestigations + resolvedInvestigations) > 0 ? 
-        Math.round((resolvedInvestigations / (activeInvestigations + resolvedInvestigations)) * 100) : 0
-    }
+      resolutionRate:
+        activeInvestigations + resolvedInvestigations > 0
+          ? Math.round(
+              (resolvedInvestigations /
+                (activeInvestigations + resolvedInvestigations)) *
+                100,
+            )
+          : 0,
+    },
   };
 }

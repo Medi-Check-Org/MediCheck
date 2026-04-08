@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@/lib/generated/prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -14,16 +14,16 @@ export async function GET(request: NextRequest) {
     // Check if User record exists
     let user = await prisma.user.findFirst({
       where: {
-        clerkUserId: userId
-      }
+        clerkUserId: userId,
+      },
     });
 
     if (!user) {
       user = await prisma.user.create({
         data: {
           clerkUserId: userId,
-          userRole: "CONSUMER"
-        }
+          userRole: "CONSUMER",
+        },
       });
     }
 
@@ -33,9 +33,9 @@ export async function GET(request: NextRequest) {
         organizationType: "REGULATOR",
         OR: [
           { adminId: user.id },
-          { teamMembers: { some: { userId: user.id } } }
-        ]
-      }
+          { teamMembers: { some: { userId: user.id } } },
+        ],
+      },
     });
 
     if (!organization) {
@@ -50,8 +50,9 @@ export async function GET(request: NextRequest) {
           address: "NAFDAC Headquarters, Abuja",
           country: "Nigeria",
           state: "FCT",
-          isVerified: true
-        }
+          isVerified: true,
+          managedRegistry: "",
+        },
       });
     }
 
@@ -64,9 +65,9 @@ export async function GET(request: NextRequest) {
     // 1. Critical counterfeit reports (high and critical severity)
     const counterfeitAlerts = await prisma.counterfeitReport.findMany({
       where: {
-        severity: { in: ['HIGH', 'CRITICAL'] },
+        severity: { in: ["HIGH", "CRITICAL"] },
         createdAt: { gte: oneDayAgo },
-        status: { in: ['PENDING', 'INVESTIGATING'] }
+        status: { in: ["PENDING", "INVESTIGATING"] },
       },
       include: {
         batch: {
@@ -75,22 +76,22 @@ export async function GET(request: NextRequest) {
             drugName: true,
             organization: {
               select: {
-                companyName: true
-              }
-            }
-          }
+                companyName: true,
+              },
+            },
+          },
         },
         consumers: {
           select: {
             fullName: true,
-            address: true
-          }
-        }
+            address: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: "desc"
+        createdAt: "desc",
       },
-      take: 5
+      take: 5,
     });
 
     // Transform counterfeit reports to alerts
@@ -98,51 +99,51 @@ export async function GET(request: NextRequest) {
       include: {
         batch: {
           select: {
-            batchId: true,
-            drugName: true,
-            organization: { select: { companyName: true } }
-          }
-        },
-        consumers: { select: { fullName: true, address: true } }
-      }
+            batchId: true;
+            drugName: true;
+            organization: { select: { companyName: true } };
+          };
+        };
+        consumers: { select: { fullName: true; address: true } };
+      };
     }>;
 
     counterfeitAlerts.forEach((report: CounterfeitReportWithRelations) => {
       alerts.push({
         id: `CF_${report.id}`,
-        type: 'counterfeit_report',
-        message: `${report.reportType.replace('_', ' ')} detected: ${report.batch?.drugName || 'Unknown'} (${report.batch?.batchId || 'N/A'})`,
+        type: "counterfeit_report",
+        message: `${report.reportType.replace("_", " ")} detected: ${report.batch?.drugName || "Unknown"} (${report.batch?.batchId || "N/A"})`,
         severity: report.severity.toLowerCase(),
         time: getTimeAgo(report.createdAt),
-        location: report.location || report.consumers?.address || 'Unknown',
-        reporter: report.consumers?.fullName || 'Anonymous',
+        location: report.location || report.consumers?.address || "Unknown",
+        reporter: report.consumers?.fullName || "Anonymous",
         details: {
           batchId: report.batch?.batchId,
           drugName: report.batch?.drugName,
           manufacturer: report.batch?.organization?.companyName,
-          description: report.description
-        }
+          description: report.description,
+        },
       });
     });
 
     // 2. Suspicious scan patterns (multiple suspicious scans for same batch)
     const suspiciousScans = await prisma.scanHistory.groupBy({
-      by: ['batchId'],
+      by: ["batchId"],
       where: {
         scanDate: { gte: oneDayAgo },
-        scanResult: 'SUSPICIOUS',
-        batchId: { not: null }
+        scanResult: "SUSPICIOUS",
+        batchId: { not: null },
       },
       _count: {
-        id: true
+        id: true,
       },
       having: {
         id: {
           _count: {
-            gte: 3 // 3 or more suspicious scans
-          }
-        }
-      }
+            gte: 3, // 3 or more suspicious scans
+          },
+        },
+      },
     });
 
     // Get batch details for suspicious scans
@@ -155,27 +156,27 @@ export async function GET(request: NextRequest) {
             drugName: true,
             organization: {
               select: {
-                companyName: true
-              }
-            }
-          }
+                companyName: true,
+              },
+            },
+          },
         });
 
         if (batch) {
           alerts.push({
             id: `SUS_${scan.batchId}`,
-            type: 'suspicious_pattern',
+            type: "suspicious_pattern",
             message: `Suspicious scan pattern detected: ${batch.drugName} (${batch.batchId})`,
-            severity: 'warning',
-            time: 'Recent',
-            location: 'Multiple locations',
-            reporter: 'System Alert',
+            severity: "warning",
+            time: "Recent",
+            location: "Multiple locations",
+            reporter: "System Alert",
             details: {
               batchId: batch.batchId,
               drugName: batch.drugName,
               manufacturer: batch.organization?.companyName,
-              scanCount: scan._count.id
-            }
+              scanCount: scan._count.id,
+            },
           });
         }
       }
@@ -184,117 +185,116 @@ export async function GET(request: NextRequest) {
     // 3. Failed ownership transfers (regulatory approval needed)
     const failedTransfers = await prisma.ownershipTransfer.findMany({
       where: {
-        status: 'FAILED',
-        updatedAt: { gte: oneDayAgo }
+        status: "FAILED",
+        updatedAt: { gte: oneDayAgo },
       },
       include: {
         batch: {
           select: {
             batchId: true,
-            drugName: true
-          }
+            drugName: true,
+          },
         },
         fromOrg: {
           select: {
-            companyName: true
-          }
+            companyName: true,
+          },
         },
         toOrg: {
           select: {
-            companyName: true
-          }
-        }
+            companyName: true,
+          },
+        },
       },
-      take: 3
+      take: 3,
     });
 
     type TransferWithRelations = Prisma.OwnershipTransferGetPayload<{
       include: {
-        batch: { select: { batchId: true, drugName: true } },
-        fromOrg: { select: { companyName: true } },
-        toOrg: { select: { companyName: true } }
-      }
+        batch: { select: { batchId: true; drugName: true } };
+        fromOrg: { select: { companyName: true } };
+        toOrg: { select: { companyName: true } };
+      };
     }>;
 
     failedTransfers.forEach((transfer: TransferWithRelations) => {
       alerts.push({
         id: `TF_${transfer.id}`,
-        type: 'failed_transfer',
-        message: `Failed ownership transfer: ${transfer.batch?.drugName || 'Unknown'} from ${transfer.fromOrg?.companyName}`,
-        severity: 'warning',
+        type: "failed_transfer",
+        message: `Failed ownership transfer: ${transfer.batch?.drugName || "Unknown"} from ${transfer.fromOrg?.companyName}`,
+        severity: "warning",
         time: getTimeAgo(transfer.updatedAt),
-        location: 'Transfer System',
-        reporter: 'Automated System',
+        location: "Transfer System",
+        reporter: "Automated System",
         details: {
           batchId: transfer.batch?.batchId,
           drugName: transfer.batch?.drugName,
           fromOrg: transfer.fromOrg?.companyName,
           toOrg: transfer.toOrg?.companyName,
-          notes: transfer.notes
-        }
+          notes: transfer.notes,
+        },
       });
     });
 
     // 4. Organizations with expired/expiring licenses
     const expiringOrgs = await prisma.organization.findMany({
       where: {
-        organizationType: { not: 'REGULATOR' },
+        organizationType: { not: "REGULATOR" },
         isVerified: true,
         updatedAt: {
-          lte: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000) // 90 days old
-        }
+          lte: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000), // 90 days old
+        },
       },
       select: {
         id: true,
         companyName: true,
         organizationType: true,
-        updatedAt: true
+        updatedAt: true,
       },
-      take: 3
+      take: 3,
     });
 
     type OrganizationBasic = Prisma.OrganizationGetPayload<{
       select: {
-        id: true,
-        companyName: true,
-        organizationType: true,
-        updatedAt: true
-      }
+        id: true;
+        companyName: true;
+        organizationType: true;
+        updatedAt: true;
+      };
     }>;
 
     expiringOrgs.forEach((org: OrganizationBasic) => {
       alerts.push({
         id: `EXP_${org.id}`,
-        type: 'license_expiring',
+        type: "license_expiring",
         message: `License review required: ${org.companyName}`,
-        severity: 'info',
+        severity: "info",
         time: getTimeAgo(org.updatedAt),
-        location: 'Licensing System',
-        reporter: 'Automated System',
+        location: "Licensing System",
+        reporter: "Automated System",
         details: {
           companyName: org.companyName,
           organizationType: org.organizationType,
-          lastUpdated: org.updatedAt
-        }
+          lastUpdated: org.updatedAt,
+        },
       });
     });
 
     // Sort alerts by severity and time
     const severityOrder = { critical: 0, high: 1, warning: 2, info: 3 };
     alerts.sort((a, b) => {
-      return severityOrder[a.severity as keyof typeof severityOrder] - 
-             severityOrder[b.severity as keyof typeof severityOrder];
+      return (
+        severityOrder[a.severity as keyof typeof severityOrder] -
+        severityOrder[b.severity as keyof typeof severityOrder]
+      );
     });
 
     return NextResponse.json({ alerts: alerts.slice(0, 10) }); // Return top 10 alerts
-
   } catch (error: unknown) {
     console.error("Error fetching alerts:", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

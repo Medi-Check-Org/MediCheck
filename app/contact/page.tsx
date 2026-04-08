@@ -155,7 +155,7 @@ export default function ContactPage() {
                   </div>
                   <Button
                     type="submit"
-                    variant="gradient"
+                    variant="default"
                     className="w-full cursor-pointer"
                     disabled={isSubmitting}
                   >

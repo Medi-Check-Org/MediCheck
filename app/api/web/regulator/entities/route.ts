@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import {auth} from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 
 export async function GET() {
   try {
@@ -10,7 +10,8 @@ export async function GET() {
     return NextResponse.json({ entities });
   } catch (error: unknown) {
     console.error("Error fetching entities:", error);
-    const message = error instanceof Error ? error.message : "Failed to fetch entities";
+    const message =
+      error instanceof Error ? error.message : "Failed to fetch entities";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -27,7 +28,10 @@ export async function POST(req: NextRequest) {
       !data.address ||
       !data.country
     ) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 },
+      );
     }
 
     const entity = await prisma.organization.create({
@@ -48,6 +52,7 @@ export async function POST(req: NextRequest) {
         agencyName: data.agencyName,
         officialId: data.officialId,
         distributorType: data.distributorType,
+        managedRegistry: data.managedRegistry,
         // Add other fields as needed
 
         users: data.users, // Ensure this is provided and matches the expected type
@@ -57,7 +62,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ entity }, { status: 201 });
   } catch (error: unknown) {
     console.error("Error creating entity:", error);
-    const message = error instanceof Error ? error.message : "Failed to create entity";
+    const message =
+      error instanceof Error ? error.message : "Failed to create entity";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
