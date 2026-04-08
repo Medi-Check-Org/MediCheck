@@ -15,6 +15,7 @@ import { TeamMemberManagement } from "@/components/team-member-management";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { Button } from "@/components/ui/button";
 import { UniversalLoader } from "@/components/ui/universal-loader";
+import { SectionErrorBoundary } from "@/components/ui/error-boundary";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Menu, Shield, X } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -160,60 +161,78 @@ export default function HospitalDashboard() {
         <div className="p-5 sm:p-6 lg:p-8 mt-12 lg:mt-0">
 
           {activeTab === "dashboard" && (
-            <HospitalMain setActiveTab={setActiveTab} orgId={orgId} />
+            <SectionErrorBoundary context="the hospital dashboard">
+              <HospitalMain setActiveTab={setActiveTab} orgId={orgId} />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "inventory" && (
-            <HospitalInventory orgId={orgId} />
+            <SectionErrorBoundary context="inventory">
+              <HospitalInventory orgId={orgId} />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "team" && (
-            <TeamMemberManagement 
-              organizationType="hospital"
-              organizationId={orgId}
-            />
+            <SectionErrorBoundary context="team management">
+              <TeamMemberManagement 
+                organizationType="hospital"
+                organizationId={orgId}
+              />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "analytics" && (
-            <AnalyticsDashboard 
-              dashboardType="hospital"
-              title="Hospital Analytics"
-            />
+            <SectionErrorBoundary context="hospital analytics">
+              <AnalyticsDashboard 
+                dashboardType="hospital"
+                title="Hospital Analytics"
+              />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "reports" && (
-            <HospitalReports />
+            <SectionErrorBoundary context="reports">
+              <HospitalReports />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "alerts" && (
-            <HospitalAlerts />
+            <SectionErrorBoundary context="alerts">
+              <HospitalAlerts />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "transfers" && (
-            <Transfers orgId={orgId} allBatches={batches} loadBatches={loadBatches} />
+            <SectionErrorBoundary context="transfers">
+              <Transfers orgId={orgId} allBatches={batches} loadBatches={loadBatches} />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "qr-scanner" && (
-            <div className="flex justify-center items-center min-h-[500px]">
-              {/* Desktop: Card wrap */}
-              <div className="hidden lg:block w-full max-w-[600px]">
-                <Card className="border border-border shadow-sm">
-                  <CardContent>
-                    <div className="flex justify-center items-center">
-                      <QRScanner onScan={handleQRScan} />
-                    </div>
-                  </CardContent>
-                </Card>
+            <SectionErrorBoundary context="QR scanner">
+              <div className="flex justify-center items-center min-h-[500px]">
+                {/* Desktop: Card wrap */}
+                <div className="hidden lg:block w-full max-w-[600px]">
+                  <Card className="border border-border shadow-sm">
+                    <CardContent>
+                      <div className="flex justify-center items-center">
+                        <QRScanner onScan={handleQRScan} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                {/* Mobile: No Card wrap, fill space */}
+                <div className="block lg:hidden w-full">
+                  <QRScanner onScan={handleQRScan} />
+                </div>
               </div>
-              {/* Mobile: No Card wrap, fill space */}
-              <div className="block lg:hidden w-full">
-                <QRScanner onScan={handleQRScan} />
-              </div>
-            </div>
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "settings" && (
-            <HospitalSettings />
+            <SectionErrorBoundary context="settings">
+              <HospitalSettings />
+            </SectionErrorBoundary>
           )}
           
         </div>

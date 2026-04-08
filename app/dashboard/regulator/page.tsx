@@ -17,6 +17,7 @@ import { TeamMemberManagement } from "@/components/team-member-management";
 import { ManufacturerTab } from "@/utils";
 import { ThemeToggle } from "@/components/theme-toggle"
 import { UniversalLoader } from "@/components/ui/universal-loader"
+import { SectionErrorBoundary } from "@/components/ui/error-boundary"
 import { toast } from "react-toastify";
 // 
 
@@ -85,42 +86,60 @@ export default function RegulatorDashboard() {
         <div className="p-5 sm:p-6 lg:p-8 mt-12 lg:mt-0">
 
           {activeTab === "dashboard" && (
-            <RegulatorMain setActiveTab={setActiveTab} />
+            <SectionErrorBoundary context="the regulator dashboard">
+              <RegulatorMain setActiveTab={setActiveTab} />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "analytics" && (
-            <RegulatorAnalytics />
+            <SectionErrorBoundary context="regulator analytics">
+              <RegulatorAnalytics />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "investigations" && (
-            <RegulatorInvestigations />
+            <SectionErrorBoundary context="investigations">
+              <RegulatorInvestigations />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "compliance" && (
-            <RegulatorCompliance />
+            <SectionErrorBoundary context="compliance">
+              <RegulatorCompliance />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "entities" && (
-            <RegulatorEntities />
+            <SectionErrorBoundary context="regulated entities">
+              <RegulatorEntities />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "reports" && (
-            <RegulatorReports />
+            <SectionErrorBoundary context="reports">
+              <RegulatorReports />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "alerts" && (
-            <RegulatorAlerts />
+            <SectionErrorBoundary context="alerts">
+              <RegulatorAlerts />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "team" && (
-            <TeamMemberManagement 
-              organizationType="regulator"
-              organizationId={orgId}
-            />
+            <SectionErrorBoundary context="team management">
+              <TeamMemberManagement 
+                organizationType="regulator"
+                organizationId={orgId}
+              />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "settings" && (
-            <RegulatorSettings />
+            <SectionErrorBoundary context="settings">
+              <RegulatorSettings />
+            </SectionErrorBoundary>
           )}
         </div>
 
