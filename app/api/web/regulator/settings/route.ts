@@ -1,21 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { getActorFromClerk } from "@/core/auth";
+import { toErrorResponse } from "@/utils/types/errors";
 
 export async function GET(request: NextRequest) {
 
   try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    console.log(userId, "user id from clerk");
+    const actor = await getActorFromClerk();
 
     // Ensure the user exists in the users table
     const loggedUser = await prisma.user.findUnique({
-      where: { clerkUserId: userId },
+      where: { clerkUserId: actor.id },
       include: {
         organizations: true,
         teamMember: {
@@ -25,8 +20,6 @@ export async function GET(request: NextRequest) {
         }
       }
     });
-
-    console.log("Logged user:", loggedUser);
 
     // Check if user is a team member
     if (loggedUser?.teamMember) {
@@ -51,12 +44,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "No organization or team member data found" }, { status: 404 });
 
   } catch (error: unknown) {
-    console.error("Error fetching regulator settings:", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json(
-      { error: message, details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
+    const errorResponse = toErrorResponse(error);
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }
 
@@ -64,15 +55,11 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const actor = await getActorFromClerk();
 
     // Ensure the user exists in the users table
     const loggedUser = await prisma.user.findUnique({
-      where: { clerkUserId: userId },
+      where: { clerkUserId: actor.id },
       include: {
         organizations: true,
         teamMember: true
@@ -122,12 +109,10 @@ export async function PUT(request: NextRequest) {
       { status: 404 }
     );
   } catch (error: unknown) {
-    console.error("Error updating regulator settings:", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json(
-      { error: message, details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
+    const errorResponse = toErrorResponse(error);
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }
 

@@ -1,59 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { getRegulatorContext } from "@/core/auth/regulator";
+import { toErrorResponse } from "@/utils/types/errors";
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Find or create User record
-    let user = await prisma.user.findUnique({
-      where: { clerkUserId: userId }
-    });
-
-    if (!user) {
-      // Auto-create User record for regulator
-      user = await prisma.user.create({
-        data: {
-          clerkUserId: userId,
-          userRole: "SUPER_ADMIN", // Assuming regulators are super admins
-          isActive: true
-        }
-      });
-    }
-
-    // Find the regulator organization for this user
-    let organization = await prisma.organization.findFirst({
-      where: {
-        organizationType: "REGULATOR",
-        OR: [
-          { adminId: user.id },
-          { teamMembers: { some: { userId: user.id } } }
-        ]
-      }
-    });
-
-    // If no regulator organization exists for this user, create one
-    if (!organization) {
-      organization = await prisma.organization.create({
-        data: {
-          adminId: user.id,
-          organizationType: "REGULATOR",
-          companyName: "Regulatory Authority",
-          contactEmail: "regulator@authority.gov",
-          address: "Regulatory Building",
-          country: "Nigeria",
-          agencyName: "NAFDAC",
-          officialId: `REG-${Date.now()}`,
-          isVerified: true,
-          isActive: true
-        }
-      });
-    }
+    await getRegulatorContext();
 
     // Get all ownership transfers for compliance review
     const transfers = await prisma.ownershipTransfer.findMany({
@@ -94,66 +46,16 @@ export async function GET(request: NextRequest) {
 
   } catch (error: unknown) {
     console.error("Error fetching transfers:", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
+    const errorResponse = toErrorResponse(error);
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Find or create User record
-    let user = await prisma.user.findUnique({
-      where: { clerkUserId: userId }
-    });
-
-    if (!user) {
-      // Auto-create User record for regulator
-      user = await prisma.user.create({
-        data: {
-          clerkUserId: userId,
-          userRole: "SUPER_ADMIN", // Assuming regulators are super admins
-          isActive: true
-        }
-      });
-    }
-
-    // Find the regulator organization for this user
-    let organization = await prisma.organization.findFirst({
-      where: {
-        organizationType: "REGULATOR",
-        OR: [
-          { adminId: user.id },
-          { teamMembers: { some: { userId: user.id } } }
-        ]
-      }
-    });
-
-    // If no regulator organization exists for this user, create one
-    if (!organization) {
-      organization = await prisma.organization.create({
-        data: {
-          adminId: user.id,
-          organizationType: "REGULATOR",
-          companyName: "Regulatory Authority",
-          contactEmail: "regulator@authority.gov",
-          address: "Regulatory Building",
-          country: "Nigeria",
-          agencyName: "NAFDAC",
-          officialId: `REG-${Date.now()}`,
-          isVerified: true,
-          isActive: true
-        }
-      });
-    }
+    const { user } = await getRegulatorContext();
 
     const { transferId, status, notes } = await request.json();
 
@@ -206,10 +108,9 @@ export async function PUT(request: NextRequest) {
 
   } catch (error: unknown) {
     console.error("Error updating transfer:", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
+    const errorResponse = toErrorResponse(error);
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }

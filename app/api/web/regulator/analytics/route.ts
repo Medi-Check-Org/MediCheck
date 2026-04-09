@@ -1,57 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { getRegulatorContext } from "@/core/auth/regulator";
+import { toErrorResponse } from "@/utils/types/errors";
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Find or create User record
-    let user = await prisma.user.findUnique({
-      where: { clerkUserId: userId }
-    });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          clerkUserId: userId,
-          userRole: "SUPER_ADMIN",
-          isActive: true
-        }
-      });
-    }
-
-    // Find the regulator organization for this user
-    let organization = await prisma.organization.findFirst({
-      where: {
-        organizationType: "REGULATOR",
-        OR: [
-          { adminId: user.id },
-          { teamMembers: { some: { userId: user.id } } }
-        ]
-      }
-    });
-
-    if (!organization) {
-      organization = await prisma.organization.create({
-        data: {
-          adminId: user.id,
-          organizationType: "REGULATOR",
-          companyName: "Regulatory Authority",
-          contactEmail: "regulator@authority.gov",
-          address: "Regulatory Building",
-          country: "Nigeria",
-          agencyName: "NAFDAC",
-          officialId: `REG-${Date.now()}`,
-          isVerified: true,
-          isActive: true
-        }
-      });
-    }
+    await getRegulatorContext();
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -164,9 +118,9 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error("Error fetching analytics:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    const errorResponse = toErrorResponse(error);
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }

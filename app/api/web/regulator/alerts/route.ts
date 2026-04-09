@@ -1,59 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
-import type { Prisma } from "@prisma/client";
+import { getRegulatorContext } from "@/core/auth/regulator";
+import { toErrorResponse } from "@/utils/types/errors";
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if User record exists
-    let user = await prisma.user.findFirst({
-      where: {
-        clerkUserId: userId
-      }
-    });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          clerkUserId: userId,
-          userRole: "CONSUMER"
-        }
-      });
-    }
-
-    // Find the regulator organization for this user
-    let organization = await prisma.organization.findFirst({
-      where: {
-        organizationType: "REGULATOR",
-        OR: [
-          { adminId: user.id },
-          { teamMembers: { some: { userId: user.id } } }
-        ]
-      }
-    });
-
-    if (!organization) {
-      // Auto-create a regulator organization for this user
-      organization = await prisma.organization.create({
-        data: {
-          adminId: user.id,
-          organizationType: "REGULATOR",
-          companyName: "NAFDAC Regulatory Authority",
-          contactEmail: "regulator@nafdac.gov.ng",
-          contactPhone: "+234-1-234-5678",
-          address: "NAFDAC Headquarters, Abuja",
-          country: "Nigeria",
-          state: "FCT",
-          isVerified: true
-        }
-      });
-    }
+    await getRegulatorContext();
 
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -94,20 +46,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform counterfeit reports to alerts
-    type CounterfeitReportWithRelations = Prisma.CounterfeitReportGetPayload<{
-      include: {
-        batch: {
-          select: {
-            batchId: true,
-            drugName: true,
-            organization: { select: { companyName: true } }
-          }
-        },
-        consumers: { select: { fullName: true, address: true } }
-      }
-    }>;
-
-    counterfeitAlerts.forEach((report: CounterfeitReportWithRelations) => {
+    counterfeitAlerts.forEach((report) => {
       alerts.push({
         id: `CF_${report.id}`,
         type: 'counterfeit_report',
@@ -208,15 +147,7 @@ export async function GET(request: NextRequest) {
       take: 3
     });
 
-    type TransferWithRelations = Prisma.OwnershipTransferGetPayload<{
-      include: {
-        batch: { select: { batchId: true, drugName: true } },
-        fromOrg: { select: { companyName: true } },
-        toOrg: { select: { companyName: true } }
-      }
-    }>;
-
-    failedTransfers.forEach((transfer: TransferWithRelations) => {
+    failedTransfers.forEach((transfer) => {
       alerts.push({
         id: `TF_${transfer.id}`,
         type: 'failed_transfer',
@@ -253,16 +184,7 @@ export async function GET(request: NextRequest) {
       take: 3
     });
 
-    type OrganizationBasic = Prisma.OrganizationGetPayload<{
-      select: {
-        id: true,
-        companyName: true,
-        organizationType: true,
-        updatedAt: true
-      }
-    }>;
-
-    expiringOrgs.forEach((org: OrganizationBasic) => {
+    expiringOrgs.forEach((org) => {
       alerts.push({
         id: `EXP_${org.id}`,
         type: 'license_expiring',
@@ -290,11 +212,10 @@ export async function GET(request: NextRequest) {
 
   } catch (error: unknown) {
     console.error("Error fetching alerts:", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
+    const errorResponse = toErrorResponse(error);
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }
 

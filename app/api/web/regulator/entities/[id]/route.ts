@@ -1,29 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { getRegulatorContext } from "@/core/auth/regulator";
+import { toErrorResponse } from "@/utils/types/errors";
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Find the regulator organization for this user
-    const organization = await prisma.organization.findFirst({
-      where: {
-        organizationType: "REGULATOR",
-        OR: [
-          { adminId: userId },
-          { teamMembers: { some: { userId: userId } } }
-        ]
-      }
-    });
-
-    if (!organization) {
-      return NextResponse.json({ error: "Regulator organization not found or access denied" }, { status: 403 });
-    }
+    await getRegulatorContext();
 
     const { isVerified, isActive, notes } = await request.json();
     const { id: entityId } = await params;
@@ -58,10 +40,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   } catch (error: unknown) {
     console.error("Error updating entity:", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
+    const errorResponse = toErrorResponse(error);
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }
