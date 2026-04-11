@@ -26,6 +26,8 @@ import CreateNewBatchForm from "./components/CreateNewBatchForm"
 import { formatProductDate } from "@/utils/helpers/formatters"
 import AttachUnitsContainer from "./components/AttachExistingUnitToBatch";
 import BatchGrouping from "./components/BatchGrouping"
+import { UniversalLoader } from "@/components/ui/universal-loader"
+
 
 const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; allBatches: MedicationBatchInfoProps[]; loadBatches: () => void }) => {
 
@@ -55,6 +57,11 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
     const [organizations, setOrganizations] = useState<OrganizationProp[]>([]);
 
     const [isGroupingModalOpen, setIsGroupingModalOpen] = useState(false)
+
+    const resetOpenedModals = () => {
+        setSelectedCreationModal("");
+        setOpenBatchCreationModal(false)
+    }
 
     useEffect(() => {
         setBatches(allBatches);
@@ -125,6 +132,8 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
             }
 
             toast.success("Batch created successfully!");
+
+            resetOpenedModals();
 
             loadBatches()
 
@@ -238,8 +247,17 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
     return (
         <div className="space-y-6">
 
+            {(gettingProduct || !orgId) && <UniversalLoader text="Loading batches." />}
+
             {/* Modal */}
-            {openBatchCreationModal && <CreateBatchModal isOpen={openBatchCreationModal} onClose={() => setOpenBatchCreationModal(false)} onSelect={setSelectedCreationModal} />}
+
+            {openBatchCreationModal &&
+                <CreateBatchModal
+                    isOpen={openBatchCreationModal}
+                    onClose={() => setOpenBatchCreationModal(false)}
+                    onSelect={setSelectedCreationModal}
+                />
+            }
             
              {selectedCreationModal === 'create-new' && (
                 <CreateNewBatchForm
@@ -274,8 +292,6 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                     onCancel={() => { setIsGroupingModalOpen(false); }}
                 />
             )}
-
-
 
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>

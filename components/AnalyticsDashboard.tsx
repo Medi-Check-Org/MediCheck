@@ -1,6 +1,5 @@
 'use client'
-
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   AreaChart,
   Area,
@@ -9,8 +8,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -34,8 +31,6 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import {
-  TrendingUp,
-  TrendingDown,
   Package,
   Users,
   AlertTriangle,
@@ -44,7 +39,9 @@ import {
   PieChart as PieChartIcon,
   RefreshCw,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
+import { UniversalLoader } from "@/components/ui/universal-loader"
+
 
 interface AnalyticsData {
   overview: {
@@ -186,39 +183,6 @@ export function AnalyticsDashboard({
     fetchAnalytics()
   }, [dashboardType, timeRange])
 
-  // Show loading state when data is loading
-  if (loading && !data) {
-    return (
-      <div className={`space-y-6 ${className}`}>
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">{title}</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <div className="h-20 bg-muted animate-pulse rounded" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <div className="h-64 bg-muted animate-pulse rounded" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        {!organizationId && (
-          <div className="text-center text-muted-foreground mt-4">
-            Waiting for organization data...
-          </div>
-        )}
-      </div>
-    )
-  }
 
   if (error) {
     return (
@@ -279,8 +243,13 @@ export function AnalyticsDashboard({
     })
   }
 
+  console.log('Analytics data loaded:', loading)
+
   return (
     <div className={`space-y-6 ${className}`}>
+
+      {(loading) && <UniversalLoader text="Loading analytics." />}
+      
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>

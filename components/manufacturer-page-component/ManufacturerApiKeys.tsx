@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect, type FormEvent } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,9 +21,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { LoadingSpinner } from "@/components/ui/loading";
 import { Key, Plus, Copy, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "react-toastify";
+import { UniversalLoader } from "@/components/ui/universal-loader"
+
 
 /** API key record as returned by GET /api/web/api-keys */
 interface ApiKeyRecord {
@@ -217,7 +217,11 @@ export function ManufacturerApiKeys() {
     d ? new Date(d).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" }) : "—";
 
   return (
+
     <div className="space-y-6">
+
+      {(loading) && <UniversalLoader text="Loading api keys." />}
+      
       <div>
         <h1 className="font-sans font-bold text-3xl text-foreground">Integrations</h1>
         <p className="text-sm sm:text-base text-muted-foreground mt-1">
@@ -310,9 +314,7 @@ export function ManufacturerApiKeys() {
           </Dialog>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <LoadingSpinner size="large" text="Loading API keys..." />
-          ) : keys.length === 0 ? (
+          {keys.length === 0 ? (
             <div className="text-center py-6 sm:py-8 px-4">
               <Key className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-3 sm:mb-4" />
               <h3 className="text-base sm:text-lg font-semibold mb-2">No API keys yet</h3>
@@ -413,6 +415,8 @@ export function ManufacturerApiKeys() {
           )}
         </DialogContent>
       </Dialog>
+
     </div>
+
   );
 }

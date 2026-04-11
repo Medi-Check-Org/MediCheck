@@ -4,7 +4,6 @@ import UnitQrcode from './components/UnitQrcode';
 import UnitRangeSelection from './components/UnitRangeSelection';
 import { Product, MedicationUnit } from '@/lib/generated/prisma/browser';
 import { toast } from 'react-toastify';
-import { LoadingSpinner } from '@/components/ui/loading';
 import { AlertCircle, RefreshCcw } from 'lucide-react';
 import UniversalLoader from '@/components/ui/universal-loader';
 
@@ -53,9 +52,6 @@ const UnitFlowManagement = ({ orgId }: { orgId: string }) => {
         setStep(2);
     };
 
-    if (loading) return (
-        <UniversalLoader />
-    );
 
     if (error) return (
         <div className="flex justify-end min-h-full w-full p-6">
@@ -77,7 +73,10 @@ const UnitFlowManagement = ({ orgId }: { orgId: string }) => {
     );
 
     return (
-        <>            
+        <>  
+
+            {(loading || !orgId) && <UniversalLoader text="Loading units." />}
+            
             <div className="flex justify-end min-h-full w-full">
                 {step === 1 ? (
                     <UnitRangeSelection

@@ -9,12 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { LoadingSpinner } from "@/components/ui/loading";
 import { toast } from "react-toastify";
 import { Plus, ArrowUpRight, ArrowDownLeft, Search, Filter, X } from "lucide-react";
 import { MedicationBatchInfoProps, OrganizationProp } from "@/utils";
 import { BatchStatus } from "@/lib/generated/prisma/enums";
 import { FormattedTransfer } from "@/app/api/web/transfers/route";
+import { UniversalLoader } from "@/components/ui/universal-loader"
+
 
 interface TransfersComponentProps {
   orgId?: string;
@@ -30,7 +31,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersComponentProps) 
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [currentOrgId, setCurrentOrgId] = useState(orgId || "");
+  const [currentOrgId] = useState(orgId || "");
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,7 +44,6 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersComponentProps) 
     toOrgId: "",
     notes: ""
   });
-
 
   // Transform allBatches to the expected format
   const availableBatches =
@@ -231,19 +231,11 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersComponentProps) 
 
   const hasActiveFilters = searchQuery !== "" || statusFilter !== "ALL" || directionFilter !== "ALL";
 
-  if (loading) {
-    return (
-      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-        <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Batch Transfers</h1>
-        <div className="flex items-center justify-center p-6 sm:p-8">
-          <LoadingSpinner size="large" text="Loading transfers..." />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+
+      {(loading || !orgId) && <UniversalLoader text="Loading transfers." />}
+      
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Batch Transfers</h1>

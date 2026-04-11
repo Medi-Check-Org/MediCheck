@@ -93,7 +93,7 @@ const UnitRangeSelection = ({ products, onSuccess, orgId }: Props) => {
                         <label className="text-sm font-medium text-foreground">Quantity to Mint</label>
                         {selectedProduct && (
                             <span className="text-[11px] font-semibold text-muted-foreground bg-secondary px-2 py-0.5 rounded">
-                                Limit: {selectedProduct.numberOfProductAvailable}
+                                Limit: {selectedProduct?.numberOfProductAvailable}
                             </span>
                         )}
                     </div>
@@ -102,7 +102,7 @@ const UnitRangeSelection = ({ products, onSuccess, orgId }: Props) => {
                         className="w-full h-11 px-4 bg-background border border-input rounded-lg text-sm outline-none focus:ring-2 focus:ring-ring transition-all"
                         placeholder="Enter amount"
                         value={quantity || ''}
-                        max={selectedProduct.numberOfProductAvailable}
+                        max={selectedProduct?.numberOfProductAvailable ?? 0}
                         min={0}
                         onChange={(e) => {
                             setQuantity(parseInt(e.target.value) || 0);

@@ -1,43 +1,49 @@
 "use client"
-
-import React from "react"
 import { Shield } from "lucide-react"
 
 interface UniversalLoaderProps {
-  /** Text shown below the logo mark */
   text?: string
 }
 
-/**
- * UniversalLoader
- *
- * Full-screen, interaction-blocking loading overlay.
- * Uses a restrained logo-pulse animation only.
- * ARIA-compliant, dark-mode aware, high z-index.
- */
-export function UniversalLoader({ text = "Loading..." }: UniversalLoaderProps) {
+export const UniversalLoader = ({ text = "Loading" }: UniversalLoaderProps) => {
   return (
+
     <div
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background"
+      className="fixed h-screen inset-0 z-9999 flex items-center justify-center bg-black/40 backdrop-blur-md"
       role="status"
       aria-live="polite"
-      aria-label={text}
     >
-      {/* Logo mark — pulsing opacity only, no scale or bounce */}
-      <div className="loader-pulse flex flex-col items-center gap-4">
-        <div className="flex items-center justify-center h-12 w-12 rounded-md bg-primary">
-          <Shield className="h-6 w-6 text-primary-foreground" aria-hidden="true" />
+
+      <div className="relative flex h-48 w-48 items-center justify-center">
+
+        <div className="relative flex h-48 w-48 flex-col items-center justify-center rounded-full bg-white/85 animate-[ping_2s_linear_infinite] text-black shadow-2xl">
+
+          {/* Brand Content */}
+          <div className="relative z-10 flex flex-col items-center gap-3">
+            {/* Shield Icon Container */}
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/20">
+              <Shield className="h-8 w-8 text-primary-foreground" aria-hidden="true" />
+            </div>
+
+            {/* Text Branding */}
+            <div className="flex flex-col items-center">
+
+              <span className="text-sm font-bold tracking-tight text-center text-black">
+                MediCheck
+              </span>
+
+              <span className="text-[8px] mt-1 font-medium uppercase text-center text-wrap tracking-[0.2em] text-black/60">
+                {text}
+              </span>
+
+            </div>
+
+          </div>
+
         </div>
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-sm font-semibold text-foreground tracking-tight">MediCheck</span>
-          <span className="text-xs text-muted-foreground">{text}</span>
-        </div>
+
       </div>
-      {/* Progress bar — clean, no color flash */}
-      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-muted overflow-hidden">
-        <div className="h-full w-1/3 bg-accent loader-pulse" />
-      </div>
-      <span className="sr-only">{text}</span>
+
     </div>
   )
 }
