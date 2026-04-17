@@ -3,17 +3,15 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { LoadingTable } from "@/components/ui/loading"
 import { Shield, AlertTriangle, FileText, TrendingUp, Clock, CheckCircle, XCircle, Eye, Building2 } from "lucide-react";
 import { ManufacturerTab } from "@/utils";
+import { toast } from "react-toastify";
 
 const RegulatorMain = ({ setActiveTab }: { 
     setActiveTab: React.Dispatch<React.SetStateAction<ManufacturerTab>>;
 }) => {
 
-    const [investigationNotes, setInvestigationNotes] = useState("")
     const [stats, setStats] = useState({
         activeInvestigations: 0,
         investigationGrowth: 0,
@@ -53,6 +51,7 @@ const RegulatorMain = ({ setActiveTab }: {
                 }
             } catch (error) {
                 console.error('Error fetching regulator data:', error)
+                toast.error("Failed to load dashboard data")
             } finally {
                 setLoading(false)
             }
@@ -60,13 +59,6 @@ const RegulatorMain = ({ setActiveTab }: {
 
         fetchData()
     }, [])
-
-    const handleStartInvestigation = () => {
-        if (investigationNotes.trim()) {
-            setInvestigationNotes("")
-            setActiveTab("investigations")
-        }
-    }
 
     const handleComplianceCheck = () => {
         setActiveTab("compliance")
@@ -77,7 +69,7 @@ const RegulatorMain = ({ setActiveTab }: {
     }
 
     const handleViewAnalytics = () => {
-        setActiveTab("reports")
+        setActiveTab("analytics")
     }
 
     return (
@@ -93,7 +85,6 @@ const RegulatorMain = ({ setActiveTab }: {
                     </span>
                 </div>
                 <div className="hidden sm:flex items-center space-x-4">
-                    <ThemeToggle />
                     <Badge variant="regulator" className="px-3 py-1">
                         <Building2 className="h-4 w-4 mr-2" />
                         Regulator

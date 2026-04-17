@@ -6,16 +6,19 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { LoadingTable } from "@/components/ui/loading"
 import { Eye, Search, CheckCircle, XCircle, AlertTriangle, Plus } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { toast } from "react-toastify"
 
 const RegulatorInvestigations = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [investigations, setInvestigations] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [submitting, setSubmitting] = useState(false)
+    const [updatingId, setUpdatingId] = useState<string | null>(null)
     const [isNewInvestigationOpen, setIsNewInvestigationOpen] = useState(false)
     const [newInvestigation, setNewInvestigation] = useState({
         batchId: '',
@@ -32,9 +35,12 @@ const RegulatorInvestigations = () => {
                 if (response.ok) {
                     const data = await response.json()
                     setInvestigations(data.investigations)
+                } else {
+                    toast.error("Failed to load investigations")
                 }
             } catch (error) {
                 console.error('Error fetching investigations:', error)
+                toast.error("Failed to load investigations")
             } finally {
                 setLoading(false)
             }
@@ -44,8 +50,8 @@ const RegulatorInvestigations = () => {
     }, [])
 
     const handleCreateInvestigation = async () => {
+        setSubmitting(true)
         try {
-            console.log('Creating investigation with data:', newInvestigation);
             const response = await fetch('/api/web/regulator/investigations', {
                 method: 'POST',
                 headers: {
@@ -57,9 +63,7 @@ const RegulatorInvestigations = () => {
                 }),
             })
 
-            console.log('Response status:', response.status);
             const data = await response.json();
-            console.log('Response data:', data);
 
             if (response.ok) {
                 setInvestigations(prev => [data.investigation, ...prev])
@@ -71,17 +75,20 @@ const RegulatorInvestigations = () => {
                     location: ''
                 })
                 setIsNewInvestigationOpen(false)
-                alert('Investigation created successfully!')
+                toast.success("Investigation created successfully")
             } else {
-                alert(`Failed to create investigation: ${data.error || 'Unknown error'}`)
+                toast.error(`Failed to create investigation: ${data.error || 'Unknown error'}`)
             }
         } catch (error) {
             console.error('Error creating investigation:', error)
-            alert(`Error creating investigation: ${error}`)
+            toast.error("Error creating investigation")
+        } finally {
+            setSubmitting(false)
         }
     }
 
     const handleUpdateStatus = async (investigationId: string, status: string, resolution?: string) => {
+        setUpdatingId(investigationId)
         try {
             const response = await fetch(`/api/web/regulator/investigations/${investigationId}`, {
                 method: 'PUT',
@@ -99,9 +106,15 @@ const RegulatorInvestigations = () => {
                             : inv
                     )
                 )
+                toast.success(`Investigation marked ${status.toLowerCase()}`)
+            } else {
+                toast.error("Failed to update investigation status")
             }
         } catch (error) {
             console.error('Error updating investigation:', error)
+            toast.error("Failed to update investigation status")
+        } finally {
+            setUpdatingId(null)
         }
     }
 
@@ -145,21 +158,20 @@ const RegulatorInvestigations = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="font-sans font-bold text-3xl text-foreground">Investigations Management</h1>
-                    <p className="text-muted-foreground">Active and completed investigations</p>
+                    <p className="text-muted-foreground">Track, triage, and resolve regulatory investigations.</p>
                 </div>
                 <div className="flex items-center gap-4">
-                    <ThemeToggle />
                     <Dialog open={isNewInvestigationOpen} onOpenChange={setIsNewInvestigationOpen}>
                         <DialogTrigger asChild>
-                            <Button>
+                            <Button className="w-full sm:w-auto">
                                 <Plus className="h-4 w-4 mr-2" />
                                 New Investigation
                             </Button>
                         </DialogTrigger>
-                    <DialogContent className="sm:max-w-125">
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Create New Investigation</DialogTitle>
                             <DialogDescription>
@@ -232,9 +244,14 @@ const RegulatorInvestigations = () => {
                             </Button>
                             <Button 
                                 onClick={handleCreateInvestigation}
-                                disabled={!newInvestigation.reportType || !newInvestigation.severity || !newInvestigation.description}
+                                disabled={
+                                  submitting ||
+                                  !newInvestigation.reportType ||
+                                  !newInvestigation.severity ||
+                                  !newInvestigation.description
+                                }
                             >
-                                Create Investigation
+                                {submitting ? "Creating..." : "Create Investigation"}
                             </Button>
                         </DialogFooter>
                     </DialogContent>
@@ -251,12 +268,12 @@ const RegulatorInvestigations = () => {
                     <div className="flex gap-4 mb-6">
                         <div className="flex-1">
                             <Input
-                                placeholder="Search by investigation title, target, or inspector..."
+                                placeholder="Search by description, drug, or reporter..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                        <Button variant="outline">
+                        <Button variant="outline" disabled>
                             <Search className="h-4 w-4 mr-2" />
                             Search ({filteredInvestigations.length})
                         </Button>
@@ -279,7 +296,7 @@ const RegulatorInvestigations = () => {
                             {loading ? (
                                 <TableRow>
                                     <TableCell colSpan={8} className="text-center py-8">
-                                        Loading investigations...
+                                        <LoadingTable rows={3} columns={8} />
                                     </TableCell>
                                 </TableRow>
                             ) : filteredInvestigations.length === 0 ? (
@@ -314,6 +331,7 @@ const RegulatorInvestigations = () => {
                                                         size="sm"
                                                         variant="outline"
                                                         onClick={() => handleUpdateStatus(investigation.id, 'INVESTIGATING')}
+                                                        disabled={updatingId === investigation.id}
                                                     >
                                                         Start
                                                     </Button>
@@ -325,6 +343,7 @@ const RegulatorInvestigations = () => {
                                                             variant="outline"
                                                             onClick={() => handleUpdateStatus(investigation.id, 'RESOLVED', 'Investigation completed')}
                                                             className="text-green-600 hover:bg-green-50"
+                                                            disabled={updatingId === investigation.id}
                                                         >
                                                             <CheckCircle className="h-4 w-4 mr-1" />
                                                             Resolve
@@ -334,6 +353,7 @@ const RegulatorInvestigations = () => {
                                                             variant="outline"
                                                             onClick={() => handleUpdateStatus(investigation.id, 'ESCALATED')}
                                                             className="text-red-600 hover:bg-red-50"
+                                                            disabled={updatingId === investigation.id}
                                                         >
                                                             <AlertTriangle className="h-4 w-4 mr-1" />
                                                             Escalate

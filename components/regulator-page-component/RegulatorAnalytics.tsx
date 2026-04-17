@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingSpinner } from "@/components/ui/loading";
 import { AlertTriangle, TrendingUp, Activity, MapPin, Clock, Bell, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -61,7 +62,7 @@ export default function RegulatorAnalytics() {
 
     if (historicalError || statsError) {
         return (
-            <div className="p-6">
+            <div className="space-y-6">
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -89,13 +90,12 @@ export default function RegulatorAnalytics() {
 
     if (!historicalData) {
         return (
-            <div className="p-6">
-                <div className="flex items-center justify-center h-64">
-                    <div className="flex items-center gap-2">
-                        <RefreshCw className="h-5 w-5 animate-spin" />
-                        <span>Loading regulatory analytics...</span>
-                    </div>
+            <div className="space-y-6">
+                <div>
+                    <h1 className="font-sans font-bold text-3xl text-foreground">Regulatory Analytics</h1>
+                    <p className="text-muted-foreground">Monitor hotspots, prediction trends, and risk intelligence.</p>
                 </div>
+                <LoadingSpinner size="large" text="Loading regulatory analytics..." />
             </div>
         );
     }
@@ -112,7 +112,11 @@ export default function RegulatorAnalytics() {
     ).length;
 
     return (
-        <div className="p-2 sm:p-4 md:p-6 space-y-6">
+        <div className="space-y-6">
+            <div>
+                <h1 className="font-sans font-bold text-3xl text-foreground">Regulatory Analytics</h1>
+                <p className="text-muted-foreground">Monitor hotspots, prediction trends, and risk intelligence.</p>
+            </div>
             {/* Quick Stats Overview */}
             <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                 <Card>

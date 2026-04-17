@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { CheckCircle, XCircle, Clock, AlertTriangle, FileCheck, TrendingUp, Users } from "lucide-react"
-import {ThemeToggle} from "@/components/theme-toggle"
+import { LoadingSpinner } from "@/components/ui/loading"
+import { toast } from "react-toastify"
 
 interface TransferData {
     id: string;
@@ -91,6 +92,7 @@ const RegulatorCompliance = () => {
         } catch (error) {
             console.error('Error fetching compliance data:', error)
             setError('Failed to load compliance data. Please try again.')
+            toast.error("Failed to load compliance data")
         } finally {
             setLoading(false)
         }
@@ -123,10 +125,12 @@ const RegulatorCompliance = () => {
             
             // Recalculate stats
             await fetchComplianceData()
+            toast.success(`Transfer ${status === "COMPLETED" ? "approved" : "rejected"} successfully`)
             
         } catch (error) {
             console.error('Error updating transfer:', error)
             setError('Failed to update transfer status. Please try again.')
+            toast.error("Failed to update transfer status")
         }
     }
 
@@ -197,10 +201,7 @@ const RegulatorCompliance = () => {
                 <div className="flex justify-between items-center">
                     <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Compliance Monitoring</h1>
                 </div>
-                <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <span className="ml-2 text-muted-foreground">Loading compliance data...</span>
-                </div>
+                <LoadingSpinner size="large" text="Loading compliance data..." />
             </div>
         )
     }
@@ -213,10 +214,7 @@ const RegulatorCompliance = () => {
                 <div className="flex flex-row items-center gap-2">
                     <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Compliance Monitoring</h1>
                 </div>
-                {/* Hide ThemeToggle on mobile, show on desktop */}
-                <div className="hidden sm:block">
-                    <ThemeToggle />
-                </div>
+                <p className="text-sm text-muted-foreground">Review ownership transfers and enforce compliance actions.</p>
             </div>
             {error && (
                 <Card className="border-destructive/20 bg-destructive/5 dark:border-destructive/30 dark:bg-destructive/10">

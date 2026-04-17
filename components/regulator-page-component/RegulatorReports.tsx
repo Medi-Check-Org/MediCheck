@@ -3,10 +3,8 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { LoadingSpinner } from "@/components/ui/loading"
 import { 
-    FileText, 
     CheckCircle, 
     XCircle, 
     Users, 
@@ -19,7 +17,7 @@ import {
     Activity,
     Shield
 } from "lucide-react"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { toast } from "react-toastify"
 
 interface AnalyticsData {
     scansByOrgType: Array<{ region: string; _count: { id: number } }>;
@@ -50,7 +48,6 @@ const RegulatorReports = () => {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [generatingReport, setGeneratingReport] = useState<string | null>(null)
-    const [selectedReportType, setSelectedReportType] = useState<string>("summary")
 
     useEffect(() => {
         fetchAnalytics()
@@ -72,6 +69,7 @@ const RegulatorReports = () => {
         } catch (error) {
             console.error('Error fetching analytics:', error)
             setError('Failed to load analytics data. Please try again.')
+            toast.error("Failed to load reports data")
         } finally {
             setLoading(false)
         }
@@ -93,9 +91,11 @@ const RegulatorReports = () => {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            toast.success(`${reportType} report downloaded`)
         } catch (error) {
             console.error('Error generating report:', error);
             setError(`Failed to generate ${reportType} report. Please try again.`);
+            toast.error(`Failed to generate ${reportType} report`)
         } finally {
             setGeneratingReport(null);
         }
@@ -126,20 +126,32 @@ const RegulatorReports = () => {
                 <div className="flex justify-between items-center">
                     <h1 className="font-sans font-bold text-3xl text-foreground">Reports & Analytics</h1>
                 </div>
-                <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <span className="ml-2 text-muted-foreground">Loading reports data...</span>
-                </div>
+                <LoadingSpinner size="large" text="Loading reports data..." />
             </div>
         )
     }
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="font-sans font-bold text-3xl text-foreground">Reports & Analytics</h1>
-                {/* Hide ThemeToggle on mobile, show on desktop */}
-                <div className="hidden sm:block">
-                    <ThemeToggle />
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h1 className="font-sans font-bold text-3xl text-foreground">Reports & Analytics</h1>
+                    <p className="text-muted-foreground">Generate regulator insights and export downloadable reports.</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => fetchAnalytics()}
+                    disabled={loading}
+                  >
+                    Refresh analytics
+                  </Button>
+                  <Button
+                    onClick={() => generateReport("summary")}
+                    disabled={generatingReport !== null}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    {generatingReport === "summary" ? "Generating..." : "Download summary PDF"}
+                  </Button>
                 </div>
             </div>
 

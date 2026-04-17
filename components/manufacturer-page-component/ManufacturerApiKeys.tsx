@@ -23,7 +23,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { LoadingSpinner } from "@/components/ui/loading";
-import { Key, Plus, Copy, RotateCcw, Trash2 } from "lucide-react";
+import { Key, Plus, Copy, RotateCcw, Trash2, X } from "lucide-react";
 import { toast } from "react-toastify";
 
 /** API key record as returned by GET /api/web/api-keys */
@@ -44,13 +44,9 @@ interface CreateKeyResponse {
   expiresAt: string | null;
 }
 
-const KNOWN_SCOPES = [
-  "batches:read",
-  "batches:write",
-  "transfers:read",
-  "transfers:write",
-  "transfers:initiate",
-];
+type PendingAction =
+  | { type: "revoke" | "rotate"; id: string; name: string }
+  | null;
 
 /** Extract user-facing message from API error response (supports both { error: string } and toErrorResponse shape). */
 function apiErrorMessage(data: unknown, fallback: string): string {
@@ -69,6 +65,7 @@ export function ManufacturerApiKeys() {
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [rawKeyModal, setRawKeyModal] = useState<{ key: string; label: string } | null>(null);
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [creating, setCreating] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [rotatingId, setRotatingId] = useState<string | null>(null);
@@ -76,7 +73,9 @@ export function ManufacturerApiKeys() {
 
   const [newName, setNewName] = useState("");
   const [newScopes, setNewScopes] = useState<string[]>([]);
-  const [customScope, setCustomScope] = useState("");
+  const [scopeInput, setScopeInput] = useState("");
+  const [expiryMode, setExpiryMode] = useState<"never" | "date">("never");
+  const [newExpiresAt, setNewExpiresAt] = useState("");
 
   const loadKeys = async () => {
     setLoading(true);
@@ -106,6 +105,19 @@ export function ManufacturerApiKeys() {
       toast.error("Name and at least one scope are required");
       return;
     }
+
+    if (expiryMode === "date") {
+      if (!newExpiresAt) {
+        toast.error("Choose an expiry date/time or select Never expires");
+        return;
+      }
+      const parsedDate = new Date(newExpiresAt);
+      if (Number.isNaN(parsedDate.getTime()) || parsedDate <= new Date()) {
+        toast.error("Expiry date must be a valid future date/time");
+        return;
+      }
+    }
+
     setCreating(true);
     try {
       const res = await fetch("/api/web/api-keys", {
@@ -114,6 +126,10 @@ export function ManufacturerApiKeys() {
         body: JSON.stringify({
           name: newName.trim(),
           permissions: newScopes,
+          expiresAt:
+            expiryMode === "date" && newExpiresAt
+              ? new Date(newExpiresAt).toISOString()
+              : null,
         }),
       });
       const data = await res.json();
@@ -122,7 +138,9 @@ export function ManufacturerApiKeys() {
       setCreateOpen(false);
       setNewName("");
       setNewScopes([]);
-      setCustomScope("");
+      setScopeInput("");
+      setExpiryMode("never");
+      setNewExpiresAt("");
       setRawKeyModal({ key: created.apiKey, label: `Created: ${created.name}` });
       loadKeys();
       toast.success("API key created. Copy it now — it won’t be shown again.");
@@ -133,43 +151,57 @@ export function ManufacturerApiKeys() {
     }
   };
 
-  const handleRevoke = async (id: string) => {
-    if (!confirm("Revoke this API key? It will stop working immediately.")) return;
-    setRevokingId(id);
-    try {
-      const res = await fetch(`/api/web/api-keys/${id}/revoke`, { method: "POST" });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(apiErrorMessage(data, "Failed to revoke key"));
-      toast.success("API key revoked");
-      loadKeys();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to revoke key");
-    } finally {
-      setRevokingId(null);
+  const submitPendingAction = async () => {
+    if (!pendingAction) return;
+    const { id, type } = pendingAction;
+    if (type === "revoke") {
+      setRevokingId(id);
+    } else {
+      setRotatingId(id);
     }
-  };
 
-  const handleRotate = async (id: string) => {
-    if (!confirm("Generate a new key and revoke the old one? The old key will stop working.")) return;
-    setRotatingId(id);
     try {
-      const res = await fetch(`/api/web/api-keys/${id}/rotate`, { method: "POST" });
+      const endpoint =
+        type === "revoke"
+          ? `/api/web/api-keys/${id}/revoke`
+          : `/api/web/api-keys/${id}/rotate`;
+      const res = await fetch(endpoint, { method: "POST" });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(apiErrorMessage(data, "Failed to rotate key"));
-      const newKey =
-        typeof data.newApiKey === "string" && data.newApiKey.length > 0
-          ? data.newApiKey
-          : null;
-      if (!newKey) {
-        throw new Error("Invalid response: missing new API key");
+      if (!res.ok) {
+        throw new Error(
+          apiErrorMessage(
+            data,
+            type === "revoke" ? "Failed to revoke key" : "Failed to rotate key",
+          ),
+        );
       }
-      const keyRecord = keys.find((k) => k.id === id);
-      setRawKeyModal({ key: newKey, label: `New key for: ${keyRecord?.name ?? id}` });
+
+      if (type === "rotate") {
+        const newKey =
+          typeof data.newApiKey === "string" && data.newApiKey.length > 0
+            ? data.newApiKey
+            : null;
+        if (!newKey) {
+          throw new Error("Invalid response: missing new API key");
+        }
+        setRawKeyModal({ key: newKey, label: `New key for: ${pendingAction.name}` });
+        toast.success("Key rotated. Copy the new key — it won’t be shown again.");
+      } else {
+        toast.success("API key revoked");
+      }
+
       loadKeys();
-      toast.success("Key rotated. Copy the new key — it won’t be shown again.");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to rotate key");
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : type === "revoke"
+            ? "Failed to revoke key"
+            : "Failed to rotate key",
+      );
     } finally {
+      setPendingAction(null);
+      setRevokingId(null);
       setRotatingId(null);
     }
   };
@@ -199,18 +231,17 @@ export function ManufacturerApiKeys() {
     }
   };
 
-  const toggleScope = (scope: string) => {
-    setNewScopes((prev) =>
-      prev.includes(scope) ? prev.filter((s) => s !== scope) : [...prev, scope]
-    );
+  const addScope = () => {
+    const scope = scopeInput.trim();
+    if (!scope) return;
+    if (!newScopes.includes(scope)) {
+      setNewScopes((prev) => [...prev, scope]);
+    }
+    setScopeInput("");
   };
 
-  const addCustomScope = () => {
-    const s = customScope.trim();
-    if (s && !newScopes.includes(s)) {
-      setNewScopes((prev) => [...prev, s]);
-      setCustomScope("");
-    }
+  const removeScope = (scope: string) => {
+    setNewScopes((prev) => prev.filter((s) => s !== scope));
   };
 
   const formatDate = (d: string | null) =>
@@ -230,7 +261,7 @@ export function ManufacturerApiKeys() {
           <div>
             <CardTitle>API Keys</CardTitle>
             <CardDescription>
-              Active keys for this organization. Revoked or expired keys are not shown.
+              Active keys for this organization. Use any scope format your integration expects. Revoked or expired keys are not shown.
             </CardDescription>
           </div>
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
@@ -244,7 +275,7 @@ export function ManufacturerApiKeys() {
               <DialogHeader>
                 <DialogTitle>Create API key</DialogTitle>
                 <DialogDescription>
-                  Give the key a name and select scopes. The raw key is shown only once after creation.
+                  Add a name, define scopes, and choose token lifespan. The raw key is shown only once after creation.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreate} className="space-y-4">
@@ -260,36 +291,80 @@ export function ManufacturerApiKeys() {
                 </div>
                 <div className="space-y-1 sm:space-y-2">
                   <Label className="text-sm font-medium">Scopes</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {KNOWN_SCOPES.map((scope) => (
-                      <Button
-                        key={scope}
-                        type="button"
-                        variant={newScopes.includes(scope) ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => toggleScope(scope)}
-                        className="cursor-pointer"
-                      >
-                        {scope}
-                      </Button>
-                    ))}
-                  </div>
                   <div className="flex gap-2 mt-2">
                     <Input
-                      placeholder="Custom scope (e.g. batches:read)"
-                      value={customScope}
-                      onChange={(e) => setCustomScope(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCustomScope())}
+                      placeholder="Add scope (e.g. batches:read)"
+                      value={scopeInput}
+                      onChange={(e) => setScopeInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === ",") {
+                          e.preventDefault();
+                          addScope();
+                        }
+                      }}
                       className="h-10 sm:h-11"
                     />
-                    <Button type="button" variant="outline" size="sm" onClick={addCustomScope} className="cursor-pointer">
+                    <Button type="button" variant="outline" size="sm" onClick={addScope} className="cursor-pointer">
                       Add
                     </Button>
                   </div>
                   {newScopes.length > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Selected: {newScopes.join(", ")}
-                    </p>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {newScopes.map((scope) => (
+                        <span
+                          key={scope}
+                          className="inline-flex items-center gap-1 rounded-full border bg-muted px-2 py-1 text-xs"
+                        >
+                          {scope}
+                          <button
+                            type="button"
+                            onClick={() => removeScope(scope)}
+                            className="text-muted-foreground hover:text-foreground"
+                            aria-label={`Remove ${scope}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Scopes are free-form. Add any non-empty value used by your integrations.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Token lifespan</Label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant={expiryMode === "never" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        setExpiryMode("never");
+                        setNewExpiresAt("");
+                      }}
+                      className="cursor-pointer"
+                    >
+                      Never expires
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={expiryMode === "date" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setExpiryMode("date")}
+                      className="cursor-pointer"
+                    >
+                      Set expiry date
+                    </Button>
+                  </div>
+                  {expiryMode === "date" && (
+                    <Input
+                      type="datetime-local"
+                      value={newExpiresAt}
+                      onChange={(e) => setNewExpiresAt(e.target.value)}
+                      className="h-10 sm:h-11"
+                    />
                   )}
                 </div>
                 <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
@@ -355,7 +430,13 @@ export function ManufacturerApiKeys() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleRotate(k.id)}
+                          onClick={() =>
+                            setPendingAction({
+                              type: "rotate",
+                              id: k.id,
+                              name: k.name,
+                            })
+                          }
                           disabled={isMutating}
                           className="cursor-pointer"
                         >
@@ -366,7 +447,13 @@ export function ManufacturerApiKeys() {
                           variant="outline"
                           size="sm"
                           className="text-destructive hover:text-destructive cursor-pointer"
-                          onClick={() => handleRevoke(k.id)}
+                          onClick={() =>
+                            setPendingAction({
+                              type: "revoke",
+                              id: k.id,
+                              name: k.name,
+                            })
+                          }
                           disabled={isMutating}
                         >
                           <Trash2 className="h-3.5 w-3.5 mr-1" />
@@ -411,6 +498,55 @@ export function ManufacturerApiKeys() {
               </Button>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!pendingAction}
+        onOpenChange={(open) => !open && !isMutating && setPendingAction(null)}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {pendingAction?.type === "revoke" ? "Revoke API key" : "Rotate API key"}
+            </DialogTitle>
+            <DialogDescription>
+              {pendingAction?.type === "revoke"
+                ? `Revoke "${pendingAction.name}"? It will stop working immediately.`
+                : `Rotate "${pendingAction?.name}"? A new key will be generated and the old one will stop working.`}
+            </DialogDescription>
+          </DialogHeader>
+          {pendingAction?.type === "rotate" && (
+            <p className="text-xs text-muted-foreground">
+              Rotate only when a key might be exposed, compromised, or due for security hygiene.
+            </p>
+          )}
+          <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPendingAction(null)}
+              disabled={isMutating}
+              className="w-full sm:w-auto cursor-pointer"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant={pendingAction?.type === "revoke" ? "destructive" : "default"}
+              onClick={submitPendingAction}
+              disabled={isMutating}
+              className="w-full sm:w-auto cursor-pointer"
+            >
+              {pendingAction?.type === "revoke"
+                ? revokingId
+                  ? "Revoking..."
+                  : "Revoke key"
+                : rotatingId
+                  ? "Rotating..."
+                  : "Rotate key"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

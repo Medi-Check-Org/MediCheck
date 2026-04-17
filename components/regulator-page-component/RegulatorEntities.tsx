@@ -4,36 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Users, CheckCircle, XCircle, AlertTriangle, Eye, Edit, Plus } from "lucide-react"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { Users, CheckCircle, XCircle, Eye } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading"
+import { toast } from "react-toastify"
 const RegulatorEntities = () => {
     const [entities, setEntities] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    const [isRegistering, setIsRegistering] = useState(false)
-    const [showRegisterDialog, setShowRegisterDialog] = useState(false)
-    const [formData, setFormData] = useState({
-        companyName: "",
-        organizationType: "",
-        contactEmail: "",
-        contactPhone: "",
-        contactPersonName: "",
-        address: "",
-        country: "Nigeria",
-        state: "",
-        licenseNumber: "",
-        nafdacNumber: "",
-        businessRegNumber: "",
-        rcNumber: "",
-        pcnNumber: "",
-        agencyName: "",
-        officialId: "",
-        distributorType: ""
-    })
 
     useEffect(() => {
         const fetchEntities = async () => {
@@ -42,9 +18,12 @@ const RegulatorEntities = () => {
                 if (response.ok) {
                     const data = await response.json()
                     setEntities(data.entities)
+                } else {
+                    toast.error("Failed to load entities")
                 }
             } catch (error) {
                 console.error('Error fetching entities:', error)
+                toast.error("Failed to load entities")
             } finally {
                 setLoading(false)
             }
@@ -71,60 +50,14 @@ const RegulatorEntities = () => {
                             : entity
                     )
                 )
+                toast.success(isVerified ? "Entity verified" : "Entity suspended")
+            } else {
+                toast.error("Failed to update entity")
             }
         } catch (error) {
             console.error('Error updating entity:', error)
+            toast.error("Failed to update entity")
         }
-    }
-
-    const handleRegisterEntity = async () => {
-        setIsRegistering(true)
-        try {
-            const response = await fetch('/api/web/regulator/entities', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData),
-            })
-
-            if (response.ok) {
-                const data = await response.json()
-                setEntities(prev => [...prev, data.entity])
-                setShowRegisterDialog(false)
-                setFormData({
-                    companyName: "",
-                    organizationType: "",
-                    contactEmail: "",
-                    contactPhone: "",
-                    contactPersonName: "",
-                    address: "",
-                    country: "Nigeria",
-                    state: "",
-                    licenseNumber: "",
-                    nafdacNumber: "",
-                    businessRegNumber: "",
-                    rcNumber: "",
-                    pcnNumber: "",
-                    agencyName: "",
-                    officialId: "",
-                    distributorType: ""
-                })
-            } else {
-                console.error('Failed to register entity')
-            }
-        } catch (error) {
-            console.error('Error registering entity:', error)
-        } finally {
-            setIsRegistering(false)
-        }
-    }
-
-    const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }))
     }
 
     const getStatusBadge = (entity: any) => {
@@ -153,225 +86,7 @@ const RegulatorEntities = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Registered Entities</h1>
-                    <p className="text-muted-foreground text-sm sm:text-base">All registered pharmaceutical entities</p>
-                </div>
-                <div className="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto">
-                    {/*
-                    <Dialog open={showRegisterDialog} onOpenChange={setShowRegisterDialog}>
-                        <DialogTrigger asChild>
-                            <Button className="w-full sm:w-auto">
-                                <Plus className="h-4 w-4 mr-2" />
-                                <span className="hidden sm:inline">Register Entity</span>
-                                <span className="sm:hidden">Register</span>
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                            <DialogHeader>
-                                <DialogTitle>Register New Entity</DialogTitle>
-                                <DialogDescription>
-                                    Add a new pharmaceutical entity to the regulatory database
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                
-                                <div className="space-y-4">
-                                    <h3 className="text-lg font-medium">Basic Information</h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label htmlFor="companyName">Company Name *</Label>
-                                            <Input
-                                                id="companyName"
-                                                value={formData.companyName}
-                                                onChange={(e) => handleInputChange('companyName', e.target.value)}
-                                                placeholder="Enter company name"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="organizationType">Organization Type *</Label>
-                                            <Select value={formData.organizationType} onValueChange={(value) => handleInputChange('organizationType', value)}>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select type" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="MANUFACTURER">Manufacturer</SelectItem>
-                                                    <SelectItem value="DRUG_DISTRIBUTOR">Drug Distributor</SelectItem>
-                                                    <SelectItem value="HOSPITAL">Hospital</SelectItem>
-                                                    <SelectItem value="PHARMACY">Pharmacy</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label htmlFor="contactEmail">Contact Email *</Label>
-                                            <Input
-                                                id="contactEmail"
-                                                type="email"
-                                                value={formData.contactEmail}
-                                                onChange={(e) => handleInputChange('contactEmail', e.target.value)}
-                                                placeholder="contact@company.com"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="contactPhone">Contact Phone</Label>
-                                            <Input
-                                                id="contactPhone"
-                                                value={formData.contactPhone}
-                                                onChange={(e) => handleInputChange('contactPhone', e.target.value)}
-                                                placeholder="+234-xxx-xxx-xxxx"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <Label htmlFor="contactPersonName">Contact Person Name</Label>
-                                        <Input
-                                            id="contactPersonName"
-                                            value={formData.contactPersonName}
-                                            onChange={(e) => handleInputChange('contactPersonName', e.target.value)}
-                                            placeholder="Full name of contact person"
-                                        />
-                                    </div>
-                                </div>
-
-                              
-                                <div className="space-y-4">
-                                    <h3 className="text-lg font-medium">Location Information</h3>
-                                    
-                                    <div>
-                                        <Label htmlFor="address">Address *</Label>
-                                        <Textarea
-                                            id="address"
-                                            value={formData.address}
-                                            onChange={(e) => handleInputChange('address', e.target.value)}
-                                            placeholder="Full business address"
-                                            rows={3}
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label htmlFor="country">Country *</Label>
-                                            <Input
-                                                id="country"
-                                                value={formData.country}
-                                                onChange={(e) => handleInputChange('country', e.target.value)}
-                                                placeholder="Nigeria"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="state">State</Label>
-                                            <Input
-                                                id="state"
-                                                value={formData.state}
-                                                onChange={(e) => handleInputChange('state', e.target.value)}
-                                                placeholder="State/Province"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                             
-                                <div className="space-y-4">
-                                    <h3 className="text-lg font-medium">Regulatory Information</h3>
-                                    
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label htmlFor="licenseNumber">License Number</Label>
-                                            <Input
-                                                id="licenseNumber"
-                                                value={formData.licenseNumber}
-                                                onChange={(e) => handleInputChange('licenseNumber', e.target.value)}
-                                                placeholder="Operating license number"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="nafdacNumber">NAFDAC Number</Label>
-                                            <Input
-                                                id="nafdacNumber"
-                                                value={formData.nafdacNumber}
-                                                onChange={(e) => handleInputChange('nafdacNumber', e.target.value)}
-                                                placeholder="NAFDAC registration number"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label htmlFor="businessRegNumber">Business Registration Number</Label>
-                                            <Input
-                                                id="businessRegNumber"
-                                                value={formData.businessRegNumber}
-                                                onChange={(e) => handleInputChange('businessRegNumber', e.target.value)}
-                                                placeholder="Business registration number"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label htmlFor="rcNumber">RC Number</Label>
-                                            <Input
-                                                id="rcNumber"
-                                                value={formData.rcNumber}
-                                                onChange={(e) => handleInputChange('rcNumber', e.target.value)}
-                                                placeholder="Corporate Affairs Commission number"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {formData.organizationType === 'PHARMACY' && (
-                                        <div>
-                                            <Label htmlFor="pcnNumber">PCN Number</Label>
-                                            <Input
-                                                id="pcnNumber"
-                                                value={formData.pcnNumber}
-                                                onChange={(e) => handleInputChange('pcnNumber', e.target.value)}
-                                                placeholder="Pharmacists Council of Nigeria number"
-                                            />
-                                        </div>
-                                    )}
-
-                                    {formData.organizationType === 'DRUG_DISTRIBUTOR' && (
-                                        <div>
-                                            <Label htmlFor="distributorType">Distributor Type</Label>
-                                            <Select value={formData.distributorType} onValueChange={(value) => handleInputChange('distributorType', value)}>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select distributor type" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="WHOLESALE">Wholesale</SelectItem>
-                                                    <SelectItem value="RETAIL">Retail</SelectItem>
-                                                    <SelectItem value="IMPORT_EXPORT">Import/Export</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <Label htmlFor="officialId">Official ID</Label>
-                                        <Input
-                                            id="officialId"
-                                            value={formData.officialId}
-                                            onChange={(e) => handleInputChange('officialId', e.target.value)}
-                                            placeholder="Official identification number"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
-                                <Button variant="outline" onClick={() => setShowRegisterDialog(false)}>
-                                    Cancel
-                                </Button>
-                                <Button 
-                                    onClick={handleRegisterEntity} 
-                                    disabled={isRegistering || !formData.companyName || !formData.organizationType || !formData.contactEmail || !formData.address || !formData.country}
-                                >
-                                    {isRegistering ? "Registering..." : "Register Entity"}
-                                </Button>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
-                    */}
+                    <p className="text-muted-foreground text-sm sm:text-base">Review and verify all registered supply-chain entities.</p>
                 </div>
             </div>
             <Card className="overflow-x-auto">
@@ -456,7 +171,9 @@ const RegulatorEntities = () => {
                     {/* Mobile Card List */}
                     <div className="block md:hidden w-full">
                         {loading ? (
-                            <div className="py-8 text-center text-muted-foreground">Loading entities...</div>
+                            <div className="py-8 text-center text-muted-foreground">
+                                <LoadingSpinner size="small" text="Loading entities..." />
+                            </div>
                         ) : entities.length === 0 ? (
                             <div className="py-8 text-center text-muted-foreground">No entities found</div>
                         ) : (
