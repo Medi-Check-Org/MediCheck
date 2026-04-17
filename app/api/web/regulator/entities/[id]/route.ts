@@ -5,7 +5,7 @@ import { toErrorResponse } from "@/utils/types/errors";
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await getRegulatorContext();
+    const { user } = await getRegulatorContext();
 
     const { isVerified, isActive, notes } = await request.json();
     const { id: entityId } = await params;
@@ -23,7 +23,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     // Log the action in audit logs
     await prisma.auditLog.create({
       data: {
-        userId,
+        userId: user.id,
         action: isVerified ? "ENTITY_VERIFIED" : "ENTITY_UNVERIFIED",
         entityType: "ORGANIZATION",
         entityId,

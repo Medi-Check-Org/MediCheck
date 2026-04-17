@@ -17,10 +17,10 @@ export async function GET(request: NextRequest) {
             product: {
               select: {
                 manufacturingDate: true,
-                expiryDate: true
-              }
-            }
-          }
+                expiryDate: true,
+              },
+            },
+          },
         },
         fromOrg: {
           select: {
@@ -43,7 +43,6 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json({ transfers });
-
   } catch (error: unknown) {
     console.error("Error fetching transfers:", error);
     const errorResponse = toErrorResponse(error);
@@ -65,26 +64,26 @@ export async function PUT(request: NextRequest) {
       data: {
         status,
         notes,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       include: {
         batch: {
           select: {
             batchId: true,
-            drugName: true
-          }
+            drugName: true,
+          },
         },
         fromOrg: {
           select: {
-            companyName: true
-          }
+            companyName: true,
+          },
         },
         toOrg: {
           select: {
-            companyName: true
-          }
-        }
-      }
+            companyName: true,
+          },
+        },
+      },
     });
 
     // Log the action
@@ -99,13 +98,12 @@ export async function PUT(request: NextRequest) {
           fromOrg: updatedTransfer.fromOrg.companyName,
           toOrg: updatedTransfer.toOrg.companyName,
           status,
-          notes
-        }
-      }
+          notes,
+        },
+      },
     });
 
     return NextResponse.json({ transfer: updatedTransfer });
-
   } catch (error: unknown) {
     console.error("Error updating transfer:", error);
     const errorResponse = toErrorResponse(error);

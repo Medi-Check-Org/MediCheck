@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@/lib/generated/prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
@@ -77,8 +76,8 @@ export async function GET(request: NextRequest) {
     }>;
 
     const inventory = transfers
-      .filter((transfer: TransferWithBatch) => transfer.batch)
-      .map((transfer: TransferWithBatch) => {
+      .filter((transfer) => transfer.batch)
+      .map((transfer) => {
         const batch = transfer.batch!;
         const product = batch.product;
         return {
