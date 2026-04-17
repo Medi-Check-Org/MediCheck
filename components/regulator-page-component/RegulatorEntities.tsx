@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Users, CheckCircle, XCircle, Eye } from "lucide-react"
-import { LoadingSpinner } from "@/components/ui/loading"
+import { UniversalLoader } from "@/components/ui/universal-loader"
 import { toast } from "react-toastify"
 const RegulatorEntities = () => {
     const [entities, setEntities] = useState<any[]>([])
@@ -67,7 +67,7 @@ const RegulatorEntities = () => {
         if (!entity.isVerified) {
             return <Badge variant="secondary">Under Review</Badge>
         }
-        return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>
+        return <Badge variant="verified">Active</Badge>
     }
 
     const getOrganizationType = (type: string) => {
@@ -82,14 +82,15 @@ const RegulatorEntities = () => {
 
     
     return (
-        <div className="space-y-6 px-2 sm:px-0">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="space-y-6">
+            {(loading) && <UniversalLoader text="Loading entities." />}
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
                     <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Registered Entities</h1>
                     <p className="text-muted-foreground text-sm sm:text-base">Review and verify all registered supply-chain entities.</p>
                 </div>
             </div>
-            <Card className="overflow-x-auto">
+            <Card className="border border-border shadow-sm overflow-x-auto">
                 <CardHeader>
                     <CardTitle>All Registered Entities</CardTitle>
                     <CardDescription>Complete database of registered pharmaceutical entities</CardDescription>
@@ -119,7 +120,10 @@ const RegulatorEntities = () => {
                                 ) : entities.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={7} className="text-center py-8">
-                                            No entities found
+                                            <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                                <Users className="h-8 w-8 text-muted-foreground/60" />
+                                                <span>No entities found</span>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ) : (
@@ -136,9 +140,9 @@ const RegulatorEntities = () => {
                                                     {!entity.isVerified && (
                                                         <Button
                                                             size="sm"
-                                                            variant="outline"
+                                                            variant="default"
                                                             onClick={() => handleVerifyEntity(entity.id, true)}
-                                                            className="text-green-600 hover:bg-green-50"
+                                                            className="h-10 cursor-pointer"
                                                         >
                                                             <CheckCircle className="h-4 w-4 mr-1" />
                                                             <span className="hidden sm:inline">Verify</span>
@@ -150,14 +154,14 @@ const RegulatorEntities = () => {
                                                             size="sm"
                                                             variant="outline"
                                                             onClick={() => handleVerifyEntity(entity.id, false)}
-                                                            className="text-red-600 hover:bg-red-50"
+                                                            className="text-destructive hover:bg-destructive/10 h-10 cursor-pointer"
                                                         >
                                                             <XCircle className="h-4 w-4 mr-1" />
                                                             <span className="hidden sm:inline">Suspend</span>
                                                             <span className="sm:hidden">✖</span>
                                                         </Button>
                                                     )}
-                                                    <Button size="sm" variant="ghost">
+                                                    <Button size="sm" variant="ghost" className="h-10 cursor-pointer">
                                                         <Eye className="h-4 w-4" />
                                                     </Button>
                                                 </div>
@@ -171,11 +175,12 @@ const RegulatorEntities = () => {
                     {/* Mobile Card List */}
                     <div className="block md:hidden w-full">
                         {loading ? (
-                            <div className="py-8 text-center text-muted-foreground">
-                                <LoadingSpinner size="small" text="Loading entities..." />
-                            </div>
+                            <div className="py-8 text-center text-muted-foreground">Loading entities...</div>
                         ) : entities.length === 0 ? (
-                            <div className="py-8 text-center text-muted-foreground">No entities found</div>
+                            <div className="py-8 text-center text-muted-foreground">
+                                <Users className="h-8 w-8 mx-auto mb-2 text-muted-foreground/60" />
+                                No entities found
+                            </div>
                         ) : (
                             <div className="flex flex-col gap-4 p-2">
                                 {entities.map((entity) => (
@@ -192,9 +197,9 @@ const RegulatorEntities = () => {
                                             {!entity.isVerified && (
                                                 <Button
                                                     size="sm"
-                                                    variant="outline"
+                                                    variant="default"
                                                     onClick={() => handleVerifyEntity(entity.id, true)}
-                                                    className="text-green-600 hover:bg-green-50 flex-1"
+                                                    className="flex-1 h-10 cursor-pointer"
                                                 >
                                                     <CheckCircle className="h-4 w-4 mr-1" />
                                                     Verify
@@ -205,13 +210,13 @@ const RegulatorEntities = () => {
                                                     size="sm"
                                                     variant="outline"
                                                     onClick={() => handleVerifyEntity(entity.id, false)}
-                                                    className="text-red-600 hover:bg-red-50 flex-1"
+                                                    className="text-destructive hover:bg-destructive/10 flex-1 h-10 cursor-pointer"
                                                 >
                                                     <XCircle className="h-4 w-4 mr-1" />
                                                     Suspend
                                                 </Button>
                                             )}
-                                            <Button size="sm" variant="ghost" className="flex-1">
+                                            <Button size="sm" variant="ghost" className="flex-1 h-10 cursor-pointer">
                                                 <Eye className="h-4 w-4" />
                                             </Button>
                                         </div>

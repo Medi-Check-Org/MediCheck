@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { useState, useEffect } from "react"
 import { Save, AlertCircle, Building2 } from "lucide-react"
-import { SectionLoadingCard } from "@/components/ui/loading"
+import { UniversalLoader } from "@/components/ui/universal-loader"
 import { toast } from "react-toastify"
 
 interface OrganizationData {
@@ -167,21 +167,14 @@ const RegulatorSettings = () => {
   };
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="font-sans font-bold text-3xl text-foreground">Settings</h1> 
-        </div>
-        <SectionLoadingCard title="Loading settings..." message="Fetching regulator organization settings." />
-      </div>
-    );
+    return <UniversalLoader text="Loading settings." />;
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <h1 className="font-sans font-bold text-3xl text-foreground">Settings</h1>
-        <p className="text-muted-foreground">Manage regulator organization profile and contact metadata.</p>
+    <div className="max-w-5xl mx-auto space-y-6 py-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Settings</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">Manage regulator organization profile and contact metadata.</p>
       </div>
 
       {error && (
@@ -206,7 +199,7 @@ const RegulatorSettings = () => {
         </Card>
       )}
 
-      <Card>
+      <Card className="border border-border shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5" />
@@ -333,7 +326,7 @@ const RegulatorSettings = () => {
                 {!editing ? (
                   <Button
                     onClick={handleEditClick}
-                    className="min-w-[120px] w-full sm:w-auto cursor-pointer"
+                    className="min-w-[120px] w-full sm:w-auto cursor-pointer h-11"
                   >
                     Edit Settings
                   </Button>
@@ -342,7 +335,7 @@ const RegulatorSettings = () => {
                     <Button
                       onClick={handleSaveSettings}
                       disabled={saving}
-                      className="min-w-[120px] w-full sm:w-auto cursor-pointer"
+                      className="min-w-[120px] w-full sm:w-auto cursor-pointer h-11"
                     >
                       {saving ? (
                         <>
@@ -359,7 +352,7 @@ const RegulatorSettings = () => {
                     <Button
                       onClick={handleCancelEdit}
                       variant="outline"
-                      className="min-w-[120px] w-full sm:w-auto cursor-pointer"
+                      className="min-w-[120px] w-full sm:w-auto cursor-pointer h-11"
                       disabled={saving}
                     >
                       Cancel

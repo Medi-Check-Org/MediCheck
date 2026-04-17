@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { LoadingSpinner } from "@/components/ui/loading"
+import { UniversalLoader } from "@/components/ui/universal-loader"
 import { 
     CheckCircle, 
     XCircle, 
@@ -121,33 +121,28 @@ const RegulatorReports = () => {
     }
 
     if (loading) {
-        return (
-            <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                    <h1 className="font-sans font-bold text-3xl text-foreground">Reports & Analytics</h1>
-                </div>
-                <LoadingSpinner size="large" text="Loading reports data..." />
-            </div>
-        )
+        return <UniversalLoader text="Loading reports data..." />
     }
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                    <h1 className="font-sans font-bold text-3xl text-foreground">Reports & Analytics</h1>
-                    <p className="text-muted-foreground">Generate regulator insights and export downloadable reports.</p>
+                    <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Reports & Analytics</h1>
+                    <p className="text-muted-foreground text-sm sm:text-base">Generate regulator insights and export downloadable reports.</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <Button
                     variant="outline"
                     onClick={() => fetchAnalytics()}
                     disabled={loading}
+                    className="h-11 cursor-pointer w-full sm:w-auto"
                   >
                     Refresh analytics
                   </Button>
                   <Button
                     onClick={() => generateReport("summary")}
                     disabled={generatingReport !== null}
+                    className="h-11 cursor-pointer w-full sm:w-auto"
                   >
                     <Download className="h-4 w-4 mr-2" />
                     {generatingReport === "summary" ? "Generating..." : "Download summary PDF"}
@@ -178,7 +173,7 @@ const RegulatorReports = () => {
             {analytics && (
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <Card>
+                        <Card className="border border-border shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Total Organizations</CardTitle>
                                 <Users className="h-4 w-4 text-muted-foreground" />
@@ -191,7 +186,7 @@ const RegulatorReports = () => {
                             </CardContent>
                         </Card>
 
-                        <Card>
+                        <Card className="border border-border shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Active Investigations</CardTitle>
                                 <Shield className="h-4 w-4 text-muted-foreground" />
@@ -204,7 +199,7 @@ const RegulatorReports = () => {
                             </CardContent>
                         </Card>
 
-                        <Card>
+                        <Card className="border border-border shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Total Scans</CardTitle>
                                 <Activity className="h-4 w-4 text-muted-foreground" />
@@ -217,7 +212,7 @@ const RegulatorReports = () => {
                             </CardContent>
                         </Card>
 
-                        <Card>
+                        <Card className="border border-border shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Medication Batches</CardTitle>
                                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
@@ -234,7 +229,7 @@ const RegulatorReports = () => {
                     {/* Analytics Charts */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Organization Types Distribution */}
-                        <Card>
+                        <Card className="border border-border shadow-sm">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <PieChart className="h-5 w-5" />
@@ -267,7 +262,7 @@ const RegulatorReports = () => {
                         </Card>
 
                         {/* Transfer Status Overview */}
-                        <Card>
+                        <Card className="border border-border shadow-sm">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <TrendingUp className="h-5 w-5" />
@@ -290,7 +285,7 @@ const RegulatorReports = () => {
                         </Card>
 
                         {/* Counterfeit Reports by Severity */}
-                        <Card>
+                        <Card className="border border-border shadow-sm">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <AlertTriangle className="h-5 w-5" />
@@ -317,7 +312,7 @@ const RegulatorReports = () => {
                         </Card>
 
                         {/* Regional Scan Distribution */}
-                        <Card>
+                        <Card className="border border-border shadow-sm">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <BarChart3 className="h-5 w-5" />
@@ -343,7 +338,7 @@ const RegulatorReports = () => {
             {/* Recent Activity Summary */}
 
             {analytics && (
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Activity className="h-5 w-5" />

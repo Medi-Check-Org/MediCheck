@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { LoadingTable } from "@/components/ui/loading"
-import { Shield, AlertTriangle, FileText, TrendingUp, Clock, CheckCircle, XCircle, Eye, Building2 } from "lucide-react";
+import { UniversalLoader } from "@/components/ui/universal-loader"
+import { Shield, AlertTriangle, FileText, TrendingUp, Clock, CheckCircle, XCircle, Eye } from "lucide-react";
 import { ManufacturerTab } from "@/utils";
 import { toast } from "react-toastify";
 
@@ -73,22 +74,17 @@ const RegulatorMain = ({ setActiveTab }: {
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6 lg:space-y-8">
+            {loading && <UniversalLoader text="Loading dashboard." />}
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
-                <div className="flex flex-col sm:flex-row sm:items-center">
-                    <h1 className="font-bold text-2xl sm:text-3xl text-foreground">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                <div>
+                    <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">
                         Regulator Dashboard
                     </h1>
-                    <span className="text-muted-foreground mt-1 sm:mt-0 sm:ml-2">
+                    <p className="text-muted-foreground text-sm sm:text-base">
                         NAFDAC - Drug Enforcement Division
-                    </span>
-                </div>
-                <div className="hidden sm:flex items-center space-x-4">
-                    <Badge variant="regulator" className="px-3 py-1">
-                        <Building2 className="h-4 w-4 mr-2" />
-                        Regulator
-                    </Badge>
+                    </p>
                 </div>
             </div>
 
@@ -216,9 +212,9 @@ const RegulatorMain = ({ setActiveTab }: {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {/* Recent Activities */}
                 <Card className="border border-border shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="font-semibold text-foreground">Recent Activities</CardTitle>
-                        <CardDescription>Latest regulatory activities and inspections</CardDescription>
+                    <CardHeader className="pb-4">
+                        <CardTitle className="font-semibold text-lg text-foreground">Recent Activities</CardTitle>
+                        <CardDescription className="text-muted-foreground text-sm">Latest regulatory activities and inspections</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
@@ -282,6 +278,7 @@ const RegulatorMain = ({ setActiveTab }: {
                                         variant="outline" 
                                         size="sm"
                                         onClick={() => setActiveTab("investigations")}
+                                        className="h-11 cursor-pointer"
                                     >
                                         <Eye className="h-4 w-4 mr-2" />
                                         Start New Investigation
@@ -294,11 +291,11 @@ const RegulatorMain = ({ setActiveTab }: {
 
                 {/* Quick Actions */}
                 <Card className="border border-border shadow-sm">
-                    <CardHeader>
-                        <CardTitle className="font-semibold text-foreground">Quick Actions</CardTitle>
-                        <CardDescription>Common regulatory tasks and shortcuts</CardDescription>
+                    <CardHeader className="pb-4">
+                        <CardTitle className="font-semibold text-lg text-foreground">Quick Actions</CardTitle>
+                        <CardDescription className="text-muted-foreground text-sm">Common regulatory tasks and shortcuts</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-3">
                         {/* 
                         <div>
                             <Label htmlFor="investigation-notes">Investigation Notes</Label>
@@ -317,8 +314,8 @@ const RegulatorMain = ({ setActiveTab }: {
                         </Button>
                         */}
                         <Button
-                            variant="outline"
-                            className="w-full justify-start bg-transparent"
+                            variant="default"
+                            className="w-full justify-start h-11 cursor-pointer"
                             onClick={handleComplianceCheck}
                         >
                             <Shield className="h-4 w-4 mr-2" />
@@ -326,7 +323,7 @@ const RegulatorMain = ({ setActiveTab }: {
                         </Button>
                         <Button
                             variant="outline"
-                            className="w-full justify-start bg-transparent"
+                            className="w-full justify-start h-11 cursor-pointer"
                             onClick={handleGenerateReport}
                         >
                             <FileText className="h-4 w-4 mr-2" />
@@ -334,7 +331,7 @@ const RegulatorMain = ({ setActiveTab }: {
                         </Button>
                         <Button
                             variant="outline"
-                            className="w-full justify-start bg-transparent"
+                            className="w-full justify-start h-11 cursor-pointer"
                             onClick={handleViewAnalytics}
                         >
                             <TrendingUp className="h-4 w-4 mr-2" />

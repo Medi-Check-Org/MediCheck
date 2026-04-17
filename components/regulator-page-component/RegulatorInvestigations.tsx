@@ -123,9 +123,9 @@ const RegulatorInvestigations = () => {
             case 'PENDING':
                 return <Badge variant="secondary">Pending</Badge>
             case 'INVESTIGATING':
-                return <Badge variant="default" className="bg-blue-100 text-blue-800">Investigating</Badge>
+                return <Badge variant="default">Investigating</Badge>
             case 'RESOLVED':
-                return <Badge variant="default" className="bg-green-100 text-green-800">Resolved</Badge>
+                return <Badge variant="verified">Resolved</Badge>
             case 'DISMISSED':
                 return <Badge variant="outline">Dismissed</Badge>
             case 'ESCALATED':
@@ -138,11 +138,11 @@ const RegulatorInvestigations = () => {
     const getSeverityBadge = (severity: string) => {
         switch (severity) {
             case 'LOW':
-                return <Badge variant="outline" className="text-green-600">Low</Badge>
+                return <Badge variant="outline" className="text-status-verified">Low</Badge>
             case 'MEDIUM':
-                return <Badge variant="outline" className="text-yellow-600">Medium</Badge>
+                return <Badge variant="outline" className="text-status-warning">Medium</Badge>
             case 'HIGH':
-                return <Badge variant="outline" className="text-orange-600">High</Badge>
+                return <Badge variant="outline" className="text-status-critical">High</Badge>
             case 'CRITICAL':
                 return <Badge variant="destructive">Critical</Badge>
             default:
@@ -160,13 +160,13 @@ const RegulatorInvestigations = () => {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="font-sans font-bold text-3xl text-foreground">Investigations Management</h1>
-                    <p className="text-muted-foreground">Track, triage, and resolve regulatory investigations.</p>
+                    <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Investigations Management</h1>
+                    <p className="text-muted-foreground text-sm sm:text-base">Track, triage, and resolve regulatory investigations.</p>
                 </div>
                 <div className="flex items-center gap-4">
                     <Dialog open={isNewInvestigationOpen} onOpenChange={setIsNewInvestigationOpen}>
                         <DialogTrigger asChild>
-                            <Button className="w-full sm:w-auto">
+                            <Button className="w-full sm:w-auto h-11 cursor-pointer">
                                 <Plus className="h-4 w-4 mr-2" />
                                 New Investigation
                             </Button>
@@ -239,7 +239,7 @@ const RegulatorInvestigations = () => {
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setIsNewInvestigationOpen(false)}>
+                            <Button variant="outline" onClick={() => setIsNewInvestigationOpen(false)} className="h-11 cursor-pointer">
                                 Cancel
                             </Button>
                             <Button 
@@ -250,6 +250,7 @@ const RegulatorInvestigations = () => {
                                   !newInvestigation.severity ||
                                   !newInvestigation.description
                                 }
+                                className="h-11 cursor-pointer"
                             >
                                 {submitting ? "Creating..." : "Create Investigation"}
                             </Button>
@@ -259,24 +260,25 @@ const RegulatorInvestigations = () => {
                 </div>
             </div>
 
-            <Card>
+            <Card className="border border-border shadow-sm">
                 <CardHeader>
                     <CardTitle>All Investigations</CardTitle>
                     <CardDescription>Complete list of regulatory investigations</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex gap-4 mb-6">
-                        <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
                                 placeholder="Search by description, drug, or reporter..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-10 h-11"
                             />
                         </div>
-                        <Button variant="outline" disabled>
-                            <Search className="h-4 w-4 mr-2" />
-                            Search ({filteredInvestigations.length})
-                        </Button>
+                        <div className="text-sm text-muted-foreground self-center">
+                            Showing {filteredInvestigations.length} investigation(s)
+                        </div>
                     </div>
 
                     <Table>
@@ -332,6 +334,7 @@ const RegulatorInvestigations = () => {
                                                         variant="outline"
                                                         onClick={() => handleUpdateStatus(investigation.id, 'INVESTIGATING')}
                                                         disabled={updatingId === investigation.id}
+                                                        className="cursor-pointer h-10"
                                                     >
                                                         Start
                                                     </Button>
@@ -342,7 +345,7 @@ const RegulatorInvestigations = () => {
                                                             size="sm"
                                                             variant="outline"
                                                             onClick={() => handleUpdateStatus(investigation.id, 'RESOLVED', 'Investigation completed')}
-                                                            className="text-green-600 hover:bg-green-50"
+                                                            className="text-green-600 hover:bg-green-50 h-10 cursor-pointer"
                                                             disabled={updatingId === investigation.id}
                                                         >
                                                             <CheckCircle className="h-4 w-4 mr-1" />
@@ -352,7 +355,7 @@ const RegulatorInvestigations = () => {
                                                             size="sm"
                                                             variant="outline"
                                                             onClick={() => handleUpdateStatus(investigation.id, 'ESCALATED')}
-                                                            className="text-red-600 hover:bg-red-50"
+                                                            className="text-red-600 hover:bg-red-50 h-10 cursor-pointer"
                                                             disabled={updatingId === investigation.id}
                                                         >
                                                             <AlertTriangle className="h-4 w-4 mr-1" />
@@ -360,7 +363,7 @@ const RegulatorInvestigations = () => {
                                                         </Button>
                                                     </>
                                                 )}
-                                                <Button size="sm" variant="ghost">
+                                                <Button size="sm" variant="ghost" className="cursor-pointer h-10">
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
                                             </div>
