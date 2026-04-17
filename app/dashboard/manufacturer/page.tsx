@@ -15,16 +15,14 @@ import Transfers from "@/components/Transfers";
 import ManufacturerMain from "@/components/manufacturer-page-component/ManufacturerMain"
 import ManufacturerSettings from "@/components/manufacturer-page-component/ManufacturerSettings"
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard"
-import { UniversalLoader } from "@/components/ui/universal-loader"
 import { SectionErrorBoundary } from "@/components/ui/error-boundary"
-import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
-// icons
-import { Menu, Shield, X } from "lucide-react"
-// 
+import { Menu, Shield } from "lucide-react"
 import { ManufacturerTab } from "@/utils";
 import { toast } from "react-toastify";
 import { MedicationBatchInfoProps } from "@/utils";
+import { UniversalLoader } from "@/components/ui/universal-loader"
+
 
 export default function ManufacturerDashboard() {
 
@@ -97,15 +95,12 @@ export default function ManufacturerDashboard() {
     loadBatches();
 
   }, [orgId]);
-
-
-  // 3️⃣ Guard rendering while loading
-  if (orgLoading || batchesLoading || !orgId) {
-    return <UniversalLoader text="Loading dashboard..." />
-  }
-
+  
   return (
+
     <div className="flex h-screen bg-background">
+
+      {(orgLoading || batchesLoading || !orgId) && <UniversalLoader text="Loading Transfers." />}
 
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border">
@@ -150,7 +145,7 @@ export default function ManufacturerDashboard() {
       )}
 
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:flex-shrink-0">
+      <div className="hidden lg:flex lg:shrink-0">
         <ManufacturerSidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -193,17 +188,17 @@ export default function ManufacturerDashboard() {
             </SectionErrorBoundary>
           )}
 
-          {activeTab === "quality" && (
+          {/* {activeTab === "quality" && (
             <SectionErrorBoundary context="quality control">
               <ManufacturerQuality />
             </SectionErrorBoundary>
-          )}
+          )} */}
 
-          {activeTab === "transport" && (
+          {/* {activeTab === "transport" && (
             <SectionErrorBoundary context="transport management">
               <ManufacturerTransport setActiveTab={setActiveTab} />
             </SectionErrorBoundary>
-          )}
+          )} */}
 
           {activeTab === "qr-generator" && (
             <SectionErrorBoundary context="QR code generation">
@@ -235,11 +230,11 @@ export default function ManufacturerDashboard() {
             </SectionErrorBoundary>
           )}
 
-          {activeTab === "reports" && (
+          {/* {activeTab === "reports" && (
             <SectionErrorBoundary context="reports">
               <ManufacturerReports />
             </SectionErrorBoundary>
-          )}
+          )} */}
 
           {activeTab === "settings" && (
             <SectionErrorBoundary context="settings">

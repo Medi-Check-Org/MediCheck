@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
@@ -16,8 +15,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Users, Plus, Mail, UserCheck, UserX, CheckCircle, XCircle, Trash2, Edit } from "lucide-react"
+import { Users, Plus, XCircle, Trash2, Edit } from "lucide-react"
 import { toast } from "react-toastify"
+import { UniversalLoader } from "@/components/ui/universal-loader"
+
 
 interface TeamMember {
   id: string
@@ -28,8 +29,6 @@ interface TeamMember {
   status: 'active' | 'inactive'
 }
 
-
-
 interface TeamMemberManagementProps {
   organizationId: string
   organizationType: string
@@ -38,9 +37,9 @@ interface TeamMemberManagementProps {
 
 export function TeamMemberManagement({ 
   organizationId, 
-  organizationType, 
   onTeamMemberUpdate 
 }: TeamMemberManagementProps) {
+
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
@@ -53,8 +52,6 @@ export function TeamMemberManagement({
     name: "",
     email: "",
   })
-
-
 
   // Fetch team members
   useEffect(() => {
@@ -172,8 +169,6 @@ export function TeamMemberManagement({
     }
   }
 
-
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
@@ -187,13 +182,14 @@ export function TeamMemberManagement({
     }
   }
 
-
-
   return (
     <div className="space-y-6">
+
+      {(loading) && <UniversalLoader text="Loading team members." />}
+
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-0">
         <div className="flex flex-col">
-          <h2 className="font-bold text-2xl sm:text-3xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <h2 className="font-bold text-2xl sm:text-3xl bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
             Team Management
           </h2>
           <p className="text-muted-foreground mt-1">
@@ -254,8 +250,6 @@ export function TeamMemberManagement({
         </Dialog>
       </div>
 
-
-
       {/* Team Members */}
       <Card>
         <CardHeader>
@@ -266,12 +260,7 @@ export function TeamMemberManagement({
           <CardDescription>All active and inactive team members in your organization</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              <span className="ml-2 text-muted-foreground">Loading team members...</span>
-            </div>
-          ) : teamMembers.length > 0 ? (
+          {teamMembers.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -417,6 +406,7 @@ export function TeamMemberManagement({
           </div>
         </DialogContent>
       </Dialog>
+
     </div>
   )
 }

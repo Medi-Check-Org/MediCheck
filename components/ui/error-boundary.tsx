@@ -183,9 +183,9 @@ export function SectionErrorBoundary({
         </Card>
       )}
     >
-      <Card className="min-h-0">
+      <>
         {children}
-      </Card>
+      </>
     </ErrorBoundary>
   )
 }

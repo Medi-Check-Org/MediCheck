@@ -2,18 +2,19 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { LoadingSpinner, LoadingTable } from "@/components/ui/loading"
+import { LoadingTable } from "@/components/ui/loading"
 import { ThemeToggle } from "@/components/theme-toggle"
 import {
     Factory,
     Package,
     QrCode,
-    Building2,
     Truck,
-    FlaskConical,
     Activity,
 } from "lucide-react";
 import { ManufacturerTab } from "@/utils";
+import { UniversalLoader } from "@/components/ui/universal-loader"
+
+
 
 interface RecentActivity {
     id: string;
@@ -40,6 +41,7 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
 
     const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
     const [loadingActivity, setLoadingActivity] = useState(true);
+    const [gettingStats, setGettingStats] = useState(true);
 
     // Fetch recent activity data from database
     const fetchRecentActivity = async () => {
@@ -60,6 +62,7 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
     // Fetch dashboard stats from database
     const fetchStats = async () => {
         try {
+            setGettingStats(true);
             const response = await fetch(`/api/web/dashboard/stats?orgId=${orgId}`);
             if (response.ok) {
                 const data = await response.json();
@@ -67,6 +70,9 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
             }
         } catch (error) {
             console.error('Error fetching stats:', error);
+        }
+        finally{
+            setGettingStats(false);
         }
     };
 
@@ -84,22 +90,6 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
             hour: '2-digit',
             minute: '2-digit'
         });
-    };
-
-    const getStatusColor = (status: string) => {
-        switch (status.toLowerCase()) {
-            case 'pending':
-                return 'bg-status-warning';
-            case 'completed':
-            case 'manufactured':
-                return 'bg-status-verified';
-            case 'in_transit':
-                return 'bg-primary';
-            case 'delivered':
-                return 'bg-role-regulator';
-            default:
-                return 'bg-muted-foreground';
-        }
     };
 
     // Loading animation component
@@ -141,6 +131,9 @@ const ManufacturerMain = ({ setActiveTab, orgId }: {
 
     return (
         <div className="space-y-6 lg:space-y-8">
+
+            {(loadingActivity || gettingStats || !orgId) && <UniversalLoader text="Loading organization information." />}
+            
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
                 <div>

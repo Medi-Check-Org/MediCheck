@@ -7,11 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { LoadingSpinner } from "@/components/ui/loading";
 import { Plus, Package2, Clock, Shield, Search, Pencil } from "lucide-react";
 import { toast } from "react-toastify";
 import { ProductSchema } from "@/utils";
 import UpdateStockModal from "./components/UpdateStock";
+import { UniversalLoader } from "@/components/ui/universal-loader"
+
 
 interface ManufacturerProductsProps {
   orgId: string;
@@ -171,19 +172,10 @@ const ManufacturerProducts = ({ orgId }: ManufacturerProductsProps) => {
     setSelectedProdcutForUpdate(null);
   }
 
-  if (loading) {
-    return (
-      <div className="space-y-4 sm:space-y-6">
-        <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Product Catalog</h1>
-        <div className="flex items-center justify-center p-6 sm:p-8">
-          <LoadingSpinner size="large" text="Loading products..." />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
+      {(loading || !orgId) && <UniversalLoader text="Loading products." />}
+      
       <div className="space-y-4 sm:space-y-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>

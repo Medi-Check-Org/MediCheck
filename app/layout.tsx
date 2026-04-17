@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter, Playfair_Display, JetBrains_Mono } from "next/font/google"
-import "./globals.css"
+import "./globals.css" 
 import { ThemeProvider } from "@/components/theme-provider";
 import { ClerkWrapper } from "@/components/ClerkWrapper";
 import { ToastWrapper } from "@/components/ToastWrapper";
