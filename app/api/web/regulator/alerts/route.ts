@@ -1,60 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { getRegulatorContext } from "@/core/auth/regulator";
+import { toErrorResponse } from "@/utils/types/errors";
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if User record exists
-    let user = await prisma.user.findFirst({
-      where: {
-        clerkUserId: userId,
-      },
-    });
-
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          clerkUserId: userId,
-          userRole: "CONSUMER",
-        },
-      });
-    }
-
-    // Find the regulator organization for this user
-    let organization = await prisma.organization.findFirst({
-      where: {
-        organizationType: "REGULATOR",
-        OR: [
-          { adminId: user.id },
-          { teamMembers: { some: { userId: user.id } } },
-        ],
-      },
-    });
-
-    if (!organization) {
-      // Auto-create a regulator organization for this user
-      organization = await prisma.organization.create({
-        data: {
-          adminId: user.id,
-          organizationType: "REGULATOR",
-          companyName: "NAFDAC Regulatory Authority",
-          contactEmail: "regulator@nafdac.gov.ng",
-          contactPhone: "+234-1-234-5678",
-          address: "NAFDAC Headquarters, Abuja",
-          country: "Nigeria",
-          state: "FCT",
-          isVerified: true,
-          managedRegistry: "",
-        },
-      });
-    }
+    await getRegulatorContext();
 
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);

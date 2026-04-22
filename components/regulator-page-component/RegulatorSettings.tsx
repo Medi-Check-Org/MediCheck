@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { useState, useEffect } from "react"
 import { Save, AlertCircle, Building2 } from "lucide-react"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { UniversalLoader } from "@/components/ui/universal-loader"
+import { toast } from "react-toastify"
 
 interface OrganizationData {
   id: string;
@@ -54,7 +55,6 @@ const RegulatorSettings = () => {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('Fetched organization data:', data); // Debug log
 
           setSettings({
             id: data.id || "",
@@ -71,7 +71,6 @@ const RegulatorSettings = () => {
           });
         } else if (response.status === 404) {
           // Organization not found - this is expected for new organizations
-          console.log('No regulator organization found, using default settings');
           setError('No organization found. Please contact your administrator to set up your regulatory agency.');
         } else {
           const errorData = await response.json();
@@ -80,6 +79,7 @@ const RegulatorSettings = () => {
       } catch (error) {
         console.error('Error fetching regulator settings:', error);
         setError('Failed to load settings');
+        toast.error("Failed to load settings")
       } finally {
         setLoading(false);
       }
@@ -150,53 +150,31 @@ const RegulatorSettings = () => {
           isActive: org.isActive !== undefined ? org.isActive : true
         });
         setSuccessMessage('Settings saved successfully!');
+        toast.success("Settings saved successfully")
         setEditing(false);
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to save settings');
+        toast.error(errorData.error || "Failed to save settings")
       }
     } catch (error) {
       console.error('Error saving regulator settings:', error);
       setError('Failed to save settings');
+      toast.error("Failed to save settings")
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="font-sans font-bold text-3xl text-foreground">Settings</h1> 
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Loading Settings...</CardTitle>
-            <CardDescription>Please wait while we load your organization settings</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="space-y-2">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
-                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <UniversalLoader text="Loading settings." />;
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="font-sans font-bold text-3xl text-foreground">Settings</h1>
-        {/* Hide ThemeToggle on mobile, show on desktop */}
-        <div className="hidden sm:block">
-          <ThemeToggle />
-        </div>
+    <div className="max-w-5xl mx-auto space-y-6 py-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Settings</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">Manage regulator organization profile and contact metadata.</p>
       </div>
 
       {error && (
@@ -221,7 +199,7 @@ const RegulatorSettings = () => {
         </Card>
       )}
 
-      <Card>
+      <Card className="border border-border shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5" />
@@ -348,7 +326,7 @@ const RegulatorSettings = () => {
                 {!editing ? (
                   <Button
                     onClick={handleEditClick}
-                    className="min-w-[120px] w-full sm:w-auto cursor-pointer"
+                    className="min-w-[120px] w-full sm:w-auto cursor-pointer h-11"
                   >
                     Edit Settings
                   </Button>
@@ -357,7 +335,7 @@ const RegulatorSettings = () => {
                     <Button
                       onClick={handleSaveSettings}
                       disabled={saving}
-                      className="min-w-[120px] w-full sm:w-auto cursor-pointer"
+                      className="min-w-[120px] w-full sm:w-auto cursor-pointer h-11"
                     >
                       {saving ? (
                         <>
@@ -374,7 +352,7 @@ const RegulatorSettings = () => {
                     <Button
                       onClick={handleCancelEdit}
                       variant="outline"
-                      className="min-w-[120px] w-full sm:w-auto cursor-pointer"
+                      className="min-w-[120px] w-full sm:w-auto cursor-pointer h-11"
                       disabled={saving}
                     >
                       Cancel

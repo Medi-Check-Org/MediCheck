@@ -3,6 +3,8 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { UniversalLoader } from "@/components/ui/universal-loader"
 import { 
     AlertTriangle, 
     Clock, 
@@ -19,7 +21,7 @@ import {
     MapPin,
     User
 } from "lucide-react"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { toast } from "react-toastify"
 
 interface AlertDetails {
     batchId?: string;
@@ -51,6 +53,7 @@ const RegulatorAlerts = () => {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
+    const [activeAlert, setActiveAlert] = useState<Alert | null>(null)
 
     useEffect(() => {
         fetchAlerts()
@@ -82,11 +85,9 @@ const RegulatorAlerts = () => {
     }
 
     const handleInvestigate = async (alertId: string, alertType: string) => {
-        // Here you could navigate to specific investigation pages
-        // or mark alerts as investigated
-        console.log(`Investigating alert ${alertId} of type ${alertType}`)
-        // For now, just show an alert
-        alert(`Starting investigation for alert ${alertId}`)
+        const selected = alerts.find((a) => a.id === alertId) ?? null
+        setActiveAlert(selected)
+        toast.info(`Investigation workflow opened for ${alertType.replaceAll("_", " ")}`)
     }
 
     const getSeverityIcon = (severity: string) => {
@@ -150,17 +151,7 @@ const RegulatorAlerts = () => {
     }
 
     if (loading) {
-        return (
-            <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                    <h1 className="font-sans font-bold text-3xl text-foreground">Alerts & Notifications</h1>
-                </div>
-                <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <span className="ml-2 text-muted-foreground">Loading alerts...</span>
-                </div>
-            </div>
-        )
+        return <UniversalLoader text="Loading alerts..." />
     }
 
     const criticalAlerts = alerts.filter(a => a.severity === 'critical')
@@ -170,11 +161,10 @@ const RegulatorAlerts = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="font-sans font-bold text-3xl text-foreground">Alerts & Notifications</h1>
-                {/* Hide ThemeToggle on mobile, show on desktop */}
-                <div className="hidden sm:block">
-                    <ThemeToggle />
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Alerts & Notifications</h1>
+                    <p className="text-muted-foreground text-sm sm:text-base">Monitor real-time risks and act quickly on critical events.</p>
                 </div>
             </div>
 
@@ -246,7 +236,7 @@ const RegulatorAlerts = () => {
             </div>
 
             {/* Refresh Controls */}
-            <Card>
+            <Card className="border border-border shadow-sm">
                 <CardContent className="pt-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center sm:justify-start">
@@ -260,7 +250,7 @@ const RegulatorAlerts = () => {
                             size="sm" 
                             onClick={fetchAlerts}
                             disabled={loading}
-                            className="w-full sm:w-auto"
+                            className="w-full sm:w-auto h-11 cursor-pointer"
                         >
                             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                             Refresh
@@ -270,7 +260,7 @@ const RegulatorAlerts = () => {
             </Card>
             {/* Critical Alerts */}
             {criticalAlerts.length > 0 && (
-                <Card className="border border-destructive/20 bg-destructive/5">
+                <Card className="border border-destructive/20 bg-destructive/5 shadow-sm">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-destructive">
                             <AlertTriangle className="h-5 w-5" />
@@ -323,11 +313,12 @@ const RegulatorAlerts = () => {
                                             size="sm" 
                                             variant="destructive"
                                             onClick={() => handleInvestigate(alert.id, alert.type)}
+                                            className="cursor-pointer h-10"
                                         >
                                             <Eye className="h-3 w-3 mr-1" />
                                             Investigate Now
                                         </Button>
-                                        <Button size="sm" variant="outline">
+                                        <Button size="sm" variant="outline" className="cursor-pointer h-10">
                                             View Details
                                         </Button>
                                     </div>
@@ -340,7 +331,7 @@ const RegulatorAlerts = () => {
 
             {/* High Priority Alerts */}
             {highAlerts.length > 0 && (
-                <Card className="border border-status-warning/20 bg-status-warning/5">
+                <Card className="border border-status-warning/20 bg-status-warning/5 shadow-sm">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-status-warning">
                             <XCircle className="h-5 w-5" />
@@ -380,11 +371,12 @@ const RegulatorAlerts = () => {
                                             size="sm" 
                                             variant="outline"
                                             onClick={() => handleInvestigate(alert.id, alert.type)}
+                                            className="cursor-pointer h-10"
                                         >
                                             <Eye className="h-3 w-3 mr-1" />
                                             Review
                                         </Button>
-                                        <Button size="sm" variant="ghost">
+                                        <Button size="sm" variant="ghost" className="cursor-pointer h-10">
                                             Mark as Reviewed
                                         </Button>
                                     </div>
@@ -397,7 +389,7 @@ const RegulatorAlerts = () => {
 
             {/* Warning Alerts */}
             {warningAlerts.length > 0 && (
-                <Card className="border border-status-warning/20 bg-status-warning/5">
+                <Card className="border border-status-warning/20 bg-status-warning/5 shadow-sm">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-status-warning">
                             <Clock className="h-5 w-5" />
@@ -423,7 +415,7 @@ const RegulatorAlerts = () => {
                                         <div className="text-xs text-muted-foreground">
                                             {alert.location} • {alert.reporter}
                                         </div>
-                                        <Button size="sm" variant="outline" className="text-xs">
+                                        <Button size="sm" variant="outline" className="text-xs cursor-pointer h-10">
                                             Review
                                         </Button>
                                     </div>
@@ -436,7 +428,7 @@ const RegulatorAlerts = () => {
 
             {/* Information Alerts */}
             {infoAlerts.length > 0 && (
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Activity className="h-5 w-5" />
@@ -470,7 +462,7 @@ const RegulatorAlerts = () => {
 
             {/* Empty State */}
             {alerts.length === 0 && !loading && (
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardContent className="pt-12 pb-12">
                         <div className="text-center">
                             <CheckCircle className="h-12 w-12 mx-auto text-status-verified mb-4" />
@@ -480,7 +472,7 @@ const RegulatorAlerts = () => {
                             </p>
                             <Button 
                                 variant="outline" 
-                                className="mt-4" 
+                                className="mt-4 h-11 cursor-pointer" 
                                 onClick={fetchAlerts}
                             >
                                 <RefreshCw className="h-4 w-4 mr-2" />
@@ -490,6 +482,46 @@ const RegulatorAlerts = () => {
                     </CardContent>
                 </Card>
             )}
+
+            <Dialog open={!!activeAlert} onOpenChange={(open) => !open && setActiveAlert(null)}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>Alert details</DialogTitle>
+                        <DialogDescription>
+                            Review this alert before starting a full investigation workflow.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {activeAlert && (
+                        <div className="space-y-3 text-sm">
+                            <div className="font-medium">{activeAlert.message}</div>
+                            <div className="text-muted-foreground">
+                                Type: {activeAlert.type.replaceAll("_", " ")} | Severity: {activeAlert.severity}
+                            </div>
+                            <div className="text-muted-foreground">
+                                Reporter: {activeAlert.reporter} | Location: {activeAlert.location}
+                            </div>
+                            {activeAlert.details?.description && (
+                                <div className="rounded-md border bg-muted/40 p-3">
+                                    {activeAlert.details.description}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setActiveAlert(null)}>
+                            Close
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                toast.success("Alert marked for investigation")
+                                setActiveAlert(null)
+                            }}
+                        >
+                            Start Investigation
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

@@ -22,14 +22,28 @@ export async function POST(req: NextRequest) {
     if (!nameStr) {
       validationErrors.name = ["Name is required and must be a non-empty string"];
     }
-    if (!Array.isArray(permissions) || permissions.length === 0) {
+    const permissionsArray = Array.isArray(permissions) ? permissions : [];
+    const normalizedPermissions = permissionsArray
+      .filter((scope: unknown): scope is string => typeof scope === "string")
+      .map((scope) => scope.trim())
+      .filter((scope) => scope.length > 0);
+
+    if (!Array.isArray(permissions) || normalizedPermissions.length === 0) {
       validationErrors.permissions = ["At least one permission (scope) is required"];
     }
+    if (Array.isArray(permissions) && normalizedPermissions.length !== permissions.length) {
+      validationErrors.permissions = [
+        "Permissions must be non-empty strings (free-form scope values are supported)",
+      ];
+    }
+
     let expiresAtDate: Date | null = null;
     if (expiresAt != null && expiresAt !== "") {
       const parsed = new Date(expiresAt);
       if (Number.isNaN(parsed.getTime())) {
         validationErrors.expiresAt = ["expiresAt must be a valid ISO date string"];
+      } else if (parsed <= new Date()) {
+        validationErrors.expiresAt = ["expiresAt must be a future date"];
       } else {
         expiresAtDate = parsed;
       }
@@ -41,7 +55,7 @@ export async function POST(req: NextRequest) {
     const rawKey = await apiKeyRepository.createKey(
       organizationId,
       nameStr,
-      permissions,
+      [...new Set(normalizedPermissions)],
       expiresAtDate ?? undefined
     );
 
@@ -49,7 +63,7 @@ export async function POST(req: NextRequest) {
       {
         name: nameStr,
         apiKey: rawKey,
-        scopes: permissions,
+        scopes: [...new Set(normalizedPermissions)],
         expiresAt: expiresAtDate ? expiresAtDate.toISOString() : null,
       },
       { status: 201 }

@@ -1,29 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { getRegulatorContext } from "@/core/auth/regulator";
+import { toErrorResponse } from "@/utils/types/errors";
 
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Find the regulator organization for this user
-    const organization = await prisma.organization.findFirst({
-      where: {
-        organizationType: "REGULATOR",
-        OR: [
-          { adminId: userId },
-          { teamMembers: { some: { userId: userId } } }
-        ]
-      }
-    });
-
-    if (!organization) {
-      return NextResponse.json({ error: "Regulator organization not found or access denied" }, { status: 403 });
-    }
+    await getRegulatorContext();
 
     // Get all counterfeit reports (investigations)
     const investigations = await prisma.counterfeitReport.findMany({
@@ -58,36 +40,16 @@ export async function GET(request: NextRequest) {
 
   } catch (error: unknown) {
     console.error("Error fetching investigations:", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
+    const errorResponse = toErrorResponse(error);
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Find the regulator organization for this user
-    const organization = await prisma.organization.findFirst({
-      where: {
-        organizationType: "REGULATOR",
-        OR: [
-          { adminId: userId },
-          { teamMembers: { some: { userId: userId } } }
-        ]
-      }
-    });
-
-    if (!organization) {
-      return NextResponse.json({ error: "Regulator organization not found or access denied" }, { status: 403 });
-    }
+    const { user } = await getRegulatorContext();
 
     const { batchId, reportType, severity, description, location, evidence } = await request.json();
 
@@ -95,14 +57,14 @@ export async function POST(request: NextRequest) {
     const investigation = await prisma.counterfeitReport.create({
       data: {
         batchId,
-        reporterId: userId, // For regulator-initiated investigations, use userId
+        reporterId: user.id,
         reportType,
         severity,
         description,
         location,
         evidence: evidence || [],
         status: "INVESTIGATING",
-        investigatorId: userId
+        investigatorId: user.id
       },
       include: {
         batch: {
@@ -123,10 +85,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error: unknown) {
     console.error("Error creating investigation:", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    );
+    const errorResponse = toErrorResponse(error);
+    return NextResponse.json(errorResponse, {
+      status: errorResponse.statusCode,
+    });
   }
 }

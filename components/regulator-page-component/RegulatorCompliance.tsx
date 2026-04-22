@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { CheckCircle, XCircle, Clock, AlertTriangle, FileCheck, TrendingUp, Users } from "lucide-react"
-import {ThemeToggle} from "@/components/theme-toggle"
+import { UniversalLoader } from "@/components/ui/universal-loader"
+import { toast } from "react-toastify"
 
 interface TransferData {
     id: string;
@@ -91,6 +92,7 @@ const RegulatorCompliance = () => {
         } catch (error) {
             console.error('Error fetching compliance data:', error)
             setError('Failed to load compliance data. Please try again.')
+            toast.error("Failed to load compliance data")
         } finally {
             setLoading(false)
         }
@@ -123,10 +125,12 @@ const RegulatorCompliance = () => {
             
             // Recalculate stats
             await fetchComplianceData()
+            toast.success(`Transfer ${status === "COMPLETED" ? "approved" : "rejected"} successfully`)
             
         } catch (error) {
             console.error('Error updating transfer:', error)
             setError('Failed to update transfer status. Please try again.')
+            toast.error("Failed to update transfer status")
         }
     }
 
@@ -192,30 +196,15 @@ const RegulatorCompliance = () => {
     }
 
     if (loading) {
-        return (
-            <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                    <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Compliance Monitoring</h1>
-                </div>
-                <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <span className="ml-2 text-muted-foreground">Loading compliance data...</span>
-                </div>
-            </div>
-        )
+        return <UniversalLoader text="Loading compliance data..." />
     }
     const pendingTransfers = transfers.filter(t => t.status === 'PENDING')
-    const recentTransfers = transfers.slice(0, 10)
-
     return (
         <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
-                <div className="flex flex-row items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                <div>
                     <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Compliance Monitoring</h1>
-                </div>
-                {/* Hide ThemeToggle on mobile, show on desktop */}
-                <div className="hidden sm:block">
-                    <ThemeToggle />
+                    <p className="text-muted-foreground text-sm sm:text-base">Review ownership transfers and enforce compliance actions.</p>
                 </div>
             </div>
             {error && (
@@ -239,10 +228,12 @@ const RegulatorCompliance = () => {
 
             {/* Statistics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Transfers</CardTitle>
-                        <FileCheck className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Total Transfers</CardTitle>
+                        <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
+                            <FileCheck className="h-4 w-4 text-primary" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats.totalTransfers}</div>
@@ -252,10 +243,12 @@ const RegulatorCompliance = () => {
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Pending Reviews</CardTitle>
-                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <div className="h-8 w-8 rounded-md bg-status-warning/10 flex items-center justify-center">
+                            <Clock className="h-4 w-4 text-status-warning" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-status-warning">{stats.pendingReviews}</div>
@@ -265,10 +258,12 @@ const RegulatorCompliance = () => {
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Compliance Rate</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Compliance Rate</CardTitle>
+                        <div className="h-8 w-8 rounded-md bg-status-verified/10 flex items-center justify-center">
+                            <TrendingUp className="h-4 w-4 text-status-verified" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-status-verified">{stats.complianceRate}%</div>
@@ -278,10 +273,12 @@ const RegulatorCompliance = () => {
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Flagged Transfers</CardTitle>
-                        <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Flagged Transfers</CardTitle>
+                        <div className="h-8 w-8 rounded-md bg-destructive/10 flex items-center justify-center">
+                            <AlertTriangle className="h-4 w-4 text-destructive" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-destructive">{stats.flaggedTransfers}</div>
@@ -294,7 +291,7 @@ const RegulatorCompliance = () => {
 
             {/* Pending Transfers Section */}
             {pendingTransfers.length > 0 && (
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Clock className="h-5 w-5 text-status-warning" />
@@ -307,7 +304,7 @@ const RegulatorCompliance = () => {
                             {pendingTransfers.slice(0, 5).map((transfer) => (
                                 <div
                                     key={transfer.id}
-                                    className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 p-4 border rounded-lg bg-white dark:bg-slate-900"
+                                    className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 p-4 border border-border rounded-lg bg-card"
                                 >
                                     {/* Info Section */}
                                     <div className="flex-1 min-w-0">
@@ -328,7 +325,7 @@ const RegulatorCompliance = () => {
                                         <Button
                                             size="sm"
                                             onClick={() => handleApproveTransfer(transfer.id, 'COMPLETED')}
-                                            className="bg-status-verified text-status-verified-foreground hover:bg-status-verified/90 w-full"
+                                            className="bg-status-verified text-status-verified-foreground hover:bg-status-verified/90 w-full h-10 cursor-pointer"
                                         >
                                             <CheckCircle className="h-4 w-4 mr-1" />
                                             Approve
@@ -337,7 +334,7 @@ const RegulatorCompliance = () => {
                                             size="sm"
                                             variant="outline"
                                             onClick={() => handleApproveTransfer(transfer.id, 'FAILED', 'Rejected by regulator')}
-                                            className="text-destructive hover:bg-destructive/10 w-full"
+                                            className="text-destructive hover:bg-destructive/10 w-full h-10 cursor-pointer"
                                         >
                                             <XCircle className="h-4 w-4 mr-1" />
                                             Reject
@@ -351,14 +348,14 @@ const RegulatorCompliance = () => {
             )}
 
             {/* All Transfers Table - Responsive */}
-            <Card>
+            <Card className="border border-border shadow-sm">
                 <CardHeader>
                     <div className="flex items-center justify-between flex-wrap gap-2">
                         <div>
                             <CardTitle>All Ownership Transfers</CardTitle>
                             <CardDescription>Complete history of ownership transfers across the supply chain</CardDescription>
                         </div>
-                        <Button variant="outline" onClick={fetchComplianceData}>
+                        <Button variant="outline" onClick={fetchComplianceData} className="h-11 cursor-pointer w-full sm:w-auto">
                             <Users className="h-4 w-4 mr-2" />
                             Refresh
                         </Button>
@@ -441,7 +438,7 @@ const RegulatorCompliance = () => {
                                                                 <Button
                                                                     size="sm"
                                                                     onClick={() => handleApproveTransfer(transfer.id, 'COMPLETED')}
-                                                                    className="bg-status-verified text-status-verified-foreground hover:bg-status-verified/90"
+                                                                    className="bg-status-verified text-status-verified-foreground hover:bg-status-verified/90 h-10 cursor-pointer"
                                                                 >
                                                                     <CheckCircle className="h-4 w-4 mr-1" />
                                                                     Approve
@@ -450,7 +447,7 @@ const RegulatorCompliance = () => {
                                                                     size="sm"
                                                                     variant="outline"
                                                                     onClick={() => handleApproveTransfer(transfer.id, 'FAILED', 'Rejected by regulator')}
-                                                                    className="text-destructive hover:bg-destructive/10"
+                                                                    className="text-destructive hover:bg-destructive/10 h-10 cursor-pointer"
                                                                 >
                                                                     <XCircle className="h-4 w-4 mr-1" />
                                                                     Reject
@@ -473,7 +470,7 @@ const RegulatorCompliance = () => {
                                 {transfers.map((transfer) => (
                                     <div
                                         key={transfer.id}
-                                        className="border rounded-lg p-4 bg-white dark:bg-slate-900 flex flex-col gap-2"
+                                        className="border border-border rounded-lg p-4 bg-card flex flex-col gap-2"
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="font-semibold text-base truncate">{transfer.batch.drugName}</div>
@@ -518,7 +515,7 @@ const RegulatorCompliance = () => {
                                                     <Button
                                                         size="sm"
                                                         onClick={() => handleApproveTransfer(transfer.id, 'COMPLETED')}
-                                                        className="bg-status-verified text-status-verified-foreground hover:bg-status-verified/90 flex-1"
+                                                        className="bg-status-verified text-status-verified-foreground hover:bg-status-verified/90 flex-1 h-10 cursor-pointer"
                                                     >
                                                         <CheckCircle className="h-4 w-4 mr-1" />
                                                         Approve
@@ -527,7 +524,7 @@ const RegulatorCompliance = () => {
                                                         size="sm"
                                                         variant="outline"
                                                         onClick={() => handleApproveTransfer(transfer.id, 'FAILED', 'Rejected by regulator')}
-                                                        className="text-destructive hover:bg-destructive/10 flex-1"
+                                                        className="text-destructive hover:bg-destructive/10 flex-1 h-10 cursor-pointer"
                                                     >
                                                         <XCircle className="h-4 w-4 mr-1" />
                                                         Reject
