@@ -21,7 +21,7 @@ const RegulatorActivities = () => {
     const fetchActivities = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/dashboard/regulator-activities`);
+        const response = await fetch(`/api/web/dashboard/regulator-activities`);
         if (response.ok) {
           const data = await response.json();
           setActivities(data);
@@ -42,7 +42,7 @@ const RegulatorActivities = () => {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="font-montserrat">Recent Activities</CardTitle>
+          <CardTitle className="font-sans">Recent Activities</CardTitle>
           <CardDescription>Latest regulatory activities and inspections</CardDescription>
         </CardHeader>
         <CardContent>
@@ -69,7 +69,7 @@ const RegulatorActivities = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-montserrat">Recent Activities</CardTitle>
+        <CardTitle className="font-sans">Recent Activities</CardTitle>
         <CardDescription>Latest regulatory activities and inspections</CardDescription>
       </CardHeader>
       <CardContent>

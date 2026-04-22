@@ -3,17 +3,16 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { Shield, AlertTriangle, FileText, TrendingUp, Clock, CheckCircle, XCircle, Eye, Building2 } from "lucide-react";
+import { LoadingTable } from "@/components/ui/loading"
+import { UniversalLoader } from "@/components/ui/universal-loader"
+import { Shield, AlertTriangle, FileText, TrendingUp, Clock, CheckCircle, XCircle, Eye } from "lucide-react";
 import { ManufacturerTab } from "@/utils";
+import { toast } from "react-toastify";
 
 const RegulatorMain = ({ setActiveTab }: { 
     setActiveTab: React.Dispatch<React.SetStateAction<ManufacturerTab>>;
 }) => {
 
-    const [investigationNotes, setInvestigationNotes] = useState("")
     const [stats, setStats] = useState({
         activeInvestigations: 0,
         investigationGrowth: 0,
@@ -32,9 +31,9 @@ const RegulatorMain = ({ setActiveTab }: {
         const fetchData = async () => {
             try {
                 const [statsResponse, activitiesResponse, alertsResponse] = await Promise.all([
-                    fetch('/api/dashboard/regulator-stats'),
-                    fetch('/api/dashboard/regulator-activities'),
-                    fetch('/api/regulator/alerts')
+                    fetch('/api/web/dashboard/regulator-stats'),
+                    fetch('/api/web/dashboard/regulator-activities'),
+                    fetch('/api/web/regulator/alerts')
                 ])
 
                 if (statsResponse.ok) {
@@ -53,6 +52,7 @@ const RegulatorMain = ({ setActiveTab }: {
                 }
             } catch (error) {
                 console.error('Error fetching regulator data:', error)
+                toast.error("Failed to load dashboard data")
             } finally {
                 setLoading(false)
             }
@@ -60,15 +60,6 @@ const RegulatorMain = ({ setActiveTab }: {
 
         fetchData()
     }, [])
-
-    const handleStartInvestigation = () => {
-        if (investigationNotes.trim()) {
-            alert(`New investigation started: ${investigationNotes}`)
-            setInvestigationNotes("")
-        } else {
-            alert("Please enter investigation details.")
-        }
-    }
 
     const handleComplianceCheck = () => {
         setActiveTab("compliance")
@@ -79,64 +70,76 @@ const RegulatorMain = ({ setActiveTab }: {
     }
 
     const handleViewAnalytics = () => {
-        setActiveTab("reports")
+        setActiveTab("analytics")
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6 lg:space-y-8">
+            {loading && <UniversalLoader text="Loading dashboard." />}
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
-                {/* On mobile, stack heading and subheading vertically, but keep them together */}
-                <div className="flex flex-col sm:flex-row sm:items-center">
-                    <h1 className="font-bold text-2xl sm:text-3xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                <div>
+                    <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">
                         Regulator Dashboard
                     </h1>
-                    <span className="text-muted-foreground mt-1 sm:mt-0 sm:ml-2">
+                    <p className="text-muted-foreground text-sm sm:text-base">
                         NAFDAC - Drug Enforcement Division
-                    </span>
-                </div>
-                {/* Hide ThemeToggle and badge on mobile, show on desktop */}
-                <div className="hidden sm:flex items-center space-x-4">
-                    <ThemeToggle />
-                    <Badge variant="secondary" className="px-3 py-1 bg-primary/10 text-primary border-primary/20">
-                        <Building2 className="h-4 w-4 mr-2" />
-                        Regulator
-                    </Badge>
+                    </p>
                 </div>
             </div>
 
             {/* Card Layout for Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Active Investigations</CardTitle>
-                        <CardDescription>{stats.activeInvestigations}</CardDescription>
+                <Card className="border border-border shadow-sm">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Active Investigations</CardTitle>
+                        <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
+                            <Eye className="h-4 w-4 text-primary" />
+                        </div>
                     </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-foreground">{stats.activeInvestigations}</div>
+                    </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Compliance Checks</CardTitle>
-                        <CardDescription>{stats.complianceChecks}</CardDescription>
+                <Card className="border border-border shadow-sm">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Compliance Checks</CardTitle>
+                        <div className="h-8 w-8 rounded-md bg-accent/10 flex items-center justify-center">
+                            <CheckCircle className="h-4 w-4 text-accent" />
+                        </div>
                     </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-foreground">{stats.complianceChecks}</div>
+                    </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Pending Reviews</CardTitle>
-                        <CardDescription>{stats.pendingReviews}</CardDescription>
+                <Card className="border border-border shadow-sm">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Pending Reviews</CardTitle>
+                        <div className="h-8 w-8 rounded-md bg-status-warning/10 flex items-center justify-center">
+                            <Clock className="h-4 w-4 text-status-warning" />
+                        </div>
                     </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-status-warning">{stats.pendingReviews}</div>
+                    </CardContent>
                 </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Violations Found</CardTitle>
-                        <CardDescription>{stats.violationsFound}</CardDescription>
+                <Card className="border border-border shadow-sm">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-muted-foreground">Violations Found</CardTitle>
+                        <div className="h-8 w-8 rounded-md bg-destructive/10 flex items-center justify-center">
+                            <XCircle className="h-4 w-4 text-destructive" />
+                        </div>
                     </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-destructive">{stats.violationsFound}</div>
+                    </CardContent>
                 </Card>
             </div>
 
             {/* Alerts Section */}
-            <Card className="border-red-200 bg-red-50">
+            <Card className="border border-destructive/20 bg-destructive/5">
                 <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-red-800">
+                    <CardTitle className="flex items-center gap-2 text-destructive">
                         <AlertTriangle className="w-5 h-5" />
                         Critical Alerts
                     </CardTitle>
@@ -144,11 +147,8 @@ const RegulatorMain = ({ setActiveTab }: {
                 <CardContent>
                     <div className="space-y-3">
                         {loading ? (
-                            <div className="flex items-center justify-center py-8">
-                                <div className="flex items-center space-x-2">
-                                    <div className="w-4 h-4 bg-red-500 rounded-full animate-pulse"></div>
-                                    <span className="text-muted-foreground">Loading alerts...</span>
-                                </div>
+                            <div className="py-4">
+                                <LoadingTable rows={3} columns={3} />
                             </div>
                         ) : alerts.length === 0 ? (
                             <div className="text-center py-8">
@@ -157,12 +157,12 @@ const RegulatorMain = ({ setActiveTab }: {
                             </div>
                         ) : (
                             alerts.map((alert) => (
-                                <div key={alert.id} className="flex items-center justify-between p-3 bg-white border rounded-lg">
+                                <div key={alert.id} className="flex items-center justify-between p-3 bg-card border border-border rounded-lg">
                                     <div className="flex-1">
-                                        <p className="font-medium">{alert.message}</p>
-                                        <p className="text-sm text-gray-600">{alert.location} - {alert.reporter} - {alert.time}</p>
+                                        <p className="font-medium text-foreground">{alert.message}</p>
+                                        <p className="text-sm text-muted-foreground">{alert.location} - {alert.reporter} - {alert.time}</p>
                                         {alert.details && (
-                                            <p className="text-xs text-gray-500 mt-1">
+                                            <p className="text-xs text-muted-foreground mt-1">
                                                 {alert.details.batchId && `Batch: ${alert.details.batchId}`}
                                                 {alert.details.manufacturer && ` | Mfg: ${alert.details.manufacturer}`}
                                             </p>
@@ -171,24 +171,18 @@ const RegulatorMain = ({ setActiveTab }: {
                                     <div className="flex items-center gap-2">
                                         <Badge
                                             variant={
-                                                alert.severity === "critical"
-                                                    ? "destructive"
-                                                    : alert.severity === "high"
-                                                        ? "destructive"
-                                                        : alert.severity === "warning"
-                                                            ? "secondary"
-                                                            : "outline"
-                                            }
-                                            className={
                                                 alert.severity === "critical" || alert.severity === "high"
-                                                    ? "bg-red-100 text-red-800 animate-pulse"
-                                                    : ""
+                                                    ? "critical"
+                                                    : alert.severity === "warning"
+                                                        ? "warning"
+                                                        : "outline"
                                             }
                                         >
                                             {alert.severity}
                                         </Badge>
                                         <Button 
                                             size="sm" 
+                                            variant={alert.severity === "critical" || alert.severity === "high" ? "destructive" : "outline"}
                                             onClick={() => {
                                                 if (alert.type === 'counterfeit_report') {
                                                     setActiveTab("investigations")
@@ -196,17 +190,10 @@ const RegulatorMain = ({ setActiveTab }: {
                                                     setActiveTab("compliance")
                                                 } else if (alert.type === 'license_expiring') {
                                                     setActiveTab("entities")
-                                                } else {
-                                                    if (typeof window !== "undefined") {
-                                                        window.alert(`Investigating ${alert.id}: ${alert.message}`)
-                                                    }
-                                                }
+                                } else {
+                                    setActiveTab("investigations" as ManufacturerTab)
+                                }
                                             }}
-                                            className={
-                                                alert.severity === "critical" || alert.severity === "high"
-                                                    ? "bg-red-600 hover:bg-red-700 text-white"
-                                                    : ""
-                                            }
                                         >
                                             {alert.type === 'counterfeit_report' ? 'Investigate' :
                                              alert.type === 'failed_transfer' ? 'Review' :
@@ -224,10 +211,10 @@ const RegulatorMain = ({ setActiveTab }: {
             {/* Recent Activity & Quick Actions */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {/* Recent Activities */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="font-montserrat">Recent Activities</CardTitle>
-                        <CardDescription>Latest regulatory activities and inspections</CardDescription>
+                <Card className="border border-border shadow-sm">
+                    <CardHeader className="pb-4">
+                        <CardTitle className="font-semibold text-lg text-foreground">Recent Activities</CardTitle>
+                        <CardDescription className="text-muted-foreground text-sm">Latest regulatory activities and inspections</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
@@ -291,6 +278,7 @@ const RegulatorMain = ({ setActiveTab }: {
                                         variant="outline" 
                                         size="sm"
                                         onClick={() => setActiveTab("investigations")}
+                                        className="h-11 cursor-pointer"
                                     >
                                         <Eye className="h-4 w-4 mr-2" />
                                         Start New Investigation
@@ -302,12 +290,12 @@ const RegulatorMain = ({ setActiveTab }: {
                 </Card>
 
                 {/* Quick Actions */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="font-montserrat">Quick Actions</CardTitle>
-                        <CardDescription>Common regulatory tasks and shortcuts</CardDescription>
+                <Card className="border border-border shadow-sm">
+                    <CardHeader className="pb-4">
+                        <CardTitle className="font-semibold text-lg text-foreground">Quick Actions</CardTitle>
+                        <CardDescription className="text-muted-foreground text-sm">Common regulatory tasks and shortcuts</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-3">
                         {/* 
                         <div>
                             <Label htmlFor="investigation-notes">Investigation Notes</Label>
@@ -326,8 +314,8 @@ const RegulatorMain = ({ setActiveTab }: {
                         </Button>
                         */}
                         <Button
-                            variant="outline"
-                            className="w-full justify-start bg-transparent"
+                            variant="default"
+                            className="w-full justify-start h-11 cursor-pointer"
                             onClick={handleComplianceCheck}
                         >
                             <Shield className="h-4 w-4 mr-2" />
@@ -335,7 +323,7 @@ const RegulatorMain = ({ setActiveTab }: {
                         </Button>
                         <Button
                             variant="outline"
-                            className="w-full justify-start bg-transparent"
+                            className="w-full justify-start h-11 cursor-pointer"
                             onClick={handleGenerateReport}
                         >
                             <FileText className="h-4 w-4 mr-2" />
@@ -343,7 +331,7 @@ const RegulatorMain = ({ setActiveTab }: {
                         </Button>
                         <Button
                             variant="outline"
-                            className="w-full justify-start bg-transparent"
+                            className="w-full justify-start h-11 cursor-pointer"
                             onClick={handleViewAnalytics}
                         >
                             <TrendingUp className="h-4 w-4 mr-2" />

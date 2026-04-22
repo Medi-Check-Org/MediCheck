@@ -1,5 +1,4 @@
 "use client"
-
 import Link from "next/link"
 import { Shield, ArrowLeft, Lock, Eye, Database, UserCheck, FileText, Mail } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -206,7 +205,7 @@ export default function PrivacyPolicyPage() {
               </div>
               <div className="mt-6">
                 <Link href="/contact">
-                  <Button variant="gradient" className="cursor-pointer">
+                  <Button className="cursor-pointer">
                     Contact Support
                   </Button>
                 </Link>

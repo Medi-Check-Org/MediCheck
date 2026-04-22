@@ -9,27 +9,29 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { LoadingSpinner } from "@/components/ui/loading";
 import { toast } from "react-toastify";
-import { Plus, ArrowUpRight, ArrowDownLeft, RefreshCw, Search, Filter, X } from "lucide-react";
-import { TransferProps, MedicationBatchInfoProps, OrganizationProp } from "@/utils";
-import { BatchStatus } from "@/lib/generated/prisma";
+import { Plus, ArrowUpRight, ArrowDownLeft, Search, Filter, X } from "lucide-react";
+import { MedicationBatchInfoProps, OrganizationProp } from "@/utils";
+import { BatchStatus } from "@/lib/generated/prisma/enums";
+import { FormattedTransfer } from "@/app/api/web/transfers/route";
+import { UniversalLoader } from "@/components/ui/universal-loader"
 
-interface TransfersProps {
+
+interface TransfersComponentProps {
   orgId?: string;
   allBatches: MedicationBatchInfoProps[];
   loadBatches: () => void;
 }
 
-const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
+const Transfers = ({ orgId, allBatches, loadBatches }: TransfersComponentProps) => {
 
-  const [transfers, setTransfers] = useState<TransferProps[]>([]);
+  const [transfers, setTransfers] = useState<FormattedTransfer[]>([]);
   const [organizations, setOrganizations] = useState<OrganizationProp[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [currentOrgId, setCurrentOrgId] = useState(orgId || "");
+  const [currentOrgId] = useState(orgId || "");
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,7 +45,6 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
     notes: ""
   });
 
-
   // Transform allBatches to the expected format
   const availableBatches =
     allBatches
@@ -54,13 +55,12 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
         batchSize: batch.batchSize,
         status: batch.status,
       }))
-      // 🛑 Exclude batches with IN_TRANSIT status
       .filter(
         batch =>
           batch.batchId &&
           batch.drugName &&
-          batch.status !== BatchStatus.IN_TRANSIT
-      ) || [];
+          (batch.status !== BatchStatus.IN_TRANSIT && batch.status !== BatchStatus.FLAGGED && batch.status !== BatchStatus.EXPIRED && batch.status !== BatchStatus.RECALLED)
+    ) || [];
 
 
 
@@ -70,11 +70,12 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/transfer/ownership?organizationId=${currentOrgId}`);
+      const res = await fetch(`/api/web/transfers?orgId=${currentOrgId}`);
 
       const data = await res.json();
 
       if (res.ok) {
+        console.log(data.transfers)
         setTransfers(data.transfers || []);
       }
       else {
@@ -90,7 +91,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
   };
 
   const getAllOrganization = async () => {
-    const res = await fetch(`/api/organizations`);
+    const res = await fetch(`/api/web/organizations`);
     const data = await res.json();
     console.log(data)
     setOrganizations(data)
@@ -118,7 +119,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
     setCreating(true);
 
     try {
-      const res = await fetch("/api/transfer/ownership", {
+      const res = await fetch("/api/web/transfers/initiate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -130,6 +131,8 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
       });
 
       const data = await res.json();
+
+      console.log(data)
 
       if (res.ok) {
         toast.success("Transfer created successfully");
@@ -143,6 +146,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
       }
     }
     catch (error) {
+      console.log(error)
       toast.error("Failed to create transfer");
     }
     finally {
@@ -154,8 +158,8 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
   const updateTransferStatus = async (transferId: string, status: string, notes?: string) => {
     setUpdating(transferId);
     try {
-      const res = await fetch(`/api/transfer/ownership/${transferId}`, {
-        method: "PUT",
+      const res = await fetch(`/api/web/transfers/${transferId}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           organizationId: currentOrgId,
@@ -195,27 +199,29 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "COMPLETED": return "text-green-600";
-      case "FAILED": return "text-red-600";
-      case "CANCELLED": return "text-red-600";
-      case "IN_PROGRESS": return "text-blue-600";
-      default: return "text-yellow-600";
+      case "COMPLETED": return "text-status-verified";
+      case "FAILED": return "text-destructive";
+      case "CANCELLED": return "text-destructive";
+      case "IN_PROGRESS": return "text-primary";
+      default: return "text-status-warning";
     }
   };
 
   // Filter and search functionality
   const filteredTransfers = transfers.filter(transfer => {
     const matchesSearch = searchQuery === "" || 
-      transfer.batch.batchId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      transfer.batch.drugName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      transfer.fromOrg.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      transfer.toOrg.companyName.toLowerCase().includes(searchQuery.toLowerCase());
+      transfer.batchId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      transfer.medicationName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      transfer.fromOrg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      transfer.toOrg.name.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus = statusFilter === "ALL" || transfer.status === statusFilter;
     const matchesDirection = directionFilter === "ALL" || transfer.direction === directionFilter;
 
     return matchesSearch && matchesStatus && matchesDirection;
   });
+
+  console.log("filteredTransfersfilteredTransfers", filteredTransfers)
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -225,22 +231,14 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
 
   const hasActiveFilters = searchQuery !== "" || statusFilter !== "ALL" || directionFilter !== "ALL";
 
-  if (loading) {
-    return (
-      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-        <h1 className="font-montserrat font-bold text-2xl sm:text-3xl text-foreground">Batch Transfers</h1>
-        <div className="flex items-center justify-center p-6 sm:p-8">
-          <LoadingSpinner size="large" text="Loading transfers..." />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+
+      {(loading || !orgId) && <UniversalLoader text="Loading transfers." />}
+      
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="font-montserrat font-bold text-2xl sm:text-3xl text-foreground">Batch Transfers</h1>
+          <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Batch Transfers</h1>
           <p className="text-muted-foreground text-sm sm:text-base">Track all batch transfers and ownership changes</p>
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
@@ -252,7 +250,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
               {!availableBatches.length && " (No batches)"}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-[95vw] sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-[95vw] sm:max-w-125 max-h-[90vh] overflow-y-auto">
             <DialogHeader className="pb-4">
               <DialogTitle className="text-lg sm:text-xl font-semibold">Create New Transfer</DialogTitle>
               <DialogDescription className="text-sm text-muted-foreground mt-2">
@@ -287,8 +285,8 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
                   </SelectContent>
                 </Select>
                 {!availableBatches.length && (
-                  <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
-                    <p className="text-sm text-orange-700 dark:text-orange-300">No batches available for transfer</p>
+                  <div className="bg-status-warning/10 border border-status-warning/20 rounded-lg p-3">
+                    <p className="text-sm text-status-warning">No batches available for transfer</p>
                   </div>
                 )}
               </div>
@@ -334,7 +332,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
                   placeholder="Add any additional notes or instructions for this transfer..."
                   value={newTransfer.notes}
                   onChange={(e) => setNewTransfer(prev => ({ ...prev, notes: e.target.value }))}
-                  className="min-h-[80px] resize-none"
+                  className="min-h-20 resize-none"
                 />
                 <p className="text-xs text-muted-foreground">Optional - Add context or special instructions</p>
               </div>
@@ -368,7 +366,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
         </Dialog>
       </div>
 
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 sm:p-6">
             <CardTitle className="text-sm sm:text-base font-medium">Total Transfers</CardTitle>
@@ -383,13 +381,13 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
             </p>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-2 border-blue-200 dark:border-blue-800">
+        <Card className="shadow-sm border-2 border-primary/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 sm:p-6">
             <CardTitle className="text-sm sm:text-base font-medium">Outgoing</CardTitle>
-            <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+            <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
-            <div className="text-2xl sm:text-3xl font-bold text-blue-600">
+            <div className="text-2xl sm:text-3xl font-bold text-primary">
               {hasActiveFilters ? 
                 filteredTransfers.filter(t => t.direction === 'OUTGOING').length :
                 transfers.filter(t => t.direction === 'OUTGOING').length
@@ -398,34 +396,19 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">Sent out</p>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-2 border-green-200 dark:border-green-800">
+        <Card className="shadow-sm border-2 border-status-verified/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 sm:p-6">
             <CardTitle className="text-sm sm:text-base font-medium">Incoming</CardTitle>
-            <ArrowDownLeft className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+            <ArrowDownLeft className="h-4 w-4 sm:h-5 sm:w-5 text-status-verified" />
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
-            <div className="text-2xl sm:text-3xl font-bold text-green-600">
+            <div className="text-2xl sm:text-3xl font-bold text-status-verified">
               {hasActiveFilters ? 
                 filteredTransfers.filter(t => t.direction === 'INCOMING').length :
                 transfers.filter(t => t.direction === 'INCOMING').length
               }
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">Received</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm border-2 border-orange-200 dark:border-orange-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 sm:p-6">
-            <CardTitle className="text-sm sm:text-base font-medium">Pending Approval</CardTitle>
-            <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6 pt-0">
-            <div className="text-2xl sm:text-3xl font-bold text-orange-600">
-              {hasActiveFilters ? 
-                filteredTransfers.filter(t => t.canApprove).length :
-                transfers.filter(t => t.canApprove).length
-              }
-            </div>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1">Need action</p>
           </CardContent>
         </Card>
       </div>
@@ -448,7 +431,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
             {/* Filter Controls */}
             <div className="flex flex-col sm:flex-row gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[140px] h-10">
+                <SelectTrigger className="w-full sm:w-35 h-10">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
@@ -463,7 +446,7 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
               </Select>
 
               <Select value={directionFilter} onValueChange={setDirectionFilter}>
-                <SelectTrigger className="w-full sm:w-[140px] h-10">
+                <SelectTrigger className="w-full sm:w-35 h-10">
                   <SelectValue placeholder="Direction" />
                 </SelectTrigger>
                 <SelectContent>
@@ -541,7 +524,6 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
                     <TableRow>
                       <TableHead>Direction</TableHead>
                       <TableHead>Batch ID</TableHead>
-                      <TableHead>Product</TableHead>
                       <TableHead>From</TableHead>
                       <TableHead>To</TableHead>
                       <TableHead>Status</TableHead>
@@ -562,43 +544,28 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
                             <span className="text-sm">{transfer.direction}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="font-medium">{transfer.batch.batchId}</TableCell>
-                        <TableCell>{transfer.batch.drugName}</TableCell>
-                        <TableCell>{transfer.fromOrg.companyName}</TableCell>
-                        <TableCell>{transfer.toOrg.companyName}</TableCell>
+                        <TableCell className="font-medium">{transfer.batchId}</TableCell>
+                        {/* <TableCell>{transfer.batch.drugName}</TableCell> */}
+                        <TableCell>{transfer.fromOrg.name}</TableCell>
+                        <TableCell>{transfer.toOrg.name}</TableCell>
                         <TableCell>
                           <Badge variant={getStatusVariant(transfer.status)} className={getStatusColor(transfer.status) + " bg-transparent border-none shadow-none p-0 font-semibold"}>
-                            {transfer.status}
+                            {transfer.status === "PENDING" ? "IN-TRANSIT" : transfer.status}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           {new Date(transfer.createdAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
-                          {transfer.canApprove ? (
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-8 px-3 text-xs"
-                                onClick={() => updateTransferStatus(transfer.id, "COMPLETED")}
-                                disabled={updating === transfer.id}
-                              >
-                                {updating === transfer.id ? "..." : "Accept"}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-8 px-3 text-xs text-red-600 hover:text-red-700"
-                                onClick={() => updateTransferStatus(transfer.id, "CANCELLED")}
-                                disabled={updating === transfer.id}
-                              >
-                                Decline
-                              </Button>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">-</span>
-                          )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 px-3 text-xs text-red-600 hover:text-red-700 cursor-pointer"
+                              onClick={() => updateTransferStatus(transfer.id, "CANCELLED")}
+                            disabled={updating === transfer.id || transfer.status === "CANCELLED"}
+                            >
+                            {orgId === transfer.fromOrg.id ? "Cancel Tranfer" : "Decline Transfer"}
+                            </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -636,20 +603,20 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
                         <div className="bg-muted/30 rounded-lg p-4 flex flex-col gap-2">
                           <div className="flex flex-col gap-1">
                             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Batch</span>
-                            <span className="font-mono text-base font-semibold break-all">{transfer.batch.batchId}</span>
+                            <span className="font-mono text-base font-semibold break-all">{transfer.batchId}</span>
                           </div>
                           <div>
-                            <span className="text-sm text-foreground">{transfer.batch.drugName}</span>
+                            <span className="text-sm text-foreground">{transfer.medicationName}</span>
                           </div>
                         </div>
                         <div className="flex flex-col gap-2">
                           <div>
                             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">From</span>
-                            <p className="text-sm font-medium text-foreground leading-tight">{transfer.fromOrg.companyName}</p>
+                            <p className="text-sm font-medium text-foreground leading-tight">{transfer.fromOrg.name}</p>
                           </div>
                           <div>
                             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">To</span>
-                            <p className="text-sm font-medium text-foreground leading-tight">{transfer.toOrg.companyName}</p>
+                            <p className="text-sm font-medium text-foreground leading-tight">{transfer.toOrg.name}</p>
                           </div>
                         </div>
                         <div className="pt-4 border-t border-border/40 flex flex-col gap-2">
@@ -660,29 +627,15 @@ const Transfers = ({ orgId, allBatches, loadBatches }: TransfersProps) => {
                               year: 'numeric' 
                             })}
                           </span>
-                          {/* Quick actions for mobile */}
-                          {transfer.canApprove && (
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 px-2 text-xs"
-                                onClick={() => updateTransferStatus(transfer.id, "COMPLETED")}
-                                disabled={updating === transfer.id}
-                              >
-                                {updating === transfer.id ? "..." : "Accept"}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 px-2 text-xs text-red-600 hover:text-red-700"
-                                onClick={() => updateTransferStatus(transfer.id, "CANCELLED")}
-                                disabled={updating === transfer.id}
-                              >
-                                Decline
-                              </Button>
-                            </div>
-                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 text-xs text-red-600 hover:text-red-700"
+                            onClick={() => updateTransferStatus(transfer.id, "CANCELLED")}
+                            disabled={updating === transfer.id || transfer.status === "CANCELLED"}
+                          >
+                            {orgId === transfer.fromOrg.id ? "Cancel Tranfer" : "Decline Transfer"}
+                          </Button>
                         </div>
                       </div>
                     </CardContent>

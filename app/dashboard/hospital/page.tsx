@@ -14,6 +14,8 @@ import QRScanner from "@/components/qr-scanner";
 import { TeamMemberManagement } from "@/components/team-member-management";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { Button } from "@/components/ui/button";
+import { UniversalLoader } from "@/components/ui/universal-loader";
+import { SectionErrorBoundary } from "@/components/ui/error-boundary";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Menu, Shield, X } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -46,7 +48,6 @@ export default function HospitalDashboard() {
 
   useEffect(() => {
     if (scannedQRcodeResult) {
-      console.log(scannedQRcodeResult);
       window.location.href = scannedQRcodeResult;
     }
   }, [scannedQRcodeResult])
@@ -58,7 +59,7 @@ export default function HospitalDashboard() {
 
       setOrgLoading(true);
       try {
-        const res = await fetch("/api/organizations/me");
+        const res = await fetch("/api/web/organizations/me");
         const data = await res.json();
         setOrgId(data.organizationId);
       }
@@ -79,9 +80,15 @@ export default function HospitalDashboard() {
 
     setBatchesLoading(true);
     try {
-      const res = await fetch(`/api/batches/${orgId}`);
+      const res = await fetch(`/api/web/batches?organizationId=${orgId}`);
       const data = await res.json();
-      setBatches(data);
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to fetch batches");
+      }
+
+      // Align with new batches API shape: { batches, total }
+      setBatches(data.batches || []);
       toast.success("Fetched batches");
     }
     catch (err) {
@@ -102,64 +109,45 @@ export default function HospitalDashboard() {
   }, [orgId]);
 
   // 3️⃣ Guard rendering while loading
-  if (orgLoading || batchesLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto"></div>
-          <p className="text-muted-foreground font-medium">Loading hospital dashboard...</p>
-        </div>
-      </div>
-    );
+  if (orgLoading || batchesLoading || !orgId) {
+    return <UniversalLoader text="Loading dashboard..." />
   }
 
-  // Mobile Header Component
-  const MobileHeader = () => (
-    <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b">
-      <div className="flex items-center justify-between p-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsMobileMenuOpen(true)}
-          className="p-2"
-        >
-          <Menu className="h-6 w-6" />
-        </Button>
-        
-        <div className="flex items-center space-x-2">
-          <Shield className="h-6 w-6 text-primary" />
-          <span className="font-bold text-lg">MediCheck</span>
-        </div>
-        
-        <ThemeToggle />
-      </div>
-    </div>
-  );
-
   return (
-    <div className="flex h-screen bg-background relative overflow-hidden">
-      {/* Background Decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-16 left-16 w-80 h-80 bg-primary/4 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-16 right-16 w-60 h-60 bg-accent/5 rounded-full blur-2xl"></div>
-        <div className="absolute top-1/2 left-1/3 w-36 h-36 bg-primary/7 rounded-full blur-xl"></div>
-      </div>
+    <div className="flex h-screen bg-background">
 
       {/* Mobile Header */}
-      <MobileHeader />
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border">
+        <div className="flex items-center justify-between px-4 h-12">
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="flex items-center justify-center h-8 w-8 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 bg-primary rounded flex items-center justify-center">
+              <Shield className="h-3.5 w-3.5 text-primary-foreground" />
+            </div>
+            <span className="font-semibold text-sm text-foreground tracking-tight">MediCheck</span>
+          </div>
+          <ThemeToggle />
+        </div>
+      </div>
 
       {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:flex lg:flex-shrink-0">
         <HospitalSidebar activeTab={activeTab} setActiveTab={setActiveTab} orgId={orgId} />
       </div>
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setIsMobileMenuOpen(false)}>
-          <div className="fixed left-0 top-0 bottom-0 w-80 bg-background shadow-xl" onClick={e => e.stopPropagation()}>
-            <HospitalSidebar 
-              activeTab={activeTab} 
-              setActiveTab={setActiveTab} 
+        <div className="lg:hidden fixed inset-0 z-50 bg-foreground/20" onClick={() => setIsMobileMenuOpen(false)}>
+          <div className="fixed left-0 top-0 bottom-0 w-60 bg-sidebar shadow-lg border-r border-sidebar-border" onClick={(e) => e.stopPropagation()}>
+            <HospitalSidebar
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
               orgId={orgId}
               isMobile={true}
               onTabSelect={() => setIsMobileMenuOpen(false)}
@@ -168,66 +156,83 @@ export default function HospitalDashboard() {
         </div>
       )}
 
-      <main className="flex-1 overflow-y-auto relative z-10 lg:ml-0">
+      <main className="flex-1 overflow-y-auto relative z-10">
 
-        <div className="p-4 sm:p-6 lg:p-8 mt-16 lg:mt-0">
+        <div className="p-5 sm:p-6 lg:p-8 mt-12 lg:mt-0">
 
           {activeTab === "dashboard" && (
-            <HospitalMain setActiveTab={setActiveTab} orgId={orgId} />
+            <SectionErrorBoundary context="the hospital dashboard">
+              <HospitalMain setActiveTab={setActiveTab} orgId={orgId} />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "inventory" && (
-            <HospitalInventory orgId={orgId} />
+            <SectionErrorBoundary context="inventory">
+              <HospitalInventory orgId={orgId} />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "team" && (
-            <TeamMemberManagement 
-              organizationType="hospital"
-              organizationId={orgId}
-            />
+            <SectionErrorBoundary context="team management">
+              <TeamMemberManagement 
+                organizationType="hospital"
+                organizationId={orgId}
+              />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "analytics" && (
-            <AnalyticsDashboard 
-              dashboardType="hospital"
-              title="Hospital Analytics"
-            />
+            <SectionErrorBoundary context="hospital analytics">
+              <AnalyticsDashboard 
+                dashboardType="hospital"
+                title="Hospital Analytics"
+              />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "reports" && (
-            <HospitalReports />
+            <SectionErrorBoundary context="reports">
+              <HospitalReports />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "alerts" && (
-            <HospitalAlerts />
+            <SectionErrorBoundary context="alerts">
+              <HospitalAlerts />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "transfers" && (
-            <Transfers orgId={orgId} allBatches={batches} loadBatches={loadBatches} />
+            <SectionErrorBoundary context="transfers">
+              <Transfers orgId={orgId} allBatches={batches} loadBatches={loadBatches} />
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "qr-scanner" && (
-            <div className="flex justify-center items-center min-h-[500px]">
-              {/* Desktop: Card wrap */}
-              <div className="hidden lg:block w-full max-w-[600px]">
-                <Card className="border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                  {/* Removed CardHeader with QR Scanner title */}
-                  <CardContent>
-                    <div className="flex justify-center items-center">
-                      <QRScanner onScan={handleQRScan} />
-                    </div>
-                  </CardContent>
-                </Card>
+            <SectionErrorBoundary context="QR scanner">
+              <div className="flex justify-center items-center min-h-[500px]">
+                {/* Desktop: Card wrap */}
+                <div className="hidden lg:block w-full max-w-[600px]">
+                  <Card className="border border-border shadow-sm">
+                    <CardContent>
+                      <div className="flex justify-center items-center">
+                        <QRScanner onScan={handleQRScan} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                {/* Mobile: No Card wrap, fill space */}
+                <div className="block lg:hidden w-full">
+                  <QRScanner onScan={handleQRScan} />
+                </div>
               </div>
-              {/* Mobile: No Card wrap, fill space */}
-              <div className="block lg:hidden w-full">
-                <QRScanner onScan={handleQRScan} />
-              </div>
-            </div>
+            </SectionErrorBoundary>
           )}
 
           {activeTab === "settings" && (
-            <HospitalSettings />
+            <SectionErrorBoundary context="settings">
+              <HospitalSettings />
+            </SectionErrorBoundary>
           )}
           
         </div>

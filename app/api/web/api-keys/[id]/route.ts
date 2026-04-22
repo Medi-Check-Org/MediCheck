@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActorFromClerk } from "@/core/auth";
 import { apiKeyRepository } from "@/core/infrastructure/db/repositories";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     // steps:  
     // 1. get actor and organization Id from clerk
     const actor = await getActorFromClerk();
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         );
     }
     // 2. get api key by id
-    const apiKey = await apiKeyRepository.findById(params.id);
+    const apiKey = await apiKeyRepository.findById(id);
     if (!apiKey) {
         return NextResponse.json({ error: "API key not found" }, { status: 404 });
     }

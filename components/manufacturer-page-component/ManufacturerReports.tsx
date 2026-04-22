@@ -13,7 +13,7 @@ const ManufacturerReports = () => {
     return (
         <div className="space-y-6">
 
-            <h1 className="font-montserrat font-bold text-3xl text-foreground">Reports & Analytics</h1>
+            <h1 className="font-sans font-bold text-3xl text-foreground">Reports & Analytics</h1>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>

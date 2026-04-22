@@ -21,6 +21,7 @@ import {
   ForbiddenError,
   BusinessRuleViolationError,
   ExternalServiceError,
+  DomainError,
 } from "@/utils/types/errors";
 import { nanoid } from "nanoid";
 import {
@@ -28,37 +29,28 @@ import {
   createBatchRegistry,
   logBatchEvent,
 } from "@/lib/hedera";
-import { generateQRPayload, generateBatchQRPayload } from "@/lib/qrPayload";
-import { hedera10Client } from "@/lib/hedera10Client";
+import {
+  generateBatchUnitQRPayload,
+  generateBatchQRPayload,
+} from "@/lib/qrPayload";
+import { prisma } from "@/lib/prisma";
+import { MedicationBatch } from "@/lib/generated/prisma/client";
+import { runInBatches } from "@/utils/helpers/batch";
 
 const QR_SECRET = process.env.QR_SECRET || "dev-secret";
+
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
 const UNIT_REG_CONCURRENCY = parseInt(
   process.env.UNIT_REG_CONCURRENCY || "10",
-  10
+  10,
 );
-
-import type { MedicationBatch } from "@/lib/generated/prisma";
 
 export interface CreateBatchOutput {
   batch: MedicationBatch;
   unitsCreated: number;
   registryTopicId: string;
   batchEventSeq: number;
-}
-
-/**
- * Helper to run tasks in batches with concurrency control
- */
-async function runInBatches<T>(
-  items: T[],
-  batchSize: number,
-  worker: (item: T) => Promise<void>
-): Promise<void> {
-  for (let i = 0; i < items.length; i += batchSize) {
-    const chunk = items.slice(i, i + batchSize);
-    await Promise.all(chunk.map(worker));
-  }
 }
 
 /**
@@ -69,12 +61,14 @@ async function runInBatches<T>(
 export class CreateBatchUseCase {
   constructor(
     private readonly batchRepo: BatchRepository,
-    private readonly orgRepo: OrganizationRepository
+    private readonly orgRepo: OrganizationRepository,
   ) {}
 
   async execute(rawInput: unknown, actor: Actor): Promise<CreateBatchOutput> {
     // 1. Validate input
     const input = validateInput(CreateBatchSchema, rawInput);
+
+    console.log("inputinputinputinputinput", input);
 
     // 2. Check permissions
     requirePermission(actor, Permissions.BATCHES_CREATE);
@@ -82,46 +76,19 @@ export class CreateBatchUseCase {
     // 3. Verify actor belongs to the organization
     if (actor.organizationId !== input.organizationId) {
       throw new ForbiddenError(
-        "Actor does not have access to this organization"
+        "Actor does not have access to this organization",
       );
     }
 
-    // 4. Load organization with agent info
+    // 4. Load organization
     const org = await this.orgRepo.getByIdOrThrow(input.organizationId);
 
     // 5. Additional business rule validations
-    const mfgDate = new Date(input.manufacturingDate);
-    const expDate = new Date(input.expiryDate);
-    const now = new Date();
-
-    // Check if manufacturing date is too far in the past (more than 10 years)
-    const tenYearsAgo = new Date(now.getFullYear() - 10, now.getMonth(), now.getDate());
-    if (mfgDate < tenYearsAgo) {
-      throw new BusinessRuleViolationError(
-        "Manufacturing date cannot be more than 10 years in the past"
-      );
-    }
-
-    // Check if expiry date is too far in the future (more than 20 years)
-    const twentyYearsFromNow = new Date(now.getFullYear() + 20, now.getMonth(), now.getDate());
-    if (expDate > twentyYearsFromNow) {
-      throw new BusinessRuleViolationError(
-        "Expiry date cannot be more than 20 years in the future"
-      );
-    }
-
-    // Check reasonable shelf life (typically drugs expire within 1-10 years)
-    const shelfLifeYears = (expDate.getTime() - mfgDate.getTime()) / (1000 * 60 * 60 * 24 * 365);
-    if (shelfLifeYears > 20) {
-      throw new BusinessRuleViolationError(
-        "Shelf life exceeds maximum allowed duration (20 years)"
-      );
-    }
 
     // Check if batch size is reasonable (at least 1, checked by schema, but double-check)
-    if (input.batchSize < 1 || input.batchSize > 100000) {
+    if (input.batchSize < 1 || input.batchSize > 100) {
       throw new BusinessRuleViolationError(
-        "Batch size must be between 1 and 100,000 units"
+        "Batch size must be between 1 and 100 units",
       );
     }
 
@@ -132,7 +99,7 @@ export class CreateBatchUseCase {
     const existingBatch = await this.batchRepo.findByBatchId(batchId);
     if (existingBatch) {
       throw new BusinessRuleViolationError(
-        `Batch ID ${batchId} already exists. Please try again.`
+        `Batch already exists. Please try again.`,
       );
     }
 
@@ -143,19 +110,33 @@ export class CreateBatchUseCase {
     }
 
     let registryTopicId: RegistryResult;
+
     try {
       registryTopicId = (await createBatchRegistry(
         batchId,
         org.id,
-        input.drugName
+        input.drugName,
       )) as RegistryResult;
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       throw new ExternalServiceError(
         "Hedera",
-        `Failed to create batch registry: ${errorMessage}`
+        `Failed to create batch registry: ${errorMessage}`,
       );
+    }
+
+    // Product validity check
+    const product = await prisma.product.findUnique({
+      where: {
+        id: input.productId,
+      },
+    });
+
+    console.log(product);
+
+    if (!product) {
+      throw new DomainError("Product does not exist", "PRODUCT_NOT_FOUND", 404);
     }
 
     // 7. Generate batch QR payload
@@ -163,7 +144,7 @@ export class CreateBatchUseCase {
       batchId,
       QR_SECRET,
       BASE_URL,
-      registryTopicId.topicId as string
+      registryTopicId.topicId as string,
     );
 
     // 8. Create batch record in database
@@ -171,11 +152,8 @@ export class CreateBatchUseCase {
       batchId,
       organizationId: input.organizationId,
       drugName: input.drugName,
-      composition: input.composition,
       batchSize: input.batchSize,
-      manufacturingDate: new Date(input.manufacturingDate),
-      expiryDate: new Date(input.expiryDate),
-      storageInstructions: input.storageInstructions,
+      productId: input.productId,
       registryTopicId: registryTopicId.topicId ?? null,
       qrCodeData: qrBatchPayload.url,
       qrSignature: qrBatchPayload.signature,
@@ -190,9 +168,13 @@ export class CreateBatchUseCase {
         organizationId: input.organizationId,
         drugName: input.drugName,
         batchSize: String(input.batchSize),
-        manufacturingDate: new Date(input.manufacturingDate).toISOString(),
-        expiryDate: new Date(input.expiryDate).toISOString(),
-      }
+        manufacturingDate: product.manufacturingDate
+          ? new Date(product.manufacturingDate).toISOString()
+          : "",
+        expiryDate: product.expiryDate
+          ? new Date(product.expiryDate).toISOString()
+          : "",
+      },
     );
 
     // 10. Store off-chain event record
@@ -205,39 +187,17 @@ export class CreateBatchUseCase {
         organizationId: input.organizationId,
         drugName: input.drugName,
         batchSize: input.batchSize,
-        manufacturingDate: new Date(input.manufacturingDate).toISOString(),
-        expiryDate: new Date(input.expiryDate).toISOString(),
+        manufacturingDate: product.manufacturingDate
+          ? new Date(product.manufacturingDate).toISOString()
+          : "",
+        expiryDate: product.expiryDate
+          ? new Date(product.expiryDate).toISOString()
+          : "",
       },
       region: org?.state ?? "",
     });
 
-    // 11. Announce via HCS-10 if organization agent exists
-    if (org.organizationAgent?.outboundTopic) {
-      try {
-        await hedera10Client.sendMessage(
-          org.organizationAgent.outboundTopic,
-          JSON.stringify({
-            p: "hcs-10",
-            op: "announce_batch",
-            batch_id: batchId,
-            registry_topic: registryTopicId,
-            status: "registered",
-          }),
-          "Batch creation announcement"
-        );
-        console.log(
-          "Announced batch on agent outbound topic:",
-          org.organizationAgent.outboundTopic
-        );
-      } catch (e) {
-        console.warn(
-          "Failed to announce to HCS-10 outbound topic (non-fatal):",
-          e
-        );
-      }
-    }
-
-    // 12. Create and register individual units
+    // 11. Create and register individual units
     const unitsData: Array<any> = [];
     const unitIndexes = Array.from({ length: input.batchSize }, (_, i) => i);
     const concurrency = UNIT_REG_CONCURRENCY > 0 ? UNIT_REG_CONCURRENCY : 10;
@@ -254,15 +214,15 @@ export class CreateBatchUseCase {
           serialNumber,
           drugName: input.drugName,
           batchId,
-        }
+        },
       );
 
-      const qrUnitPayload = generateQRPayload(
+      const qrUnitPayload = generateBatchUnitQRPayload(
         serialNumber,
         batchId,
         seq,
         QR_SECRET,
-        BASE_URL
+        BASE_URL,
       );
 
       unitsData.push({
@@ -270,6 +230,7 @@ export class CreateBatchUseCase {
         batchId: newBatch.id,
         registrySequence: seq,
         qrCode: qrUnitPayload.url,
+        productId: input.productId,
         qrSignature: qrUnitPayload.signature,
       });
     });
@@ -288,7 +249,7 @@ export class CreateBatchUseCase {
         organizationId: org.id,
         units: unitsData.map((u) => u.serialNumber),
         count: unitsData.length,
-      }
+      },
     );
 
     await this.batchRepo.createEvent({
@@ -299,28 +260,15 @@ export class CreateBatchUseCase {
       region: org?.state ?? "",
     });
 
-    // 15. Announce on managed registry if available
-    if (org.managedRegistry) {
-      try {
-        await hedera10Client.sendMessage(
-          org.managedRegistry,
-          JSON.stringify({
-            type: "BATCH_CREATED",
-            orgId: input.organizationId,
-            batchId,
-            drugName: input.drugName,
-            timestamp: new Date().toISOString(),
-            topicId: registryTopicId?.topicId as string,
-          }),
-          "New batch announcement"
-        );
-        console.log(
-          `📢 Announced new batch ${batchId} on managed registry ${org.managedRegistry}`
-        );
-      } catch (e) {
-        console.warn("Failed to announce on managed registry (non-fatal):", e);
-      }
-    }
+    // reduce product pool size
+
+    await prisma.product.update({
+      where: { id: product.id },
+      data: {
+        numberOfProductAvailable:
+          product.numberOfProductAvailable - input.batchSize,
+      },
+    });
 
     return {
       batch: newBatch,
@@ -334,13 +282,13 @@ export class CreateBatchUseCase {
 // Create singleton instance with injected dependencies
 export const createBatchUseCase = new CreateBatchUseCase(
   batchRepository,
-  organizationRepository
+  organizationRepository,
 );
 
 // Export convenience function
 export async function createBatch(
   input: unknown,
-  actor: Actor
+  actor: Actor,
 ): Promise<CreateBatchOutput> {
   return createBatchUseCase.execute(input, actor);
 }

@@ -11,9 +11,9 @@ interface BatchData {
     batchId: string;
     drugName: string;
     batchSize: number;
-    expiryDate: string;
+    expiryDate: string | null;
     status: string;
-    manufacturingDate: string;
+    manufacturingDate: string | null;
     transferDate: string;
     receivedFrom: string;
     fromOrgType: string;
@@ -34,7 +34,7 @@ const DistributorInventory = ({ orgId }: DistributorInventoryProps) => {
             try {
                 setLoading(true);
                 // Fetch batches that have been transferred TO this distributor
-                const response = await fetch(`/api/hospital/inventory?orgId=${orgId}`);
+                const response = await fetch(`/api/web/hospital/inventory?orgId=${orgId}`);
                 if (response.ok) {
                     const data = await response.json();
                     setBatches(data);
@@ -51,8 +51,10 @@ const DistributorInventory = ({ orgId }: DistributorInventoryProps) => {
         fetchBatches();
     }, [orgId]);
 
-    const getStatus = (expiryDate: string) => {
+    const getStatus = (expiryDate: string | null) => {
+        if (!expiryDate) return "—";
         const expiry = new Date(expiryDate);
+        if (isNaN(expiry.getTime())) return "—";
         const today = new Date();
         const tenDaysFromNow = new Date();
         tenDaysFromNow.setDate(today.getDate() + 10);
@@ -66,8 +68,10 @@ const DistributorInventory = ({ orgId }: DistributorInventoryProps) => {
         }
     };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
+    const formatDate = (dateString: string | null) => {
+        if (!dateString) return "—";
+        const d = new Date(dateString);
+        return isNaN(d.getTime()) ? "—" : d.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric'
@@ -77,7 +81,7 @@ const DistributorInventory = ({ orgId }: DistributorInventoryProps) => {
     if (loading) {
         return (
             <div className="space-y-6">
-                <h1 className="font-montserrat font-bold text-3xl text-foreground">Warehouse Stock Management</h1>
+                <h1 className="font-sans font-bold text-3xl text-foreground">Warehouse Stock Management</h1>
                 <div className="flex items-center justify-center p-8">
                     <LoadingSpinner size="large" text="Loading inventory..." />
                 </div>
@@ -89,7 +93,7 @@ const DistributorInventory = ({ orgId }: DistributorInventoryProps) => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="font-montserrat font-bold text-3xl text-foreground">Warehouse Stock Management</h1>
+                    <h1 className="font-sans font-bold text-3xl text-foreground">Warehouse Stock Management</h1>
                     <p className="text-muted-foreground">Current medication stock levels and distribution status</p>
                 </div>
                 {/* <Button onClick={() => alert("Adding new medication to inventory...")}>

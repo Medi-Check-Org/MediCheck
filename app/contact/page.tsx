@@ -1,5 +1,4 @@
 "use client"
-
 import { useState } from "react"
 import Link from "next/link"
 import { Shield, ArrowLeft, Mail, Send, MessageSquare, MapPin } from "lucide-react"
@@ -156,7 +155,7 @@ export default function ContactPage() {
                   </div>
                   <Button
                     type="submit"
-                    variant="gradient"
+                    variant="default"
                     className="w-full cursor-pointer"
                     disabled={isSubmitting}
                   >

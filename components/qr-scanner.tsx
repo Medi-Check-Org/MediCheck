@@ -113,34 +113,43 @@ export const QRScanner = forwardRef<QRScannerRef, QRScannerProps>(({
 
   // Stop camera stream
   const stopCamera = useCallback(() => {
-    // Stop all media stream tracks
+    console.log("Initiating full hardware shutdown...");
+
+    // 1. Stop the processing loop immediately
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = undefined;
+    }
+
+    // 2. Kill tracks from the Ref
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => {
-        track.stop()
-        console.log(`Stopped camera track: ${track.kind}`)
-      })
-      streamRef.current = null
+        track.stop();
+        track.enabled = false;
+      });
+      streamRef.current = null;
     }
-    
-    // Clear video element
-    if (videoRef.current) {
-      videoRef.current.srcObject = null
-      videoRef.current.load()
+
+    // 3. HARD STOP: Check the video element itself for any active srcObject
+    // This catches "ghost" streams that streamRef might have missed
+    if (videoRef.current && videoRef.current.srcObject) {
+      const videoStream = videoRef.current.srcObject as MediaStream;
+      videoStream.getTracks().forEach(track => {
+        track.stop();
+        track.enabled = false;
+        console.log("Killed ghost track from video element");
+      });
+      videoRef.current.srcObject = null;
+      videoRef.current.pause();
+      videoRef.current.removeAttribute("src"); // Force browser to drop the source
+      videoRef.current.load();
     }
-    
-    // Cancel any ongoing animation frames
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current)
-      animationRef.current = undefined
-    }
-    
-    // Reset all states
-    setIsScanning(false)
-    setHasPermission(null)
-    setError(null)
-    setLastScanResult(null)
-    console.log('Camera completely stopped and resources released')
-  }, [])
+
+    setIsScanning(false);
+    setHasPermission(null);
+    setError(null);
+    setIsLoading(false);
+  }, []);
 
   // Expose methods to parent component via ref
   useImperativeHandle(ref, () => ({
@@ -289,12 +298,22 @@ export const QRScanner = forwardRef<QRScannerRef, QRScannerProps>(({
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      stopCamera()
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current)
+      // This runs when the component is destroyed
+      console.log("Component unmounting: Killing camera...");
+
+      // Stop tracks first
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
       }
-    }
-  }, [stopCamera])
+
+      // Call the full stop logic
+      stopCamera();
+
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [stopCamera]);
 
   // Auto-start camera if autoStart is enabled
   useEffect(() => {
@@ -404,6 +423,7 @@ export const QRScanner = forwardRef<QRScannerRef, QRScannerProps>(({
       </CardContent>
     </Card>
   )
+  
 })
 
 QRScanner.displayName = 'QRScanner'

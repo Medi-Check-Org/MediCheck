@@ -46,14 +46,14 @@ const HospitalReports = () => {
         const fetchData = async () => {
             try {
                 // Get organization ID
-                const orgResponse = await fetch("/api/organizations/me");
+                const orgResponse = await fetch("/api/web/organizations/me");
                 if (orgResponse.ok) {
                     const orgResult = await orgResponse.json();
                     const organizationId = orgResult.organizationId;
                     setOrgId(organizationId);
 
                     // Fetch reports data
-                    const reportsResponse = await fetch(`/api/hospital/reports?orgId=${organizationId}`);
+                    const reportsResponse = await fetch(`/api/web/hospital/reports?orgId=${organizationId}`);
                     if (reportsResponse.ok) {
                         const data = await reportsResponse.json();
                         setReportsData(data);
@@ -78,7 +78,7 @@ const HospitalReports = () => {
 
         setSubmitting(true);
         try {
-            const response = await fetch('/api/hospital/reports', {
+            const response = await fetch('/api/web/hospital/reports', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ const HospitalReports = () => {
                 setSeverity("");
                 
                 // Refresh reports data
-                const reportsResponse = await fetch(`/api/hospital/reports?orgId=${orgId}`);
+                const reportsResponse = await fetch(`/api/web/hospital/reports?orgId=${orgId}`);
                 if (reportsResponse.ok) {
                     const data = await reportsResponse.json();
                     setReportsData(data);

@@ -6,13 +6,13 @@
  */
 
 import { prisma } from "@/lib/prisma";
-import type {
-  Prisma,
+import {
   MedicationBatch,
-  MedicationUnit,
   BatchEvent,
   BatchStatus,
-} from "@/lib/generated/prisma";
+  Product,
+} from "@/lib/generated/prisma/client";
+import { Prisma } from "@/lib/generated/prisma/client";
 import { NotFoundError } from "@/utils/types/errors";
 
 export interface BatchWithRelations extends MedicationBatch {
@@ -29,17 +29,18 @@ export interface BatchWithRelations extends MedicationBatch {
     registrySequence: number | null;
   }>;
   batchEvents?: BatchEvent[];
+  product?: Product | null;
+  _count?: {
+    medicationUnits: number;
+  };
 }
 
 export interface CreateBatchData {
   batchId: string;
   organizationId: string;
   drugName: string;
-  composition?: string;
+  productId: string;
   batchSize: number;
-  manufacturingDate: Date;
-  expiryDate: Date;
-  storageInstructions?: string;
   registryTopicId?: string | null;
   qrCodeData?: string;
   qrSignature?: string;
@@ -62,6 +63,7 @@ export interface CreateUnitsData {
   registrySequence: number;
   qrCode: string;
   qrSignature: string;
+  productId: string;
 }
 
 export class BatchRepository {
@@ -89,6 +91,7 @@ export class BatchRepository {
             contactEmail: true,
           },
         },
+        product: true,
       },
     });
   }
@@ -108,6 +111,7 @@ export class BatchRepository {
             contactEmail: true,
           },
         },
+        product: true,
       },
     });
   }
@@ -142,6 +146,7 @@ export class BatchRepository {
           },
           take: 20, // Limit events returned
         },
+        product: true,
       },
     });
   }
@@ -169,14 +174,14 @@ export class BatchRepository {
       };
     }
 
+    // manufacturingDate & expiryDate live on Product in schema, not MedicationBatch
     if (filters.startDate || filters.endDate) {
-      whereClause.manufacturingDate = {};
-      if (filters.startDate) {
-        whereClause.manufacturingDate.gte = filters.startDate;
-      }
-      if (filters.endDate) {
-        whereClause.manufacturingDate.lte = filters.endDate;
-      }
+      whereClause.product = {
+        manufacturingDate: {
+          ...(filters.startDate && { gte: filters.startDate }),
+          ...(filters.endDate && { lte: filters.endDate }),
+        },
+      };
     }
 
     const page = filters.page ?? 1;
@@ -196,6 +201,12 @@ export class BatchRepository {
               companyName: true,
               organizationType: true,
               contactEmail: true,
+            },
+          },
+          product: true,
+          _count: {
+            select: {
+              medicationUnits: true,
             },
           },
         },

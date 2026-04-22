@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { LoadingSpinner } from "@/components/ui/loading"
+import { LoadingTable } from "@/components/ui/loading"
 import { Package, AlertTriangle, TrendingUp, Truck, Building2, QrCode } from "lucide-react";
 import { ManufacturerTab } from "@/utils";
 import { useEffect, useState } from "react"
@@ -33,9 +33,10 @@ const DistributorMain = ({ setActiveTab, orgId }: {
             
             try {
                 setLoading(true);
-                const response = await fetch(`/api/batches/${orgId}`);
+                const response = await fetch(`/api/web/batches?organizationId=${orgId}`); 
                 if (response.ok) {
-                    const batches = await response.json();
+                    const result = await response.json();
+                    const batches = result.data.batches;
                     const totalBatchUnits = batches.reduce((sum: number, batch: any) => sum + (batch.quantity || 0), 0);
                     
                     // Calculate active shipments (batches in transit)
@@ -65,7 +66,7 @@ const DistributorMain = ({ setActiveTab, orgId }: {
         const fetchDistributorName = async () => {
             if (!orgId) return;
             try {
-                const response = await fetch(`/api/organizations/info?orgId=${orgId}`);
+                const response = await fetch(`/api/web/organizations/info?orgId=${orgId}`);
                 if (response.ok) {
                     const data = await response.json();
                     setDistributorName(data.companyName);
@@ -89,10 +90,19 @@ const DistributorMain = ({ setActiveTab, orgId }: {
 
     if (loading) {
         return (
-            <div className="space-y-8">
-                <h1 className="font-bold text-2xl sm:text-3xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Distributor Dashboard</h1>
-                <div className="flex items-center justify-center p-8">
-                    <LoadingSpinner size="large" text="Loading dashboard..." />
+            <div className="space-y-6">
+                <div className="skeleton h-7 w-48 rounded" aria-hidden="true" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="bg-card border border-border rounded-lg p-5">
+                            <div className="skeleton h-3 w-24 rounded mb-4" />
+                            <div className="skeleton h-7 w-16 rounded mb-2" />
+                            <div className="skeleton h-3 w-32 rounded" />
+                        </div>
+                    ))}
+                </div>
+                <div className="bg-card border border-border rounded-lg p-5">
+                    <LoadingTable rows={3} columns={2} />
                 </div>
             </div>
         );
@@ -103,8 +113,8 @@ const DistributorMain = ({ setActiveTab, orgId }: {
             {/* Header */}
             <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-center sm:space-y-0">
                 <div className="min-w-0 flex-1">
-                    <h1 className="font-bold text-2xl sm:text-3xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Distribution Center</h1>
-                    <p className="text-muted-foreground mt-1 sm:mt-2 text-base sm:text-lg font-extrabold">
+                    <h1 className="font-bold text-2xl sm:text-3xl text-foreground">Distribution Center</h1>
+                    <p className="text-muted-foreground mt-1 sm:mt-2 text-base sm:text-lg">
                       Welcome{distributorName ? ` to ${distributorName} - Wholesale Distribution` : " to your distribution center"}
                     </p>
                 </div>
@@ -112,7 +122,7 @@ const DistributorMain = ({ setActiveTab, orgId }: {
                     <span className="hidden sm:inline">
                         <ThemeToggle />
                     </span>
-                    <Badge variant="secondary" className="px-3 py-1.5 bg-primary/10 text-primary border-primary/20 text-sm">
+                    <Badge variant="distributor" className="px-3 py-1.5 text-sm">
                         <Building2 className="h-4 w-4 mr-2" />
                         Distributor
                     </Badge>
@@ -121,10 +131,12 @@ const DistributorMain = ({ setActiveTab, orgId }: {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Total Batches</CardTitle>
-                        <Package className="h-4 w-4 text-primary" />
+                        <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
+                            <Package className="h-4 w-4 text-primary" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-foreground">{stats.totalBatches.toLocaleString()}</div>
@@ -134,10 +146,12 @@ const DistributorMain = ({ setActiveTab, orgId }: {
                     </CardContent>
                 </Card>
 
-                <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Total Units</CardTitle>
-                        <Package className="h-4 w-4 text-green-500" />
+                        <div className="h-8 w-8 rounded-md bg-status-verified/10 flex items-center justify-center">
+                            <Package className="h-4 w-4 text-status-verified" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-foreground">{stats.totalBatchUnits.toLocaleString()}</div>
@@ -147,26 +161,30 @@ const DistributorMain = ({ setActiveTab, orgId }: {
                     </CardContent>
                 </Card>
 
-                <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Active Shipments</CardTitle>
-                        <Truck className="h-4 w-4 text-blue-500" />
+                        <div className="h-8 w-8 rounded-md bg-accent/10 flex items-center justify-center">
+                            <Truck className="h-4 w-4 text-accent" />
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-blue-600">{stats.activeShipments}</div>
+                        <div className="text-2xl font-bold text-accent">{stats.activeShipments}</div>
                         <p className="text-xs text-muted-foreground">
                             Currently in transit
                         </p>
                     </CardContent>
                 </Card>
 
-                <Card className="glass-effect border-2 border-primary/10 shadow-lg backdrop-blur-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Low Stock Alerts</CardTitle>
-                        <AlertTriangle className="h-4 w-4 text-orange-500" />
+                        <div className="h-8 w-8 rounded-md bg-status-warning/10 flex items-center justify-center">
+                            <AlertTriangle className="h-4 w-4 text-status-warning" />
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-orange-600">{stats.lowStockCount}</div>
+                        <div className="text-2xl font-bold text-status-warning">{stats.lowStockCount}</div>
                         <p className="text-xs text-muted-foreground">
                             Batches need restocking
                         </p>
@@ -174,12 +192,12 @@ const DistributorMain = ({ setActiveTab, orgId }: {
                 </Card>
             </div>
 
-            {/* Recent Activity */}
+            {/* Quick Actions */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardHeader>
-                        <CardTitle className="font-montserrat">Quick Actions</CardTitle>
+                        <CardTitle className="font-semibold text-foreground">Quick Actions</CardTitle>
                         <CardDescription>Wholesale distribution tasks and shortcuts</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">

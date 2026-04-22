@@ -5,6 +5,7 @@
  */
 
 import { Actor, Permissions, requirePermission } from "@/utils/types/actor";
+import { logBatchEvent } from "@/lib/hedera";
 import {
   UpdateTransferStatusSchema,
   validateInput,
@@ -16,10 +17,12 @@ import {
   transferRepository,
 } from "@/core/infrastructure/db/repositories";
 import {
-  ForbiddenError,
   BusinessRuleViolationError,
 } from "@/utils/types/errors";
-import type { OwnershipTransfer, TransferStatus } from "@/lib/generated/prisma";
+import {
+  TransferStatus,
+  OwnershipTransfer,
+} from "@/lib/generated/prisma/client";
 
 export interface UpdateTransferOutput {
   transfer: OwnershipTransfer;
@@ -53,49 +56,52 @@ export class UpdateTransferStatusUseCase {
       );
     }
 
-    // 5. Verify actor has access to destination organization
-    if (actor.organizationId !== transfer.toOrgId) {
-      throw new ForbiddenError(
-        "Only the destination organization can accept/reject this transfer"
-      );
-    }
-
-    // 6. Update transfer status
+    // 5. Update transfer status
     const updatedTransfer = await this.transferRepo.updateStatus(
       transfer.id,
-      input.status as TransferStatus
+      input.status
     );
 
-    // 7. If completed, update batch ownership
+    // 6. If completed, update batch ownership
     let batchUpdated = false;
-    if (input.status === "COMPLETED") {
-      await this.batchRepo.updateOrganization(
-        transfer.batchId,
-        transfer.toOrgId
+
+    if (input.status === "CANCELLED") {
+
+      await this.batchRepo.updateStatus(transfer.batch.batchId, "CREATED");
+
+      const eventSeq = await logBatchEvent(
+        transfer.batch.registryTopicId ?? "",
+        "TRANSFER_CANCELLED",
+        {
+          batchId: transfer.batch.batchId,
+          transferFrom: transfer.fromOrg.id,
+          transferTo: transfer.toOrg.id,
+          timestamp: new Date().toISOString(),
+        },
       );
+
+      // 7. Store off-chain event (HCS-2 logging for transfers TBD - event type not yet supported)
+      await this.batchRepo.createEvent({
+        batchId: transfer.batchId,
+        eventType: "TRANSFER_CANCELLED",
+        hederaSeq: eventSeq ?? 0,
+        payload: {
+          transferId: transfer.id,
+          status: input.status,
+          processedBy: actor.id,
+        },
+      });
+
       batchUpdated = true;
+      
     }
 
-    // 8. Store off-chain event (HCS-2 logging for transfers TBD - event type not yet supported)
-    const eventSeq = 0;
-    await this.batchRepo.createEvent({
-      batchId: transfer.batchId,
-      eventType:
-        input.status === "COMPLETED"
-          ? "TRANSFER_COMPLETED"
-          : "TRANSFER_CANCELLED",
-      hederaSeq: eventSeq,
-      payload: {
-        transferId: transfer.id,
-        status: input.status,
-        processedBy: actor.id,
-      },
-    });
 
     return {
       transfer: updatedTransfer,
       batchUpdated,
     };
+
   }
 }
 

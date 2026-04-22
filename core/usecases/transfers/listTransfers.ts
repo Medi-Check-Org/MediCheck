@@ -15,6 +15,7 @@ import {
   transferRepository,
   TransferWithRelations,
 } from "@/core/infrastructure/db/repositories";
+import type { TransferStatus } from "@/lib/generated/prisma/client";
 import { ForbiddenError } from "@/utils/types/errors";
 
 export interface ListTransfersOutput {
@@ -48,7 +49,7 @@ export class ListTransfersUseCase {
     const transfers = await this.transferRepo.list({
       organizationId: input.organizationId,
       direction: input.direction,
-      status: input.status as any,
+      status: input.status,
     });
 
     return {

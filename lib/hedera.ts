@@ -2,17 +2,21 @@
 import { hedera2Client } from "./hedera2Client";
 import { HCS2RegistryType } from "@hashgraphonline/standards-sdk";
 import { HederaLogPayload } from "@/utils";
+import {
+  hederaEvents,
+  HederaUnitSafetyCheckPayload,
+} from "@/utils/types/hedera";
 
 // Creates a new batch registry on Hedera blockchain for tracking medication batches
 export async function createBatchRegistry(
   batchId: string,
   orgId?: string,
-  drugName?: string
+  drugName?: string,
 ) {
   // Create registry topic on Hedera
   const registry = await hedera2Client.createRegistry({
     registryType: HCS2RegistryType.INDEXED,
-    ttl: 60 * 60 * 24 * 365, // 1 year
+    ttl: 60 * 60 * 24 * 365 * 2, // 2 years need to setup auutomatic renewal or extension of time to live
     adminKey: true,
   });
 
@@ -43,7 +47,7 @@ export async function createBatchRegistry(
 export async function createOrgManagedRegistry(orgId: string, orgName: string) {
   const registry = await hedera2Client.createRegistry({
     registryType: HCS2RegistryType.INDEXED,
-    ttl: 60 * 60 * 24 * 365 * 2, // 2 years
+    ttl: 60 * 60 * 24 * 365 * 2, // 2 years need to setup auutomatic renewal or extension of time to live
     adminKey: true,
   });
 
@@ -69,10 +73,10 @@ export async function createOrgManagedRegistry(orgId: string, orgName: string) {
   return registryTopicId;
 }
 
-
+// this funtion allows uus to register a unit to the associated batch registry
 export async function registerUnitOnBatch(
   registryTopicId: string,
-  unit: { serialNumber: string; drugName: string; batchId: string }
+  unit: { serialNumber: string; drugName: string; batchId: string },
 ): Promise<number> {
   const message = JSON.stringify({
     type: "UNIT",
@@ -91,15 +95,40 @@ export async function registerUnitOnBatch(
   return response.sequenceNumber;
 }
 
+// this funtion allows uus to register an independed unit to the associated organization registry
+export async function registerUnitOnOrganizationManagedRegistry(
+  registryTopicId: string,
+  unit: {
+    serialNumber: string;
+    drugName: string;
+    mintedUnitId: string;
+    orgId: string;
+    productId: string;
+  },
+): Promise<number> {
+  const message = JSON.stringify({
+    type: "MINTED_UNIT",
+    ...unit,
+  });
 
+  const response = await hedera2Client.registerEntry(registryTopicId, {
+    targetTopicId: registryTopicId,
+    metadata: message,
+  });
+
+  if (!response.success || response.sequenceNumber === undefined) {
+    throw new Error(`Failed to register unit ${unit.serialNumber}`);
+  }
+
+  return response.sequenceNumber;
+}
+
+
+// we log batch related activies and the related unit
 export async function logBatchEvent(
   topicId: string,
-  eventType:
-    | "BATCH_CREATED"
-    | "BATCH_OWNERSHIP"
-    | "BATCH_FLAG"
-    | "BATCH_UNITS_REGISTERED",
-  payload: HederaLogPayload
+  eventType: hederaEvents,
+  payload: HederaLogPayload,
 ) {
   const message = JSON.stringify({
     type: "EVENT_LOG",
@@ -120,11 +149,34 @@ export async function logBatchEvent(
   return response.sequenceNumber;
 }
 
+export async function logOrgMintedUnitEvent(
+  topicId: string,
+  eventType: "UNIT_MINTED" | "UNIT_SCANNED" | "UNIT_FLAGGED",
+  payload: HederaUnitSafetyCheckPayload,
+) {
+  const message = JSON.stringify({
+    type: "EVENT_LOG",
+    eventType,
+    timestamp: new Date().toISOString(),
+    ...payload,
+  });
+
+  const response = await hedera2Client.registerEntry(topicId, {
+    targetTopicId: topicId,
+    metadata: message,
+  });
+
+  if (!response.success) {
+    throw new Error(`Failed to log event to Hedera topic ${topicId}`);
+  }
+
+  return response.sequenceNumber;
+}
 
 /**
- * Fetch all EVENT_LOG messages from a Hedera topic using the batch registryId
+ * Fetch all EVENT_LOG messages from a Hedera topic using the registryId
  */
-export const getBatchEventLogs = async (topicId: string) => {
+export const getAllEventLogs = async (topicId: string) => {
   const messages = await hedera2Client.getRegistry(topicId, {
     limit: 100,
     order: "asc",
@@ -132,4 +184,3 @@ export const getBatchEventLogs = async (topicId: string) => {
 
   return messages.entries;
 };
-

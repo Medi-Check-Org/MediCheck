@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { UserRole } from "@/lib/generated/prisma";
+import { UserRole } from "../generated/prisma/enums";
 import { publicRoutes, authRoutes, orgnaizationRoutes } from "@/utils";
 import type { Actor } from "@/utils/types/actor";
 import { userRepository } from "@/core/infrastructure/db/repositories";
@@ -10,15 +10,16 @@ export async function handleWebAuth(auth: any, req: Request) {
 
   console.log("Incoming pathname in handleWebAuth", pathname);
 
-  const { userId, sessionClaims } = await auth();
-
-  const teamMember = await userRepository.getByClerkIdOrThrow(userId);
-
-  if (req.headers.get("authorization")?.startsWith("Bearer ")) {
-    return NextResponse.json(
-      { error: "Invalid authentication method for this route" },
-      { status: 401 }
-    );
+  if (
+    // instead of listing them, we can create an object called public route and list them there just like we are doing to routes, makes it cleanerv
+    pathname.startsWith("/api/web/verify") ||
+    pathname.startsWith("/api/web/hotspots") ||
+    pathname.startsWith("/api/web/geminiTranslation") ||
+    pathname.startsWith("/api/web/auth") ||
+    pathname.startsWith("/api/web/register") ||
+    pathname.startsWith("/api/web/failed/registration/cleanup")
+  ) {
+    return NextResponse.next();
   }
 
   // Public & auth routes
@@ -29,13 +30,24 @@ export async function handleWebAuth(auth: any, req: Request) {
     return NextResponse.next();
   }
 
-  if (
-    pathname.startsWith("/api/verify") || // instead of listing them, we can create an object called public route and list them there just like we are doing to routes, makes it cleaner
-    pathname.startsWith("/api/hotspots") ||
-    pathname.startsWith("/api/geminiTranslation") ||
-    pathname.startsWith("/api/auth")
-  ) {
-    return NextResponse.next();
+  const { userId, sessionClaims } = await auth();
+
+  if (!userId) {
+    return NextResponse.json(
+      { error: "Invalid authentication" },
+      { status: 401 },
+    );
+  }
+
+  console.log("Clerk auth result in handleWebAuth", { userId, sessionClaims });
+
+  const teamMember = await userRepository.getByClerkIdOrThrow(userId);
+
+  if (req.headers.get("authorization")?.startsWith("Bearer ")) {
+    return NextResponse.json(
+      { error: "Invalid authentication method for this route" },
+      { status: 401 },
+    );
   }
 
   if (!userId) {
@@ -47,6 +59,8 @@ export async function handleWebAuth(auth: any, req: Request) {
   let role = publicMetadata?.role as UserRole | undefined;
   let orgType = publicMetadata?.organizationType as string | undefined;
   let organizationId = publicMetadata?.organizationId as string | undefined;
+
+  console.log("Extracted metadata from session claims", { role, orgType, organizationId });
 
   // Cookie fallback (unchanged logic)
   if (!role || !orgType || !organizationId) {
@@ -66,6 +80,8 @@ export async function handleWebAuth(auth: any, req: Request) {
   }
 
   const permissions = getPermissionsForRole(teamMember.userRole);
+
+  console.log("Finalized actor attributes", { role, orgType, organizationId, permissions });
 
   // Build normalized actor
   const actor: Actor = {
@@ -94,7 +110,7 @@ export async function handleWebAuth(auth: any, req: Request) {
     if (!allowedRoute) {
       if (userId && role === UserRole.ORGANIZATION_MEMBER) {
         console.log(
-          "Org member without orgType detected - redirecting to general dashboard"
+          "Org member without orgType detected - redirecting to general dashboard",
         );
         return NextResponse.redirect(new URL("/dashboard", req.url));
       }
@@ -106,8 +122,11 @@ export async function handleWebAuth(auth: any, req: Request) {
     }
   }
 
+  console.log("User authorized for requested route, proceeding with request");
+
   // Attach actor for downstream use
   const res = NextResponse.next();
   res.headers.set("x-actor", JSON.stringify(actor));
   return res;
+
 }

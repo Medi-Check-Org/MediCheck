@@ -14,48 +14,24 @@ import { ValidationError } from "./errors";
 
 export const CreateBatchSchema = z.object({
   organizationId: z.string().cuid(),
-  drugName: z.string().min(1, "Drug name is required").max(255, "Drug name must not exceed 255 characters"),
-  composition: z.string().max(2000, "Composition must not exceed 2000 characters").optional(),
-  batchSize: z.number().int().positive("Batch size must be a positive integer").max(100000, "Batch size must not exceed 100,000 units"),
-  manufacturingDate: z.string().refine(
-    (date) => !isNaN(Date.parse(date)),
-    { message: "Invalid manufacturing date format" }
-  ).or(z.date()),
-  expiryDate: z.string().refine(
-    (date) => !isNaN(Date.parse(date)),
-    { message: "Invalid expiry date format" }
-  ).or(z.date()),
-  storageInstructions: z.string().max(1000, "Storage instructions must not exceed 1000 characters").optional(),
-}).refine(
-  (data) => {
-    const mfgDate = new Date(data.manufacturingDate);
-    const expDate = new Date(data.expiryDate);
-    return expDate > mfgDate;
-  },
-  {
-    message: "Expiry date must be after manufacturing date",
-    path: ["expiryDate"],
-  }
-).refine(
-  (data) => {
-    const mfgDate = new Date(data.manufacturingDate);
-    const now = new Date();
-    // Manufacturing date shouldn't be more than 2 years in the future
-    const twoYearsFromNow = new Date(now.getFullYear() + 2, now.getMonth(), now.getDate());
-    return mfgDate <= twoYearsFromNow;
-  },
-  {
-    message: "Manufacturing date cannot be more than 2 years in the future",
-    path: ["manufacturingDate"],
-  }
-);
+  drugName: z
+    .string()
+    .min(1, "Drug name is required")
+    .max(255, "Drug name must not exceed 255 characters"),
+  batchSize: z
+    .number()
+    .int()
+    .positive("Batch size must be a positive integer")
+    .max(100000, "Batch size must not exceed 100,000 units"),
+  productId: z.string().cuid(),
+});
 
 export type CreateBatchInput = z.infer<typeof CreateBatchSchema>;
 
 export const ListBatchesSchema = z.object({
   organizationId: z.string().cuid(),
   filters: z.object({
-    status: z.string().optional(),
+    status: z.nativeEnum(BatchStatus).optional(),
     drugName: z.string().optional(),
     startDate: z.date().optional(),
     endDate: z.date().optional(),
@@ -85,9 +61,15 @@ export const InitiateTransferSchema = z.object({
 
 export type InitiateTransferInput = z.infer<typeof InitiateTransferSchema>;
 
+import {
+  TransferStatus,
+  BatchStatus,
+  OrganizationType,
+} from "@/lib/generated/prisma/enums";
+
 export const ListTransfersSchema = z.object({
   organizationId: z.string().cuid(),
-  status: z.string().optional(),
+  status: z.nativeEnum(TransferStatus).optional(),
   direction: z.enum(["OUTGOING", "INCOMING", "ALL"]).optional().default("ALL"),
 });
 
@@ -96,7 +78,7 @@ export type ListTransfersInput = z.infer<typeof ListTransfersSchema>;
 export const UpdateTransferStatusSchema = z.object({
   transferId: z.string().cuid(),
   organizationId: z.string().cuid(),
-  status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED", "FAILED", "CANCELLED"]),
+  status: z.nativeEnum(TransferStatus),
   notes: z.string().max(1000).optional(),
 });
 
@@ -150,7 +132,7 @@ export type GetOrganizationInput = z.infer<typeof GetOrganizationSchema>;
 
 export const ListOrganizationsSchema = z.object({
   filters: z.object({
-    organizationType: z.string().optional(),
+    organizationType: z.nativeEnum(OrganizationType).optional(),
     state: z.string().optional(),
   }).optional(),
 });

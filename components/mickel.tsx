@@ -1,0 +1,578 @@
+// "use client"
+// import { useState, useEffect } from "react"
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+// import { Button } from "@/components/ui/button"
+// import { ThemeToggle } from "@/components/theme-toggle"
+// import { QRScanner } from "@/components/qr-scanner";
+// import { publicRoutes, authRoutes } from "@/utils";
+// import { useUser } from "@clerk/nextjs";
+// import { getRedirectPath } from "@/utils";
+// import {
+//   Shield,
+//   ArrowLeft,
+//   QrCode,
+// } from "lucide-react"
+// import Link from "next/link"
+
+// export default function ScanPage() {
+
+//   const { user, isSignedIn } = useUser();
+
+//   const role = user?.publicMetadata.role as string | undefined;
+
+//   const organizationType = user?.publicMetadata.organizationType as string | undefined;
+
+//   const [scannedQRcodeResult, setScannedQRcodeResult] = useState("");
+
+//   const handleQRScan = (qrData: string) => {
+//     setScannedQRcodeResult(qrData)
+//   }
+
+//   useEffect(() => {
+//     if (scannedQRcodeResult) {
+//       window.location.href = scannedQRcodeResult;
+//     }
+//   }, [scannedQRcodeResult])
+
+//   // Handle QR scanner errors
+//   const handleQRError = (error: string) => {
+//     console.error('QR Scanner error:', error)
+//   }
+
+//   return (
+//     <div className="min-h-screen bg-background flex flex-col">
+
+//       {/* Unified Navigation */}
+//       <nav className="border-b border-border bg-card/95 backdrop-blur-sm fixed top-0 left-0 right-0 z-50">
+//         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+//           <div className="flex justify-between items-center h-14">
+//             <Link href={publicRoutes.home} className="flex items-center gap-2.5">
+//               <div className="bg-primary p-1.5 rounded-md">
+//                 <Shield className="h-4 w-4 text-primary-foreground" />
+//               </div>
+//               <span className="font-bold text-base text-foreground tracking-tight">MediCheck</span>
+//             </Link>
+//             {isSignedIn ? (
+//               <div className="flex items-center gap-2">
+//                 <ThemeToggle />
+//                 <Link href={getRedirectPath(role, organizationType)}>
+//                   <Button variant="default" size="sm">Dashboard</Button>
+//                 </Link>
+//               </div>
+//             ) : (
+//               <div className="flex items-center gap-2">
+//                 <ThemeToggle />
+//                 <Link href={authRoutes.login}>
+//                   <Button variant="ghost" size="sm">Sign In</Button>
+//                 </Link>
+//                 <Link href={authRoutes.register}>
+//                   <Button variant="default" size="sm">Get Started</Button>
+//                 </Link>
+//               </div>
+//             )}
+//           </div>
+//         </div>
+//       </nav>
+
+//       <main className="flex-1 w-full max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-8">
+//         <div className="mb-6">
+//           <Link
+//             href={publicRoutes.home}
+//             className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors text-sm mb-5"
+//           >
+//             <ArrowLeft className="h-4 w-4 mr-1.5" />
+//             Back to Home
+//           </Link>
+//           <h1 className="font-bold text-2xl sm:text-3xl text-foreground mb-1.5 tracking-tight">
+//             Verify Your Medicine
+//           </h1>
+//           <p className="text-muted-foreground text-sm">
+//             Scan the QR code on your medication packaging to verify authenticity.
+//           </p>
+//         </div>
+
+//         <Card className="border border-border shadow-sm">
+//           <CardHeader className="pb-3">
+//             <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
+//               <QrCode className="h-4 w-4 text-accent" />
+//               Medication Scanner
+//             </CardTitle>
+//           </CardHeader>
+//           <CardContent>
+//             <QRScanner
+//               onScan={handleQRScan}
+//               onError={handleQRError}
+//               width={320}
+//               height={240}
+//               facingMode="environment"
+//               className="mx-auto"
+//             />
+//           </CardContent>
+//         </Card>
+//       </main>
+//     </div>
+//   )
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 'use client'
+
+// import React, { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardRef } from 'react'
+// import { Button } from '@/components/ui/button'
+// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+// import { Alert } from '@/components/ui/alert'
+// import { Camera, X, RotateCcw } from 'lucide-react'
+
+// interface QRScannerProps {
+//   onScan: (data: string) => void
+//   onError?: (error: string) => void
+//   className?: string
+//   width?: number
+//   height?: number
+//   facingMode?: 'user' | 'environment' // 'user' for front camera, 'environment' for back camera
+//   autoStart?: boolean // Whether to automatically start scanning when component mounts
+// }
+
+// interface QRCodeResult {
+//   text: string
+//   format?: string
+//   timestamp: number
+// }
+
+// export interface QRScannerRef {
+//   startCamera: () => void
+//   stopCamera: () => void
+// }
+
+// export const QRScanner = forwardRef<QRScannerRef, QRScannerProps>(({
+//   onScan,
+//   onError,
+//   className = '',
+//   width = 300,
+//   height = 300,
+//   facingMode = 'environment',
+//   autoStart = false
+// }, ref) => {
+//   const videoRef = useRef<HTMLVideoElement>(null)
+//   const canvasRef = useRef<HTMLCanvasElement>(null)
+//   const streamRef = useRef<MediaStream | null>(null)
+//   const animationRef = useRef<number | undefined>(undefined)
+  
+//   const [isScanning, setIsScanning] = useState(false)
+//   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
+//   const [error, setError] = useState<string | null>(null)
+//   const [lastScanResult, setLastScanResult] = useState<QRCodeResult | null>(null)
+//   const [isLoading, setIsLoading] = useState(false)
+
+//   // Debounce function to prevent multiple scans of the same code
+//   const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined)
+
+//   const handleScanResult = useCallback((result: string) => {
+//     const now = Date.now()
+    
+//     // Prevent scanning the same code within 2 seconds
+//     if (lastScanResult && 
+//         lastScanResult.text === result && 
+//         now - lastScanResult.timestamp < 2000) {
+//       return
+//     }
+
+//     // Clear any existing debounce timeout
+//     if (debounceRef.current) {
+//       clearTimeout(debounceRef.current)
+//     }
+
+//     // Debounce the scan result to prevent rapid multiple scans
+//     debounceRef.current = setTimeout(() => {
+//       setLastScanResult({ text: result, timestamp: now })
+//       onScan(result)
+//     }, 100)
+//   }, [lastScanResult, onScan])
+
+//   // Initialize camera stream
+//   const startCamera = useCallback(async () => {
+//     try {
+//       setIsLoading(true)
+//       setError(null)
+
+//       // Check if getUserMedia is supported
+//       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+//         throw new Error('Camera access is not supported in this browser')
+//       }
+
+//       // Request camera permission
+//       const constraints: MediaStreamConstraints = {
+//         video: {
+//           facingMode,
+//           width: { ideal: width },
+//           height: { ideal: height }
+//         }
+//       }
+
+//       const stream = await navigator.mediaDevices.getUserMedia(constraints)
+//       streamRef.current = stream
+      
+//       if (videoRef.current) {
+//         videoRef.current.srcObject = stream
+//         videoRef.current.play()
+//         setHasPermission(true)
+//         setIsScanning(true)
+//       }
+//     } catch (err) {
+//       const errorMessage = err instanceof Error ? err.message : 'Failed to access camera'
+//       setError(errorMessage)
+//       setHasPermission(false)
+//       onError?.(errorMessage)
+//     } finally {
+//       setIsLoading(false)
+//     }
+//   }, [facingMode, width, height, onError])
+
+//   // Stop camera stream
+//   const stopCamera = useCallback(() => {
+//     // Stop all media stream tracks
+//     if (streamRef.current) {
+//       streamRef.current.getTracks().forEach(track => {
+//         track.stop()
+//         console.log(`Stopped camera track: ${track.kind}`)
+//       })
+//       streamRef.current = null
+//     }
+    
+//     // Clear video element
+//     if (videoRef.current) {
+//       videoRef.current.srcObject = null
+//       videoRef.current.load()
+//     }
+    
+//     // Cancel any ongoing animation frames
+//     if (animationRef.current) {
+//       cancelAnimationFrame(animationRef.current)
+//       animationRef.current = undefined
+//     }
+    
+//     // Reset all states
+//     setIsScanning(false)
+//     setHasPermission(null)
+//     setError(null)
+//     setLastScanResult(null)
+//     console.log('Camera completely stopped and resources released')
+//   }, [])
+
+//   // Expose methods to parent component via ref
+//   useImperativeHandle(ref, () => ({
+//     startCamera,
+//     stopCamera
+//   }), [startCamera, stopCamera])
+
+//   // QR Code scanning with actual libraries
+//   const scanQRCode = useCallback(async () => {
+//     if (!videoRef.current || !isScanning) {
+//       return
+//     }
+
+//     const video = videoRef.current
+
+//     if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+//       animationRef.current = requestAnimationFrame(scanQRCode)
+//       return
+//     }
+
+//     try {
+//       // Try ZXing library first
+//       const result = await scanWithZXing(video)
+//       if (result) {
+//         handleScanResult(result)
+//         return
+//       }
+//     } catch (err) {
+//       // If ZXing fails, try qr-scanner
+//       try {
+//         const result = await scanWithQRScanner(video)
+//         if (result) {
+//           handleScanResult(result)
+//           return
+//         }
+//       } catch (fallbackErr) {
+//         // If both fail, use canvas-based detection as fallback
+//         if (canvasRef.current) {
+//           const result = scanWithCanvas(video, canvasRef.current)
+//           if (result) {
+//             handleScanResult(result)
+//           }
+//         }
+//       }
+//     }
+
+//     // Continue scanning
+//     animationRef.current = requestAnimationFrame(scanQRCode)
+//   }, [isScanning, handleScanResult])
+
+//   // ZXing-based scanning
+//   const scanWithZXing = async (video: HTMLVideoElement): Promise<string | null> => {
+//     try {
+//       const { BrowserMultiFormatReader } = await import('@zxing/library')
+//       const codeReader = new BrowserMultiFormatReader()
+      
+//       const result = await codeReader.decodeOnceFromVideoDevice(undefined, video)
+//       return result ? result.getText() : null
+//     } catch (err) {
+//       // Silently fail - this is expected when no QR code is visible
+//       return null
+//     }
+//   }
+
+//   // qr-scanner library based scanning
+//   const scanWithQRScanner = async (video: HTMLVideoElement): Promise<string | null> => {
+//     try {
+//       const QrScanner = (await import('qr-scanner')).default
+      
+//       // Create a canvas from the video frame
+//       const canvas = document.createElement('canvas')
+//       const ctx = canvas.getContext('2d')
+//       if (!ctx) return null
+      
+//       canvas.width = video.videoWidth
+//       canvas.height = video.videoHeight
+//       ctx.drawImage(video, 0, 0)
+      
+//       // Use the correct API - just pass the canvas element
+//       const result = await QrScanner.scanImage(canvas)
+//       return result || null
+//     } catch (err) {
+//       // Silently fail - this is expected when no QR code is visible
+//       return null
+//     }
+//   }
+
+//   // Canvas-based fallback scanning
+//   const scanWithCanvas = (video: HTMLVideoElement, canvas: HTMLCanvasElement): string | null => {
+//     const context = canvas.getContext('2d')
+//     if (!context) return null
+
+//     // Set canvas dimensions to match video
+//     canvas.width = video.videoWidth
+//     canvas.height = video.videoHeight
+
+//     // Draw current video frame to canvas
+//     context.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+//     try {
+//       // Get image data from canvas
+//       const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
+      
+//       // Basic pattern detection for demo purposes
+//       const data = imageData.data
+//       let darkPixels = 0
+//       let lightPixels = 0
+      
+//       for (let i = 0; i < data.length; i += 4) {
+//         const r = data[i]
+//         const g = data[i + 1]
+//         const b = data[i + 2]
+//         const brightness = (r + g + b) / 3
+        
+//         if (brightness < 100) darkPixels++
+//         else lightPixels++
+//       }
+      
+//       // If we have a good mix of dark and light pixels, it might be a QR code
+//       const ratio = darkPixels / (darkPixels + lightPixels)
+//       if (ratio > 0.3 && ratio < 0.7) {
+//         // For demo purposes, return a mock QR code data
+//         return `demo-qr-token-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+//       }
+      
+//       return null
+//     } catch (err) {
+//       console.warn('Canvas scanning error:', err)
+//       return null
+//     }
+//   }
+
+//   // Start scanning when component mounts or when explicitly started
+//   useEffect(() => {
+//     if (isScanning && videoRef.current) {
+//       animationRef.current = requestAnimationFrame(scanQRCode)
+//     }
+    
+//     return () => {
+//       if (animationRef.current) {
+//         cancelAnimationFrame(animationRef.current)
+//       }
+//     }
+//   }, [isScanning, scanQRCode])
+
+//   // Cleanup on unmount
+//   useEffect(() => {
+//     return () => {
+//       stopCamera()
+//       if (debounceRef.current) {
+//         clearTimeout(debounceRef.current)
+//       }
+//     }
+//   }, [stopCamera])
+
+//   // Auto-start camera if autoStart is enabled
+//   useEffect(() => {
+//     if (autoStart && !isScanning && hasPermission === null) {
+//       startCamera()
+//     }
+//   }, [autoStart, isScanning, hasPermission, startCamera])
+
+//   return (
+//     <Card className={`w-fit ${className}`}>
+//       <CardHeader>
+//         <CardTitle className="flex items-center gap-2">
+//           <Camera className="w-5 h-5" />
+//           QR Code Scanner
+//         </CardTitle>
+//       </CardHeader>
+//       <CardContent className="space-y-4">
+//         <div className="relative flex justify-center items-center">
+//           {/* Video element for camera feed */}
+//           <video
+//             ref={videoRef}
+//             style={{ 
+//               width: `${width}px`, 
+//               height: `${height}px`,
+//               maxWidth: '100%',
+//               maxHeight: '100%'
+//             }}
+//             className="border rounded-lg bg-gray-100 mx-auto object-cover block"
+//             playsInline
+//             muted
+//           />
+          
+//           {/* Camera off overlay */}
+//           {!isScanning && !isLoading && hasPermission !== false && (
+//             <div 
+//               className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-gray-900/80 flex flex-col items-center justify-center rounded-lg"
+//               style={{ 
+//                 width: `${width}px`, 
+//                 height: `${height}px`,
+//                 maxWidth: '100%',
+//                 maxHeight: '100%'
+//               }}
+//             >
+//               <Camera className="w-12 h-12 text-gray-400 mb-2" />
+//               <p className="text-gray-300 text-sm text-center px-4">Camera is off<br />Click "Start Scanning" to begin</p>
+//             </div>
+//           )}
+          
+//           {/* Canvas for image processing (hidden) */}
+//           <canvas
+//             ref={canvasRef}
+//             className="hidden"
+//           />
+          
+//           {/* Loading overlay */}
+//           {isLoading && (
+//             <div 
+//               className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg"
+//               style={{ width, height }}
+//             >
+//               <div className="text-white text-center">
+//                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+//                 <p>Starting camera...</p>
+//               </div>
+//             </div>
+//           )}
+//         </div>
+
+//         {/* Error display */}
+//         {error && (
+//           <Alert variant="destructive">
+//             <p>{error}</p>
+//           </Alert>
+//         )}
+
+//         {/* Control buttons */}
+//         <div className="flex gap-2 justify-center">
+//           {!isScanning ? (
+//             <Button onClick={startCamera} disabled={isLoading}>
+//               <Camera className="w-4 h-4 mr-2" />
+//               Start Scanning
+//             </Button>
+//           ) : (
+//             <Button variant="outline" onClick={stopCamera}>
+//               <X className="w-4 h-4 mr-2" />
+//               Stop Scanning
+//             </Button>
+//           )}
+          
+//           {hasPermission === false && (
+//             <Button variant="outline" onClick={startCamera}>
+//               <RotateCcw className="w-4 h-4 mr-2" />
+//               Retry
+//             </Button>
+//           )}
+//         </div>
+
+//         {/* Instructions */}
+//         <div className="text-sm text-gray-600 text-center">
+//           <p>Position the QR code within the scanning area</p>
+//           {lastScanResult && (
+//             <p className="text-green-600 mt-1">
+//               Last scanned: {new Date(lastScanResult.timestamp).toLocaleTimeString()}
+//             </p>
+//           )}
+//         </div>
+//       </CardContent>
+//     </Card>
+//   )
+// })
+
+// QRScanner.displayName = 'QRScanner'
+
+// export default QRScanner

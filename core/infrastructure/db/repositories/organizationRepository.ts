@@ -7,30 +7,19 @@
 import { prisma } from "@/lib/prisma";
 import type {
   Organization,
-  Agent,
-  Prisma,
   OrganizationType,
-} from "@/lib/generated/prisma";
+} from "@/lib/generated/prisma/client";
+import { Prisma } from "@/lib/generated/prisma/client";
 import { NotFoundError } from "@/utils/types/errors";
 
-export interface OrganizationWithAgent extends Organization {
-  organizationAgent?: Agent | null;
-}
 
 export interface OrganizationWithDetails extends Organization {
-  organizationAgent?: {
-    id: number;
-    agentName: string;
-    inboundTopic: string;
-    outboundTopic: string;
-  } | null;
-  medicationBatches?: {
-    id: string;
-    batchId: string;
-    drugName: string;
-    status: string;
-    createdAt: Date;
-  }[];
+  medicationBatches?: (any & {
+    product?: any | null;
+    _count?: {
+      medicationUnits: number;
+    };
+  })[];
 }
 
 export interface ListOrganizationsFilters {
@@ -53,12 +42,9 @@ export class OrganizationRepository {
   /**
    * Find organization by ID
    */
-  async findById(id: string): Promise<OrganizationWithAgent | null> {
+  async findById(id: string): Promise<Organization | null> {
     return prisma.organization.findUnique({
       where: { id },
-      include: {
-        organizationAgent: true,
-      },
     });
   }
 
@@ -66,26 +52,19 @@ export class OrganizationRepository {
    * Find organization with full details
    */
   async findByIdWithDetails(
-    id: string
+    id: string,
   ): Promise<OrganizationWithDetails | null> {
     return prisma.organization.findUnique({
       where: { id },
       include: {
-        organizationAgent: {
-          select: {
-            id: true,
-            agentName: true,
-            inboundTopic: true,
-            outboundTopic: true,
-          },
-        },
         medicationBatches: {
-          select: {
-            id: true,
-            batchId: true,
-            drugName: true,
-            status: true,
-            createdAt: true,
+          include: {
+            product: true,
+            _count: {
+              select: {
+                medicationUnits: true,
+              },
+            },
           },
           take: 10,
           orderBy: {
@@ -122,7 +101,7 @@ export class OrganizationRepository {
    */
   async update(
     id: string,
-    data: UpdateOrganizationData
+    data: UpdateOrganizationData,
   ): Promise<Organization> {
     return prisma.organization.update({
       where: { id },
@@ -143,7 +122,7 @@ export class OrganizationRepository {
   /**
    * Get or throw if not found
    */
-  async getByIdOrThrow(id: string): Promise<OrganizationWithAgent> {
+  async getByIdOrThrow(id: string): Promise<Organization> {
     const org = await this.findById(id);
     if (!org) {
       throw new NotFoundError("Organization", id);

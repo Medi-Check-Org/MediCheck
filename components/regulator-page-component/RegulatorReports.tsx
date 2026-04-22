@@ -3,10 +3,8 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { UniversalLoader } from "@/components/ui/universal-loader"
 import { 
-    FileText, 
     CheckCircle, 
     XCircle, 
     Users, 
@@ -19,7 +17,7 @@ import {
     Activity,
     Shield
 } from "lucide-react"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { toast } from "react-toastify"
 
 interface AnalyticsData {
     scansByOrgType: Array<{ region: string; _count: { id: number } }>;
@@ -50,7 +48,6 @@ const RegulatorReports = () => {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [generatingReport, setGeneratingReport] = useState<string | null>(null)
-    const [selectedReportType, setSelectedReportType] = useState<string>("summary")
 
     useEffect(() => {
         fetchAnalytics()
@@ -60,7 +57,7 @@ const RegulatorReports = () => {
         try {
             setLoading(true)
             setError(null)
-            const response = await fetch('/api/regulator/analytics')
+            const response = await fetch('/api/web/regulator/analytics')
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`)
@@ -72,6 +69,7 @@ const RegulatorReports = () => {
         } catch (error) {
             console.error('Error fetching analytics:', error)
             setError('Failed to load analytics data. Please try again.')
+            toast.error("Failed to load reports data")
         } finally {
             setLoading(false)
         }
@@ -80,7 +78,7 @@ const RegulatorReports = () => {
     const generateReport = async (reportType: string) => {
         try {
             setGeneratingReport(reportType);
-            const response = await fetch(`/api/regulator/reports?type=${reportType}`);
+            const response = await fetch(`/api/web/regulator/reports?type=${reportType}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             // Get PDF blob
@@ -93,9 +91,11 @@ const RegulatorReports = () => {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            toast.success(`${reportType} report downloaded`)
         } catch (error) {
             console.error('Error generating report:', error);
             setError(`Failed to generate ${reportType} report. Please try again.`);
+            toast.error(`Failed to generate ${reportType} report`)
         } finally {
             setGeneratingReport(null);
         }
@@ -106,47 +106,54 @@ const RegulatorReports = () => {
             case 'completed':
             case 'resolved':
             case 'delivered':
-                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                return 'bg-status-verified/10 text-status-verified'
             case 'pending':
             case 'investigating':
             case 'in_transit':
-                return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                return 'bg-status-warning/10 text-status-warning'
             case 'failed':
             case 'dismissed':
             case 'flagged':
-                return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                return 'bg-destructive/10 text-destructive'
             default:
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                return 'bg-muted text-muted-foreground'
         }
     }
 
     if (loading) {
-        return (
-            <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                    <h1 className="font-montserrat font-bold text-3xl text-foreground">Reports & Analytics</h1>
-                </div>
-                <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <span className="ml-2 text-muted-foreground">Loading reports data...</span>
-                </div>
-            </div>
-        )
+        return <UniversalLoader text="Loading reports data..." />
     }
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="font-montserrat font-bold text-3xl text-foreground">Reports & Analytics</h1>
-                {/* Hide ThemeToggle on mobile, show on desktop */}
-                <div className="hidden sm:block">
-                    <ThemeToggle />
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                    <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Reports & Analytics</h1>
+                    <p className="text-muted-foreground text-sm sm:text-base">Generate regulator insights and export downloadable reports.</p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    onClick={() => fetchAnalytics()}
+                    disabled={loading}
+                    className="h-11 cursor-pointer w-full sm:w-auto"
+                  >
+                    Refresh analytics
+                  </Button>
+                  <Button
+                    onClick={() => generateReport("summary")}
+                    disabled={generatingReport !== null}
+                    className="h-11 cursor-pointer w-full sm:w-auto"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    {generatingReport === "summary" ? "Generating..." : "Download summary PDF"}
+                  </Button>
                 </div>
             </div>
 
             {error && (
-                <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+                <Card className="border-destructive/20 bg-destructive/5">
                     <CardContent className="pt-6">
-                        <div className="flex items-center gap-2 text-red-800 dark:text-red-200">
+                        <div className="flex items-center gap-2 text-destructive">
                             <AlertTriangle className="h-4 w-4" />
                             <span>{error}</span>
                             <Button 
@@ -166,7 +173,7 @@ const RegulatorReports = () => {
             {analytics && (
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <Card>
+                        <Card className="border border-border shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Total Organizations</CardTitle>
                                 <Users className="h-4 w-4 text-muted-foreground" />
@@ -179,39 +186,39 @@ const RegulatorReports = () => {
                             </CardContent>
                         </Card>
 
-                        <Card>
+                        <Card className="border border-border shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Active Investigations</CardTitle>
                                 <Shield className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-orange-600">{analytics.summary.activeInvestigations}</div>
+                                <div className="text-2xl font-bold text-status-warning">{analytics.summary.activeInvestigations}</div>
                                 <p className="text-xs text-muted-foreground">
                                     {analytics.summary.resolvedInvestigations} resolved this month
                                 </p>
                             </CardContent>
                         </Card>
 
-                        <Card>
+                        <Card className="border border-border shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Total Scans</CardTitle>
                                 <Activity className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-blue-600">{analytics.summary.totalScans}</div>
+                                <div className="text-2xl font-bold text-primary">{analytics.summary.totalScans}</div>
                                 <p className="text-xs text-muted-foreground">
                                     This month
                                 </p>
                             </CardContent>
                         </Card>
 
-                        <Card>
+                        <Card className="border border-border shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Medication Batches</CardTitle>
                                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-green-600">{analytics.summary.totalBatches}</div>
+                                <div className="text-2xl font-bold text-status-verified">{analytics.summary.totalBatches}</div>
                                 <p className="text-xs text-muted-foreground">
                                     Total registered
                                 </p>
@@ -222,7 +229,7 @@ const RegulatorReports = () => {
                     {/* Analytics Charts */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Organization Types Distribution */}
-                        <Card>
+                        <Card className="border border-border shadow-sm">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <PieChart className="h-5 w-5" />
@@ -242,9 +249,9 @@ const RegulatorReports = () => {
                                                     {stat.organizationType.replace('_', ' ')}
                                                 </Badge>
                                                 {stat.isVerified ? (
-                                                    <CheckCircle className="h-4 w-4 text-green-600" />
+                                                    <CheckCircle className="h-4 w-4 text-status-verified" />
                                                 ) : (
-                                                    <XCircle className="h-4 w-4 text-gray-400" />
+                                                    <XCircle className="h-4 w-4 text-muted-foreground" />
                                                 )}
                                             </div>
                                             <span className="font-semibold">{stat._count.id}</span>
@@ -255,7 +262,7 @@ const RegulatorReports = () => {
                         </Card>
 
                         {/* Transfer Status Overview */}
-                        <Card>
+                        <Card className="border border-border shadow-sm">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <TrendingUp className="h-5 w-5" />
@@ -278,7 +285,7 @@ const RegulatorReports = () => {
                         </Card>
 
                         {/* Counterfeit Reports by Severity */}
-                        <Card>
+                        <Card className="border border-border shadow-sm">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <AlertTriangle className="h-5 w-5" />
@@ -305,7 +312,7 @@ const RegulatorReports = () => {
                         </Card>
 
                         {/* Regional Scan Distribution */}
-                        <Card>
+                        <Card className="border border-border shadow-sm">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <BarChart3 className="h-5 w-5" />
@@ -331,7 +338,7 @@ const RegulatorReports = () => {
             {/* Recent Activity Summary */}
 
             {analytics && (
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Activity className="h-5 w-5" />
@@ -346,11 +353,11 @@ const RegulatorReports = () => {
                                 <div className="space-y-1">
                                     <div className="flex justify-between text-sm">
                                         <span>Active Cases</span>
-                                        <span className="font-medium text-orange-600">{analytics.summary.activeInvestigations}</span>
+                                        <span className="font-medium text-status-warning">{analytics.summary.activeInvestigations}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span>Resolved</span>
-                                        <span className="font-medium text-green-600">{analytics.summary.resolvedInvestigations}</span>
+                                        <span className="font-medium text-status-verified">{analytics.summary.resolvedInvestigations}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span>Total Cases</span>
@@ -368,7 +375,7 @@ const RegulatorReports = () => {
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span>Verified</span>
-                                        <span className="font-medium text-green-600">{analytics.summary.verifiedOrganizations}</span>
+                                        <span className="font-medium text-status-verified">{analytics.summary.verifiedOrganizations}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <span>Verification Rate</span>

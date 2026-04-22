@@ -7,3 +7,4 @@
 export { getActorFromClerk, getActorFromClerkOptional } from "./clerk";
 export { getActorFromApiKey, extractApiKeyFromHeaders, isValidApiKeyFormat } from "./apiKey";
 export { normalizeActor, mergePermissions, sanitizeActorForLogging } from "./normalizeActor";
+export { getRegulatorContext } from "./regulator";

@@ -15,7 +15,7 @@ import {
   batchRepository,
   BatchWithRelations,
 } from "@/core/infrastructure/db/repositories";
-import type { BatchStatus } from "@/lib/generated/prisma";
+import { BatchStatus } from "@/lib/generated/prisma/enums";
 
 export interface ListBatchesOutput {
   batches: BatchWithRelations[];
@@ -34,6 +34,8 @@ export class ListBatchesUseCase {
     // 1. Validate input
     const input = validateInput(ListBatchesSchema, rawInput);
 
+    console.log(input)
+
     // 2. Check permissions
     requirePermission(actor, Permissions.BATCHES_READ);
 
@@ -47,7 +49,7 @@ export class ListBatchesUseCase {
     // 4. Fetch batches
     const { batches, total } = await this.batchRepo.list({
       organizationId,
-      status: input.filters?.status as BatchStatus | undefined,
+      status: input.filters?.status,
       drugName: input.filters?.drugName,
       startDate: input.filters?.startDate,
       endDate: input.filters?.endDate,

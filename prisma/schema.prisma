@@ -1,9 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output = "../lib/generated/prisma"
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
 }
 
 model User {
@@ -13,7 +14,6 @@ model User {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
   consumer      Consumer?
   organizations Organization?
   teamMember    TeamMember?
@@ -60,16 +60,13 @@ model Organization {
   agencyName        String?
   officialId        String?
   distributorType   String?
-
   isVerified        Boolean          @default(true)
   isActive          Boolean          @default(true)
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
 
-  initiatedConnections AgentConnection[] @relation("InitiatorOrg")
-  receivedConnections  AgentConnection[] @relation("ReceiverOrg")
   medicationBatches MedicationBatch[]
-  organizationAgent Agent? @relation("OrgAgent")
+  medicationUnits    MedicationUnit[]
   users             User                @relation(fields: [adminId], references: [id], onDelete: Cascade)
   transfersFrom     OwnershipTransfer[] @relation("TransferFrom")
   transfersTo       OwnershipTransfer[] @relation("TransferTo")
@@ -97,28 +94,6 @@ model ApiKey {
   @@index([organizationId])
 }
 
-
-model Product {
-  id                String    @id @default(cuid())
-  organizationId    String
-  name              String
-  description       String
-  category          String
-  dosageForm        String?
-  strength          String?
-  activeIngredients String[]
-  nafdacNumber      String?
-  shelfLifeMonths   Int?
-  storageConditions String?
-  isActive          Boolean   @default(true)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@map("products")
-}
-
 model TeamMember {
   id             String   @id @default(cuid())
   userId         String   @unique
@@ -141,54 +116,90 @@ model TeamMember {
   @@map("team_members")
 }
 
+model Product {
+  id                String    @id @default(cuid())
+  organizationId    String
+  name              String
+  description       String
+  category          String
+  dosageForm        String?
+  manufacturingDate   DateTime?
+  expiryDate          DateTime?
+  strength          String?
+  activeIngredients String[]
+  nafdacNumber      String?
+  shelfLifeMonths   Int?
+  storageConditions String?
+  mintedUnitCounter Int      @default(0)
+  numberOfProductAvailable Int @default(0)
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt 
+
+  medicationUnits   MedicationUnit[]
+  medicationBatch   MedicationBatch[]
+
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("products")
+}
+
 model MedicationBatch {
   id                  String              @id @default(cuid())
   batchId             String              @unique
+  productId           String?
   organizationId      String
   drugName            String
-  composition         String?
   batchSize           Int
-  manufacturingDate   DateTime
-  expiryDate          DateTime
-  storageInstructions String?
+  fromUnitIdNumber    String?
+  toUnitIdNumber      String?
   currentLocation     String?
   status              BatchStatus         @default(CREATED)
   qrCodeData          String?
   qrSignature         String?
   secretKey           String?
   blockchainHash      String?
-  // ✅ Hedera registry for this batch
+  // Hedera registry for this batch
   registryTopicId     String? // HCS topic ID where all units are registered
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
-  counterfeitReports  CounterfeitReport[]
+  // Relation part
+  product             Product?  @relation(fields: [productId], references: [id])
   organization        Organization        @relation(fields: [organizationId], references: [id])
+  counterfeitReports  CounterfeitReport[]
   ownershipTransfers  OwnershipTransfer[]
   scanHistory         ScanHistory[]
   batchEvents         BatchEvent[]
   medicationUnits     MedicationUnit[]
+
+  // Hierarchy Fields
+  parentBatchId     String?
+  parentBatch       MedicationBatch?  @relation("BatchLineage", fields: [parentBatchId], references: [id])
+  childBatches      MedicationBatch[] @relation("BatchLineage")
 
   @@map("medication_batches")
 }
 
 model MedicationUnit {
   id               String     @id @default(cuid()) // Primary key
-  batchId          String // FK to MedicationBatch
+  batchId          String?    // FK to MedicationBatch
+  orgId            String?    // FK to Organization
+  productId        String
   serialNumber     String     @unique // Unique identifier per unit
-  qrCode           String? // Optional QR code for scanning
+  mintedUnitId     String?
+  qrCode           String
   qrSignature      String?
-  currentLocation  String? // Where the unit currently is
+  currentLocation  String?    // Where the unit currently is
   status           UnitStatus @default(IN_STOCK) // Enum for tracking unit state
-  blockchainHash   String? // Optional for blockchain verification
   createdAt        DateTime   @default(now()) // Auto set on creation
-  // ✅ On-chain footprint for this specific unit
-  registrySequence Int? // sequence number of the unit’s registration on-chain
-  updatedAt        DateTime   @updatedAt // Auto updated on changes
-  //
   soldAt           DateTime? 
-
-  // Relation back to MedicationBatch
-  batch MedicationBatch @relation(fields: [batchId], references: [id])
+  updatedAt        DateTime   @updatedAt // Auto updated on changes
+  // On-chain footprint for this specific unit attched to a unit.
+  registrySequence Int? // sequence number of the unit’s registration on-chain
+  // Relationship
+  product          Product?  @relation(fields: [productId], references: [id])
+  batch            MedicationBatch? @relation(fields: [batchId], references: [id])
+  organization     Organization? @relation(fields: [orgId], references: [id])
   scanHistory      ScanHistory[]
 
   @@map("medication_units")
@@ -318,71 +329,6 @@ model AuditLog {
 }
 
 
-model Agent {
-  id             Int      @id @default(autoincrement())
-  agentName      String
-  accountId      String?  
-  role           String     // "manufacturer" | "distributor" | "pharmacy" | "hospital" | "regulator" | "gateway"
-  inboundTopic   String
-  outboundTopic  String
-  connectionTopic String?   // optional
-  managedRegistry String?   // HCS-2 topicId this agent manages (if manufacturer)
-  profileId      String?    // hcs-11 ref
-  publicKey      String     // agent signing pubkey
-  privateKey     String?
-  createdAt      DateTime   @default(now())
-
-  messages AgentMessage[]
-  
-  // 🔁 Reverse relations to AgentConnection
-  initiatedConnections AgentConnection[] @relation("InitiatorAgent")
-  receivedConnections  AgentConnection[] @relation("ReceiverAgent")
-
-  orgId        String       @unique
-  organization Organization @relation("OrgAgent", fields: [orgId], references: [id])
-}
-
-
-model AgentMessage {
-  id          Int      @id @default(autoincrement())
-  topicId     String
-  message     Json
-  sequence    Int?
-  createdAt   DateTime @default(now())
-
-  agentId     Int
-  Agent       Agent    @relation(fields: [agentId], references: [id])
-}
-
-model AgentConnection {
-  id                 String   @id @default(cuid())
-  initiatorOrgId     String
-  receiverOrgId      String
-  initiatorAgentId   Int
-  receiverAgentId    Int
-  connectionTopicId  String   // shared HCS-10 topic for both
-  status             String   @default("PENDING") // PENDING | ACTIVE | CLOSED
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-
-  initiatorOrg       Organization @relation("InitiatorOrg", fields: [initiatorOrgId], references: [id])
-  receiverOrg        Organization @relation("ReceiverOrg", fields: [receiverOrgId], references: [id])
-
-  initiatorAgent     Agent @relation("InitiatorAgent", fields: [initiatorAgentId], references: [id])
-  receiverAgent      Agent @relation("ReceiverAgent", fields: [receiverAgentId], references: [id])
-}
-
-model registration_requests {
-  id          String   @id @default(uuid())
-  agent_id    String
-  org_id      String
-  network     String   // required by the SDK
-  status      String?
-  created_at  DateTime @default(now())
-}
-
-
-
 enum UserRole {
   ORGANIZATION_MEMBER
   CONSUMER
@@ -412,6 +358,7 @@ enum UnitStatus {
   DISPATCHED
   SOLD
   RETURNED
+  FLAGGED
   LOST
 }
 

@@ -1,0 +1,153 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
+
+export const runtime = "nodejs";
+
+/** Request body for POST /api/web/products */
+interface CreateProductBody {
+  name?: string;
+  description?: string;
+  category?: string;
+  dosageForm?: string;
+  strength?: string;
+  activeIngredients?: string[] | string;
+  nafdacNumber?: string;
+  shelfLifeMonths?: number | string;
+  storageConditions?: string;
+  organizationId?: string;
+  numberOfProductAvailable?: number | string;
+  manufacturingDate?: string;
+  expiryDate?: string;
+}
+
+// POST - Create new product
+export async function POST(req: Request) {
+  try {
+    const { userId } = await auth();
+    
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json() as CreateProductBody;
+    const {
+      name,
+      description,
+      category,
+      dosageForm,
+      strength,
+      activeIngredients,
+      nafdacNumber,
+      shelfLifeMonths,
+      storageConditions,
+      organizationId,
+      numberOfProductAvailable,
+      manufacturingDate,
+      expiryDate
+    } = body;
+
+    console.log("Received Product Creation Request:", body);
+
+    // Basic validation
+    if (
+      !name ||
+      !description ||
+      !category ||
+      !organizationId ||
+      !numberOfProductAvailable // all fields are needed.
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Missing required fields: name, description, category, organizationId",
+        },
+        { status: 400 },
+      );
+    }
+
+    // Verify organization exists and user has access
+    const organization = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      include: { users: true }
+    });
+
+    console.log("Organization lookup result:", organization);
+
+    if (!organization || organization.users.clerkUserId !== userId) {
+      return NextResponse.json(
+        { error: "Organization not found or access denied" },
+        { status: 403 }
+      );
+    }
+
+    const productRequestBody = {
+      name,
+      description,
+      category,
+      dosageForm,
+      strength,
+      activeIngredients: Array.isArray(activeIngredients)
+        ? activeIngredients.filter((item): item is string => item !== undefined)
+        : activeIngredients ? [activeIngredients] : [],
+      nafdacNumber,
+      shelfLifeMonths: shelfLifeMonths != null ? parseInt(String(shelfLifeMonths), 10) : null,
+      storageConditions,
+      organizationId,
+      numberOfProductAvailable: numberOfProductAvailable != null
+        ? parseInt(String(numberOfProductAvailable), 10)
+        : 0,
+      manufacturingDate: manufacturingDate ? new Date(manufacturingDate) : null,
+      expiryDate: expiryDate ? new Date(expiryDate) : null,
+    };
+
+    const product = await prisma.product.create({
+      data: productRequestBody
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Product created successfully",
+      product
+    }, { status: 201 });
+
+  }
+  catch (error: unknown) {
+    console.error("Product Creation Error:", error);
+    return NextResponse.json(
+      { error: "Failed to create product" },
+      { status: 500 }
+    );
+  }
+}
+
+// GET - Get all products for an organization
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const organizationId = searchParams.get("organizationId");
+
+    if (!organizationId) {
+      return NextResponse.json(
+        { error: "organizationId parameter is required" },
+        { status: 400 }
+      );
+    }
+
+    const products = await prisma.product.findMany({
+      where: { organizationId },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return NextResponse.json({
+      products
+    }, { status: 200 });
+
+  } catch (error: unknown) {
+    console.error("Get Products Error:", error);
+    return NextResponse.json(
+      { error: "Failed to retrieve products" },
+      { status: 500 }
+    );
+  }
+}

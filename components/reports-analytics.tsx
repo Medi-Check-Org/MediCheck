@@ -64,7 +64,7 @@ export function ReportsAnalytics() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-montserrat font-bold text-3xl text-foreground">Reports & Analytics</h1>
+        <h1 className="font-sans font-bold text-3xl text-foreground">Reports & Analytics</h1>
         <p className="text-muted-foreground">Comprehensive insights into your medication verification system</p>
       </div>
 

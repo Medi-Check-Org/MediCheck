@@ -1,6 +1,5 @@
 import crypto from "crypto";
 
-
 export interface QRPayload {
   s: string; // serialNumber
   b: string; // batchId
@@ -9,14 +8,14 @@ export interface QRPayload {
   sig?: string;
 }
 
-
-export function generateQRPayload(
+export function generateBatchUnitQRPayload(
   serialNumber: string,
   batchId: string,
   registrySequence: number,
   secret: string,
-  baseUrl: string
+  baseUrl: string,
 ) {
+  
   // 1️⃣ Create a signed hash
 
   const data = `${serialNumber}|${batchId}|${registrySequence}`;
@@ -38,6 +37,33 @@ export function generateQRPayload(
   };
 }
 
+export function generateMintedUnitQRPayload(
+  serialNumber: string,
+  orgId: string,
+  registrySequence: number,
+  secret: string,
+  baseUrl: string,
+) {
+  // 1️⃣ Create a signed hash
+
+  const data = `${serialNumber}|${orgId}|${registrySequence}`;
+
+  const signature = crypto
+    .createHmac("sha256", secret)
+    .update(data)
+    .digest("hex");
+
+  // 2️⃣ Create a URL with query params
+  const url = `${baseUrl}/verify/batchUnit/${serialNumber}?sig=${signature}`;
+
+  return {
+    url,
+    serialNumber,
+    orgId,
+    registrySequence,
+    signature,
+  };
+}
 
 // batch QR payload generation
 export function generateBatchQRPayload(
@@ -46,7 +72,6 @@ export function generateBatchQRPayload(
   baseUrl: string,
   registryTopicId: string,
 ) {
-
   const data = `BATCH|${batchId}|${registryTopicId}`;
 
   const signature = crypto
@@ -62,4 +87,3 @@ export function generateBatchQRPayload(
     signature,
   };
 }
-

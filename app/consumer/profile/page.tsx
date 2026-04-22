@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -95,7 +94,7 @@ export default function ConsumerProfile() {
     const fetchUserProfile = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/consumer/profile');
+        const response = await fetch('/api/web/consumer/profile');
         if (response.ok) {
           const profileData = await response.json();
           setUserProfile(profileData);
@@ -134,7 +133,7 @@ export default function ConsumerProfile() {
   // Update profile function
   const updateProfile = async () => {
     try {
-      const response = await fetch('/api/consumer/profile', {
+      const response = await fetch('/api/web/consumer/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -168,7 +167,7 @@ export default function ConsumerProfile() {
   const saveProfileChanges = async () => {
     try {
       setIsProfileSaving(true);
-      const response = await fetch('/api/consumer/profile', {
+      const response = await fetch('/api/web/consumer/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -245,7 +244,7 @@ export default function ConsumerProfile() {
   const fetchScanHistory = async () => {
     try {
       setIsScanHistoryLoading(true);
-      const response = await fetch('/api/consumer/scan-history');
+      const response = await fetch('/api/web/consumer/scan-history');
       if (response.ok) {
         const historyData = await response.json();
         setScanHistory(historyData);
@@ -274,17 +273,17 @@ export default function ConsumerProfile() {
   const getResultColor = (result: string) => {
     switch (result) {
       case "GENUINE":
-        return "bg-green-100 text-green-800"
+        return "bg-status-verified/10 text-status-verified"
       case "SUSPICIOUS":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-status-warning/10 text-status-warning"
       case "COUNTERFEIT":
-        return "bg-red-100 text-red-800"
+        return "bg-destructive/10 text-destructive"
       case "EXPIRED":
-        return "bg-orange-100 text-orange-800"
+        return "bg-status-warning/10 text-status-warning"
       case "NOT_FOUND":
-        return "bg-gray-100 text-gray-800"
+        return "bg-muted text-muted-foreground"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-muted text-muted-foreground"
     }
   }
 
@@ -389,7 +388,7 @@ export default function ConsumerProfile() {
     setIsAILoading(true)
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/web/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -3,6 +3,8 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { UniversalLoader } from "@/components/ui/universal-loader"
 import { 
     AlertTriangle, 
     Clock, 
@@ -19,7 +21,7 @@ import {
     MapPin,
     User
 } from "lucide-react"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { toast } from "react-toastify"
 
 interface AlertDetails {
     batchId?: string;
@@ -51,6 +53,7 @@ const RegulatorAlerts = () => {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
+    const [activeAlert, setActiveAlert] = useState<Alert | null>(null)
 
     useEffect(() => {
         fetchAlerts()
@@ -63,7 +66,7 @@ const RegulatorAlerts = () => {
         try {
             setLoading(true)
             setError(null)
-            const response = await fetch('/api/regulator/alerts')
+            const response = await fetch('/api/web/regulator/alerts')
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`)
@@ -82,40 +85,38 @@ const RegulatorAlerts = () => {
     }
 
     const handleInvestigate = async (alertId: string, alertType: string) => {
-        // Here you could navigate to specific investigation pages
-        // or mark alerts as investigated
-        console.log(`Investigating alert ${alertId} of type ${alertType}`)
-        // For now, just show an alert
-        alert(`Starting investigation for alert ${alertId}`)
+        const selected = alerts.find((a) => a.id === alertId) ?? null
+        setActiveAlert(selected)
+        toast.info(`Investigation workflow opened for ${alertType.replaceAll("_", " ")}`)
     }
 
     const getSeverityIcon = (severity: string) => {
         switch (severity) {
             case 'critical':
-                return <AlertTriangle className="h-4 w-4 text-red-600" />
+                return <AlertTriangle className="h-4 w-4 text-destructive" />
             case 'high':
-                return <XCircle className="h-4 w-4 text-orange-600" />
+                return <XCircle className="h-4 w-4 text-status-critical" />
             case 'warning':
-                return <Clock className="h-4 w-4 text-yellow-600" />
+                return <Clock className="h-4 w-4 text-status-warning" />
             case 'info':
-                return <Activity className="h-4 w-4 text-blue-600" />
+                return <Activity className="h-4 w-4 text-accent" />
             default:
-                return <Bell className="h-4 w-4 text-gray-600" />
+                return <Bell className="h-4 w-4 text-muted-foreground" />
         }
     }
 
     const getSeverityColor = (severity: string) => {
         switch (severity) {
             case 'critical':
-                return 'bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800'
+                return 'bg-destructive/5 border-destructive/20'
             case 'high':
-                return 'bg-orange-50 border-orange-200 dark:bg-orange-950 dark:border-orange-800'
+                return 'bg-status-critical/5 border-status-critical/20'
             case 'warning':
-                return 'bg-yellow-50 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800'
+                return 'bg-status-warning/5 border-status-warning/20'
             case 'info':
-                return 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800'
+                return 'bg-accent/5 border-accent/20'
             default:
-                return 'bg-gray-50 border-gray-200 dark:bg-gray-950 dark:border-gray-800'
+                return 'bg-muted border-border'
         }
     }
 
@@ -150,17 +151,7 @@ const RegulatorAlerts = () => {
     }
 
     if (loading) {
-        return (
-            <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                    <h1 className="font-montserrat font-bold text-3xl text-foreground">Alerts & Notifications</h1>
-                </div>
-                <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    <span className="ml-2 text-muted-foreground">Loading alerts...</span>
-                </div>
-            </div>
-        )
+        return <UniversalLoader text="Loading alerts..." />
     }
 
     const criticalAlerts = alerts.filter(a => a.severity === 'critical')
@@ -170,18 +161,17 @@ const RegulatorAlerts = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="font-montserrat font-bold text-3xl text-foreground">Alerts & Notifications</h1>
-                {/* Hide ThemeToggle on mobile, show on desktop */}
-                <div className="hidden sm:block">
-                    <ThemeToggle />
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Alerts & Notifications</h1>
+                    <p className="text-muted-foreground text-sm sm:text-base">Monitor real-time risks and act quickly on critical events.</p>
                 </div>
             </div>
 
             {error && (
-                <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+                <Card className="border border-destructive/20 bg-destructive/5">
                     <CardContent className="pt-6">
-                        <div className="flex items-center gap-2 text-red-800 dark:text-red-200">
+                        <div className="flex items-center gap-2 text-destructive">
                             <AlertTriangle className="h-4 w-4" />
                             <span>{error}</span>
                             <Button 
@@ -199,54 +189,54 @@ const RegulatorAlerts = () => {
 
             {/* Alert Summary Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Critical</p>
-                                <p className="text-2xl font-bold text-red-600">{criticalAlerts.length}</p>
+                                <p className="text-2xl font-bold text-destructive">{criticalAlerts.length}</p>
                             </div>
-                            <AlertTriangle className="h-8 w-8 text-red-600" />
+                            <AlertTriangle className="h-8 w-8 text-destructive" />
                         </div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">High Priority</p>
-                                <p className="text-2xl font-bold text-orange-600">{highAlerts.length}</p>
+                                <p className="text-2xl font-bold text-status-critical">{highAlerts.length}</p>
                             </div>
-                            <XCircle className="h-8 w-8 text-orange-600" />
+                            <XCircle className="h-8 w-8 text-status-critical" />
                         </div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Warnings</p>
-                                <p className="text-2xl font-bold text-yellow-600">{warningAlerts.length}</p>
+                                <p className="text-2xl font-bold text-status-warning">{warningAlerts.length}</p>
                             </div>
-                            <Clock className="h-8 w-8 text-yellow-600" />
+                            <Clock className="h-8 w-8 text-status-warning" />
                         </div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Info</p>
-                                <p className="text-2xl font-bold text-blue-600">{infoAlerts.length}</p>
+                                <p className="text-2xl font-bold text-accent">{infoAlerts.length}</p>
                             </div>
-                            <Activity className="h-8 w-8 text-blue-600" />
+                            <Activity className="h-8 w-8 text-accent" />
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Refresh Controls */}
-            <Card>
+            <Card className="border border-border shadow-sm">
                 <CardContent className="pt-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center sm:justify-start">
@@ -260,7 +250,7 @@ const RegulatorAlerts = () => {
                             size="sm" 
                             onClick={fetchAlerts}
                             disabled={loading}
-                            className="w-full sm:w-auto"
+                            className="w-full sm:w-auto h-11 cursor-pointer"
                         >
                             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                             Refresh
@@ -270,20 +260,20 @@ const RegulatorAlerts = () => {
             </Card>
             {/* Critical Alerts */}
             {criticalAlerts.length > 0 && (
-                <Card className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+                <Card className="border border-destructive/20 bg-destructive/5 shadow-sm">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-red-800 dark:text-red-200">
+                        <CardTitle className="flex items-center gap-2 text-destructive">
                             <AlertTriangle className="h-5 w-5" />
                             Critical Alerts ({criticalAlerts.length})
                         </CardTitle>
-                        <CardDescription className="text-red-700 dark:text-red-300">
+                        <CardDescription className="text-destructive/70">
                             Immediate attention required
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
                             {criticalAlerts.map((alert) => (
-                                <div key={alert.id} className="p-4 bg-white dark:bg-gray-900 border border-red-200 dark:border-red-800 rounded-lg">
+                                <div key={alert.id} className="p-4 bg-card border border-border rounded-lg">
                                     <div className="flex items-start justify-between mb-3">
                                         <div className="flex items-center gap-2">
                                             {getTypeIcon(alert.type)}
@@ -306,7 +296,7 @@ const RegulatorAlerts = () => {
                                         </div>
                                     </div>
                                     {alert.details && (
-                                        <div className="text-xs text-muted-foreground bg-gray-50 dark:bg-gray-800 p-2 rounded mb-3">
+                                        <div className="text-xs text-muted-foreground bg-muted p-2 rounded mb-3">
                                             {alert.details.batchId && (
                                                 <div>Batch ID: {alert.details.batchId}</div>
                                             )}
@@ -321,13 +311,14 @@ const RegulatorAlerts = () => {
                                     <div className="flex gap-2">
                                         <Button 
                                             size="sm" 
+                                            variant="destructive"
                                             onClick={() => handleInvestigate(alert.id, alert.type)}
-                                            className="bg-red-600 hover:bg-red-700"
+                                            className="cursor-pointer h-10"
                                         >
                                             <Eye className="h-3 w-3 mr-1" />
                                             Investigate Now
                                         </Button>
-                                        <Button size="sm" variant="outline">
+                                        <Button size="sm" variant="outline" className="cursor-pointer h-10">
                                             View Details
                                         </Button>
                                     </div>
@@ -340,20 +331,20 @@ const RegulatorAlerts = () => {
 
             {/* High Priority Alerts */}
             {highAlerts.length > 0 && (
-                <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950">
+                <Card className="border border-status-warning/20 bg-status-warning/5 shadow-sm">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-orange-800 dark:text-orange-200">
+                        <CardTitle className="flex items-center gap-2 text-status-warning">
                             <XCircle className="h-5 w-5" />
                             High Priority Alerts ({highAlerts.length})
                         </CardTitle>
-                        <CardDescription className="text-orange-700 dark:text-orange-300">
+                        <CardDescription className="text-status-warning/70">
                             Requires prompt review
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
                             {highAlerts.map((alert) => (
-                                <div key={alert.id} className="p-4 bg-white dark:bg-gray-900 border border-orange-200 dark:border-orange-800 rounded-lg">
+                                <div key={alert.id} className="p-4 bg-card border border-border rounded-lg">
                                     <div className="flex items-start justify-between mb-3">
                                         <div className="flex items-center gap-2">
                                             {getTypeIcon(alert.type)}
@@ -380,12 +371,12 @@ const RegulatorAlerts = () => {
                                             size="sm" 
                                             variant="outline"
                                             onClick={() => handleInvestigate(alert.id, alert.type)}
-                                            className="text-orange-600 hover:bg-orange-50"
+                                            className="cursor-pointer h-10"
                                         >
                                             <Eye className="h-3 w-3 mr-1" />
                                             Review
                                         </Button>
-                                        <Button size="sm" variant="ghost">
+                                        <Button size="sm" variant="ghost" className="cursor-pointer h-10">
                                             Mark as Reviewed
                                         </Button>
                                     </div>
@@ -398,20 +389,20 @@ const RegulatorAlerts = () => {
 
             {/* Warning Alerts */}
             {warningAlerts.length > 0 && (
-                <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950">
+                <Card className="border border-status-warning/20 bg-status-warning/5 shadow-sm">
                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+                        <CardTitle className="flex items-center gap-2 text-status-warning">
                             <Clock className="h-5 w-5" />
                             Warning Alerts ({warningAlerts.length})
                         </CardTitle>
-                        <CardDescription className="text-yellow-700 dark:text-yellow-300">
+                        <CardDescription className="text-status-warning/70">
                             Monitor and review when possible
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-3">
                             {warningAlerts.map((alert) => (
-                                <div key={alert.id} className="p-3 bg-white dark:bg-gray-900 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                                <div key={alert.id} className="p-3 bg-card border border-border rounded-lg">
                                     <div className="flex items-start justify-between mb-2">
                                         <div className="flex items-center gap-2">
                                             {getTypeIcon(alert.type)}
@@ -424,7 +415,7 @@ const RegulatorAlerts = () => {
                                         <div className="text-xs text-muted-foreground">
                                             {alert.location} • {alert.reporter}
                                         </div>
-                                        <Button size="sm" variant="outline" className="text-xs">
+                                        <Button size="sm" variant="outline" className="text-xs cursor-pointer h-10">
                                             Review
                                         </Button>
                                     </div>
@@ -437,7 +428,7 @@ const RegulatorAlerts = () => {
 
             {/* Information Alerts */}
             {infoAlerts.length > 0 && (
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Activity className="h-5 w-5" />
@@ -471,17 +462,17 @@ const RegulatorAlerts = () => {
 
             {/* Empty State */}
             {alerts.length === 0 && !loading && (
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardContent className="pt-12 pb-12">
                         <div className="text-center">
-                            <CheckCircle className="h-12 w-12 mx-auto text-green-600 mb-4" />
+                            <CheckCircle className="h-12 w-12 mx-auto text-status-verified mb-4" />
                             <h3 className="text-lg font-medium text-foreground mb-2">All Clear!</h3>
                             <p className="text-muted-foreground">
                                 No active alerts or notifications at this time.
                             </p>
                             <Button 
                                 variant="outline" 
-                                className="mt-4" 
+                                className="mt-4 h-11 cursor-pointer" 
                                 onClick={fetchAlerts}
                             >
                                 <RefreshCw className="h-4 w-4 mr-2" />
@@ -491,6 +482,46 @@ const RegulatorAlerts = () => {
                     </CardContent>
                 </Card>
             )}
+
+            <Dialog open={!!activeAlert} onOpenChange={(open) => !open && setActiveAlert(null)}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>Alert details</DialogTitle>
+                        <DialogDescription>
+                            Review this alert before starting a full investigation workflow.
+                        </DialogDescription>
+                    </DialogHeader>
+                    {activeAlert && (
+                        <div className="space-y-3 text-sm">
+                            <div className="font-medium">{activeAlert.message}</div>
+                            <div className="text-muted-foreground">
+                                Type: {activeAlert.type.replaceAll("_", " ")} | Severity: {activeAlert.severity}
+                            </div>
+                            <div className="text-muted-foreground">
+                                Reporter: {activeAlert.reporter} | Location: {activeAlert.location}
+                            </div>
+                            {activeAlert.details?.description && (
+                                <div className="rounded-md border bg-muted/40 p-3">
+                                    {activeAlert.details.description}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setActiveAlert(null)}>
+                            Close
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                toast.success("Alert marked for investigation")
+                                setActiveAlert(null)
+                            }}
+                        >
+                            Start Investigation
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

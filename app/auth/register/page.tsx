@@ -20,7 +20,7 @@ import { Shield, Building2, User, ArrowLeft, Eye, EyeOff } from "lucide-react"
 // 
 import { toast } from "react-toastify";
 import { ORG_TYPE_MAP, getRedirectPath } from "@/utils";
-import { OrganizationType, UserRole } from "@/lib/generated/prisma";
+import { OrganizationType, UserRole } from "@/lib/generated/prisma/enums";
 
 
 export default function RegisterPage() {
@@ -92,14 +92,17 @@ export default function RegisterPage() {
         password: formData.password,
       });
 
-      console.log(result)
+      await setActive({ session: result.createdSessionId });
+
+      // Force Clerk to update the active session token with new metadata
+      await clerk.session?.reload();
 
       if (result.status === "complete") {
 
         // 2. Create user in your DB
         
         // Send all form data
-        const res = await fetch("/api/register", {
+        const res = await fetch("/api/web/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -127,27 +130,16 @@ export default function RegisterPage() {
           }),
         });
 
-        console.log("initiating api post reqest")
-
         const data = await res.json();
-        
-        console.log("API response:", data);
 
         if (!res.ok) throw new Error(data.error || "Registration failed");
 
         toast.success("Registration successful!");
 
-        await setActive({ session: result.createdSessionId });
-
-        // Force Clerk to update the active session token with new metadata
-        await clerk.session?.reload();
-
         // Update frontend user state
         await user?.reload();
 
         const redirectPath = getRedirectPath(accountType === "organization" ? UserRole.ORGANIZATION_MEMBER : UserRole.CONSUMER, formData.organizationType.toUpperCase());
-
-        console.log(redirectPath)
         
         router.push(redirectPath);
   
@@ -157,9 +149,22 @@ export default function RegisterPage() {
       }
 
     }
-    catch (err) {
-      console.log(err)
-      toast.error(err instanceof Error ? err.message : String(err));
+    catch (error) {
+
+      console.error("Registration failed:", error);
+
+      try {
+        await fetch("/api/web/failed/registration/cleanup", {
+          method: "POST",
+        });
+      }
+      catch (cleanupError) {
+        console.error("Cleanup failed:", cleanupError);
+      }
+
+      await clerk.signOut();
+
+      toast.error("Registration failed. Please try again.");
     }
     finally {
       setIsLoading(false);
@@ -259,7 +264,7 @@ export default function RegisterPage() {
                 Country of Origin *
               </Label>
               <Select value={formData.country} onValueChange={(value) => setFormData({ ...formData, country: value })}>
-                <SelectTrigger className="h-11">
+                <SelectTrigger className="h-11 cursor-pointer">
                   <SelectValue placeholder="Select country" />
                 </SelectTrigger>
                 <SelectContent>
@@ -276,7 +281,7 @@ export default function RegisterPage() {
                 State *
               </Label>
               <Select value={formData.state} onValueChange={(value) => setFormData({ ...formData, state: value })}>
-                <SelectTrigger className="h-11">
+                <SelectTrigger className="h-11 cursor-pointer">
                   <SelectValue placeholder="Select state" />
                 </SelectTrigger>
                 <SelectContent>
@@ -693,41 +698,23 @@ export default function RegisterPage() {
 
   return (
 
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background Decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-32 -left-40 w-80 h-80 bg-accent/6 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 -right-32 w-64 h-64 bg-primary/5 rounded-full blur-2xl"></div>
-        <div className="absolute top-2/3 left-1/4 w-40 h-40 bg-accent/8 rounded-full blur-xl"></div>
-      </div>
-      
-      {/* Navigation - Updated to match landing page */}
-      <nav className="border-b border-border/50 bg-card/95 backdrop-blur-xl sticky top-0 z-50 shadow-lg glass-effect">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 sm:h-20">
-            <Link href="/" className="flex items-center space-x-2 sm:space-x-4">
-              <div className="relative group cursor-pointer">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                <div className="relative bg-gradient-to-r from-primary to-accent p-1.5 sm:p-2 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
-                  <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-white group-hover:scale-110 transition-transform duration-300" />
-                </div>
+    <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <nav className="border-b border-border bg-card fixed top-0 left-0 right-0 z-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-12">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="h-7 w-7 bg-primary rounded flex items-center justify-center">
+                <Shield className="h-4 w-4 text-primary-foreground" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-lg sm:text-2xl text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">MediCheck</span>
-                <span className="text-xs text-muted-foreground font-mono hidden sm:block">Blockchain Verified</span>
-              </div>
+              <span className="font-semibold text-sm text-foreground tracking-tight">MediCheck</span>
             </Link>
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center gap-2">
               <ThemeToggle />
               <Link href="/">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  className="cursor-pointer font-medium text-xs sm:text-sm px-3 sm:px-6"
-                >
-                  <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Back to Home</span>
-                  <span className="sm:hidden">Back</span>
+                <Button variant="ghost" size="sm" className="text-xs h-8 px-3">
+                  <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
+                  Back
                 </Button>
               </Link>
             </div>
@@ -736,76 +723,81 @@ export default function RegisterPage() {
       </nav>
 
       {/* Main Content */}
-      <section className="relative py-8 sm:py-16 px-4 sm:px-6 lg:px-8 min-h-screen">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5"></div>
-        
-        <div className="relative max-w-4xl mx-auto">
+      <section className="pt-20 pb-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto">
           {!accountType ? (
-            <div className="max-w-2xl mx-auto">
-              <div className="text-center mb-12">
-                <h1 className="text-4xl font-bold text-foreground mb-4">
-                  Create Your Account
+            <div className="max-w-lg mx-auto">
+              <div className="mb-8">
+                <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest mb-3">Getting Started</p>
+                <h1 className="text-xl font-semibold text-foreground mb-1.5 tracking-tight">
+                  Create your account
                 </h1>
-                <p className="text-lg text-muted-foreground">
-                  Choose the account type that best fits your needs
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Select the account type that matches your role in the medication supply chain.
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card 
-                  className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-primary/50 group"
+              <div className="grid sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  className="text-left border border-border rounded bg-card hover:border-primary hover:bg-muted/40 transition-colors cursor-pointer p-5"
                   onClick={() => setAccountType("organization")}
                 >
-                  <CardContent className="p-8 text-center">
-                    <div className="text-6xl mb-6 group-hover:scale-110 transition-all duration-200">
-                      🏢
-                    </div>
-                    <h3 className="text-xl font-semibold text-foreground mb-3">Organization</h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      For manufacturers, distributors, hospitals, pharmacies, and regulatory agencies
-                    </p>
-                  </CardContent>
-                </Card>
+                  <div className="h-8 w-8 rounded bg-muted flex items-center justify-center mb-3">
+                    <Building2 className="h-4 w-4 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-sm text-foreground mb-1">Organization</h3>
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    Manufacturers, distributors, hospitals, pharmacies, and regulatory agencies.
+                  </p>
+                </button>
 
-                <Card 
-                  className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-primary/50 group"
+                <button
+                  type="button"
+                  className="text-left border border-border rounded bg-card hover:border-accent hover:bg-muted/40 transition-colors cursor-pointer p-5"
                   onClick={() => setAccountType("consumer")}
                 >
-                  <CardContent className="p-8 text-center">
-                    <div className="text-6xl mb-6 group-hover:scale-110 transition-all duration-200">
-                      👤
-                    </div>
-                    <h3 className="text-xl font-semibold text-foreground mb-3">Consumer</h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                      For patients and consumers who want to verify medications
-                    </p>
-                  </CardContent>
-                </Card>
+                  <div className="h-8 w-8 rounded bg-muted flex items-center justify-center mb-3">
+                    <User className="h-4 w-4 text-accent" />
+                  </div>
+                  <h3 className="font-semibold text-sm text-foreground mb-1">Consumer</h3>
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    Patients and individuals who want to verify medication authenticity.
+                  </p>
+                </button>
               </div>
             </div>
 
           ) : (
             <div className="max-w-2xl mx-auto">
-              <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-foreground mb-2">
-                  {accountType === "organization" ? "Organization Registration" : "Create Account"}
+              <div className="mb-8">
+                <button
+                  type="button"
+                  onClick={() => { setAccountType(null); setStep(1); }}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-5 cursor-pointer"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  <span>Change account type</span>
+                </button>
+                <h1 className="text-2xl font-bold text-foreground mb-1.5 tracking-tight">
+                  {accountType === "organization" ? "Organization Registration" : "Create Consumer Account"}
                 </h1>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {accountType === "organization"
-                    ? "Register your organization to start managing medication verification"
-                    : "Create your consumer account for medication verification"}
+                    ? "Register your organization to manage medication verification."
+                    : "Create your account to verify medications."}
                 </p>
                 {accountType === "organization" && (
-                  <div className="mt-4">
-                    <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
-                      Step {step} of 2
-                    </Badge>
+                  <div className="flex items-center gap-2 mt-4">
+                    <div className={`h-1.5 rounded-full transition-all ${step >= 1 ? 'bg-primary w-8' : 'bg-border w-8'}`} />
+                    <div className={`h-1.5 rounded-full transition-all ${step >= 2 ? 'bg-primary w-8' : 'bg-border w-8'}`} />
+                    <span className="text-xs text-muted-foreground ml-1">Step {step} of 2</span>
                   </div>
                 )}
               </div>
 
-              <Card className="shadow-lg border-0 bg-card/50 backdrop-blur-sm">
-                <CardContent className="p-8">
+              <Card className="shadow-sm border border-border">
+                <CardContent className="p-6 sm:p-8">
                   
                 <form onSubmit={handleSubmit} className="space-y-6">
                     
@@ -821,7 +813,7 @@ export default function RegisterPage() {
                               value={formData.organizationType}
                               onValueChange={(value) => setFormData({ ...formData, organizationType: value })}
                             >
-                              <SelectTrigger className="h-11">
+                              <SelectTrigger className="h-11 cursor-pointer">
                                 <SelectValue placeholder="Select organization type" />
                               </SelectTrigger>
                               <SelectContent>                                  

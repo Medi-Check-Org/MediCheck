@@ -1,6 +1,5 @@
 'use client'
-
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   AreaChart,
   Area,
@@ -9,8 +8,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -34,8 +31,6 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import {
-  TrendingUp,
-  TrendingDown,
   Package,
   Users,
   AlertTriangle,
@@ -44,7 +39,9 @@ import {
   PieChart as PieChartIcon,
   RefreshCw,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
+import { UniversalLoader } from "@/components/ui/universal-loader"
+
 
 interface AnalyticsData {
   overview: {
@@ -159,7 +156,7 @@ export function AnalyticsDashboard({
         type: dashboardType
       })
       
-      const response = await fetch(`/api/analytics?${params}`)
+      const response = await fetch(`/api/web/analytics?${params}`)
       
       if (!response.ok) {
         const errorData = await response.json()
@@ -186,48 +183,15 @@ export function AnalyticsDashboard({
     fetchAnalytics()
   }, [dashboardType, timeRange])
 
-  // Show loading state when data is loading
-  if (loading && !data) {
-    return (
-      <div className={`space-y-6 ${className}`}>
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">{title}</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <div className="h-20 bg-gray-200 animate-pulse rounded" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <div className="h-64 bg-gray-200 animate-pulse rounded" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        {!organizationId && (
-          <div className="text-center text-gray-500 mt-4">
-            Waiting for organization data...
-          </div>
-        )}
-      </div>
-    )
-  }
 
   if (error) {
     return (
       <div className={`space-y-6 ${className}`}>
         <Card>
           <CardContent className="p-6 text-center">
-            <AlertTriangle className="mx-auto h-12 w-12 text-red-500 mb-4" />
+            <AlertTriangle className="mx-auto h-12 w-12 text-destructive mb-4" />
             <h3 className="text-lg font-semibold mb-2">Error Loading Analytics</h3>
-            <p className="text-gray-600 mb-4">{error}</p>
+            <p className="text-muted-foreground mb-4">{error}</p>
             <Button onClick={fetchAnalytics}>Try Again</Button>
           </CardContent>
         </Card>
@@ -243,29 +207,29 @@ export function AnalyticsDashboard({
       title: 'Total Batches',
       value: data.overview.totalBatches,
       icon: Package,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
+      color: 'text-primary',
+      bgColor: 'bg-primary/10'
     },
     {
       title: 'Products',
       value: data.overview.totalProducts,
       icon: BarChart3,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
+      color: 'text-status-verified',
+      bgColor: 'bg-status-verified/10'
     },
     {
       title: 'Units Produced',
       value: data.overview.totalUnits,
       icon: Activity,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
+      color: 'text-accent',
+      bgColor: 'bg-accent/10'
     },
     {
       title: 'Team Members',
       value: data.overview.teamMembersCount,
       icon: Users,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-100'
+      color: 'text-role-regulator',
+      bgColor: 'bg-role-regulator/10'
     }
   ]
 
@@ -274,18 +238,23 @@ export function AnalyticsDashboard({
       title: 'Counterfeit Reports',
       value: data.overview.counterfeitReports,
       icon: AlertTriangle,
-      color: 'text-red-600',
-      bgColor: 'bg-red-100'
+      color: 'text-destructive',
+      bgColor: 'bg-destructive/10'
     })
   }
 
+  console.log('Analytics data loaded:', loading)
+
   return (
     <div className={`space-y-6 ${className}`}>
+
+      {(loading) && <UniversalLoader text="Loading analytics." />}
+      
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">{title}</h2>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             {data.organizationType.replace('_', ' ').toLowerCase()} analytics for the last {timeRange} days
           </p>
         </div>
@@ -327,7 +296,7 @@ export function AnalyticsDashboard({
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">{metric.title}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{metric.title}</p>
                     <p className="text-2xl font-bold">{formatNumber(metric.value)}</p>
                   </div>
                   <div className={`p-3 rounded-full ${metric.bgColor}`}>
@@ -485,19 +454,19 @@ export function AnalyticsDashboard({
                 <div key={batch.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex-1">
                     <p className="font-medium">{batch.drugName}</p>
-                    <p className="text-sm text-gray-600">Batch: {batch.batchId}</p>
+                    <p className="text-sm text-muted-foreground">Batch: {batch.batchId}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <Badge
                         variant={batch.status === 'DELIVERED' ? 'default' : batch.status === 'FLAGGED' ? 'destructive' : 'secondary'}
                       >
                         {batch.status}
                       </Badge>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         {batch.unitsCount} units • {batch.scansCount} scans
                       </span>
                     </div>
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-muted-foreground">
                     {formatDate(batch.createdAt)}
                   </div>
                 </div>
@@ -520,7 +489,7 @@ export function AnalyticsDashboard({
                 <div key={transfer.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex-1">
                     <p className="font-medium">{transfer.drugName}</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       {dashboardType === 'manufacturer' ? 'To: ' : 'From: '}
                       {dashboardType === 'manufacturer' ? transfer.to : transfer.from}
                     </p>
@@ -531,7 +500,7 @@ export function AnalyticsDashboard({
                       {transfer.status}
                     </Badge>
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-muted-foreground">
                     {formatDate(transfer.date)}
                   </div>
                 </div>
@@ -553,22 +522,22 @@ export function AnalyticsDashboard({
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
-                <p className="text-2xl font-bold text-blue-600">
+                <p className="text-2xl font-bold text-primary">
                   {data.specificMetrics.avgBatchSize}
                 </p>
-                <p className="text-sm text-gray-600">Average Batch Size</p>
+                <p className="text-sm text-muted-foreground">Average Batch Size</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-yellow-600">
+                <p className="text-2xl font-bold text-status-warning">
                   {data.specificMetrics.expiringBatches}
                 </p>
-                <p className="text-sm text-gray-600">Expiring in 90 Days</p>
+                <p className="text-sm text-muted-foreground">Expiring in 90 Days</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-2xl font-bold text-status-verified">
                   {data.trends.recentBatches.length}
                 </p>
-                <p className="text-sm text-gray-600">Recent Production</p>
+                <p className="text-sm text-muted-foreground">Recent Production</p>
               </div>
             </div>
           </CardContent>
@@ -576,7 +545,7 @@ export function AnalyticsDashboard({
       )}
 
       {/* Footer */}
-      <div className="text-center text-sm text-gray-500">
+      <div className="text-center text-sm text-muted-foreground">
         Last updated: {new Date(data.generatedAt).toLocaleString()}
       </div>
     </div>

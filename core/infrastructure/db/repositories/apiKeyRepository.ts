@@ -2,6 +2,12 @@ import { generateApiKey } from "@/lib/auth/apiKeyGenerator";
 import { hashApiKey } from "@/lib/auth/hashApiKey";
 import { prisma } from "@/lib/prisma";
 
+/** Where clause: key is not expired (no expiry or expiresAt > now). Use so listKeys, findById, findByHashedKey, validateKey treat expiresAt: null as valid. */
+function validExpiryWhere() {
+    const now = new Date();
+    return { OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] };
+}
+
 interface ApiKeyRecord {
     id: string;
     name: string;
@@ -35,12 +41,12 @@ export class ApiKeyRepository {
 
     async listKeys(organizationId: string): Promise<ApiKeyRecord[]> {
         // steps:
-        // 1. query all keys for org ID where revokedAt is null
+        // 1. query all keys for org ID where revokedAt is null and (no expiry or not yet expired)
         const apiKeys = await prisma.apiKey.findMany({
             where: {
                 organizationId,
                 revokedAt: null,
-                expiresAt: { gt: new Date() }
+                ...validExpiryWhere()
             },
             select: {
                 id: true,
@@ -62,7 +68,7 @@ export class ApiKeyRepository {
             where: {
                 id,
                 revokedAt: null,
-                expiresAt: { gt: new Date() }
+                ...validExpiryWhere()
             },
             select: {
                 id: true,
@@ -86,7 +92,7 @@ export class ApiKeyRepository {
             where: {
                 hashedKey,
                 revokedAt: null,
-                expiresAt: { gt: new Date() }
+                ...validExpiryWhere()
             },
             select: {
                 id: true,
@@ -109,12 +115,12 @@ export class ApiKeyRepository {
         // steps:
         // 1. hash raw key
         const hashedKey = hashApiKey(rawKey)
-        // 2. query key by hashedKey where revokedAt is null and expiresAt > now
+        // 2. query key by hashedKey where revokedAt is null and (no expiry or not expired)
         const apiKey = await prisma.apiKey.findFirst({
             where: {
                 hashedKey,
                 revokedAt: null,
-                expiresAt: { gt: new Date() }
+                ...validExpiryWhere()
             },
             select: {
                 id: true,
@@ -132,6 +138,15 @@ export class ApiKeyRepository {
         }
 
         return apiKey;
+    }
+
+    /** Returns key ownership for auth check; does not filter by revoked/expired. */
+    async findByIdForAuth(id: string): Promise<{ organizationId: string } | null> {
+        const key = await prisma.apiKey.findUnique({
+            where: { id },
+            select: { organizationId: true }
+        });
+        return key;
     }
 
     async revokeKey(id: string) {

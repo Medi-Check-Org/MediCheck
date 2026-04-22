@@ -1,17 +1,5 @@
 
-import { AIAgentCapability } from "@hashgraphonline/standards-sdk"
 import { MedicationBatchProp } from "./schemType"
-export interface ProductProps {
-  name: string
-  description: string
-  category: string
-  dosageForm: string
-  strength: string
-  activeIngredients: string[]
-  nafdacNumber: string
-  shelfLifeMonths: number
-  storageConditions: string
-}
 
 export type ManufacturerTab =
   | "dashboard"
@@ -30,19 +18,9 @@ export type ManufacturerTab =
   | "investigations"
   | "analytics"
   | "entities"
-  | "compliance";
-
-export interface ProductProps {
-  name: string;
-  description: string;
-  category: string;
-  dosageForm: string;
-  strength: string;
-  activeIngredients: string[];
-  nafdacNumber: string;
-  shelfLifeMonths: number;
-  storageConditions: string;
-}
+  | "compliance"
+  | "units"
+  | "api-keys";
 
 export interface MedicationBatchInfoProps extends MedicationBatchProp {
   _count: {
@@ -63,11 +41,13 @@ export interface TransferProps {
   requiresApproval: boolean;
   canApprove: boolean;
   batch: {
-    batchId: string;
+    batchId: string; 
     drugName: string;
     batchSize: number;
-    manufacturingDate: string;
-    expiryDate: string;
+    product: {
+      manufacturingDate: string;
+      expiryDate: string;
+    };
   };
   fromOrg: {
     companyName: string;
@@ -84,7 +64,7 @@ export interface TransferProps {
 export interface HederaLogPayload {
   batchId: string;
   organizationId?: string;
-  timestamp?: string;
+  timestamp?: string | Date;
   // specific to batch unit creation
   units?: string[];
   count?: number;
@@ -95,11 +75,17 @@ export interface HederaLogPayload {
   manufacturingDate?: string;
   expiryDate?: string;
   // specific to transfer
-  transferFrom?: string; // for transfer
-  transferTo?: string; // for transfer
+  transferFrom?: string; // for transfer initiation or confirmation
+  transferTo?: string; // for transfer initiation or confirmation
   qrSignature?: string;
   // flag
+  unitId?: string
   flagReason?: string;
+  // unit-scan
+  scanResult?: "GENUINE" | "SUSPICIOUS";
+  latitude?: number | null;
+  longitude?: number | null;
+  serialNumber?: string;
 }
 
 export interface MyPublicMetadata {
@@ -108,49 +94,9 @@ export interface MyPublicMetadata {
 }
 
 
-export interface HCSMessage {
-  p: "hcs-10"; // Protocol identifier
-  op:
-    | "connection_request" // Operation type
-    | "connection_created"
-    | "message"
-    | "close_connection";
-  data: string; // Message content
-  created?: Date; // Creation timestamp
-  consensus_timestamp?: string; // Hedera consensus timestamp
-  m?: string; // Optional memo
-  payer: string; // Transaction payer account
-  outbound_topic_id?: string; // Related outbound topic
-  connection_request_id?: number; // For connection requests
-  confirmed_request_id?: number; // For confirmations
-  connection_topic_id?: string; // Shared connection topic
-  connected_account_id?: string; // Connected account
-  requesting_account_id?: string; // Requesting account
-  connection_id?: number; // Unique connection ID
-  sequence_number: number; // Message sequence
-  operator_id?: string; // Operator ID (format: topicId@accountId)
-  reason?: string; // Optional reason (for close)
-  close_method?: string; // Close method
-}
-
-
-
-export enum Hcs10MemoType {
-  INBOUND = "inbound", // For inbound topic memos
-  OUTBOUND = "outbound", // For outbound topic memos
-  CONNECTION = "connection", // For connection topic memos
-}
 
 
 
 
-export interface CreateAgentProp{
-  name: string;
-  description: string;
-  orgId: string;
-  role: string;
-  model?: string;
-  capabilities?: AIAgentCapability[];
-  metadata?: Record<string, any>;
-  agentType?: "manual" | "autonomous";
-};
+
+

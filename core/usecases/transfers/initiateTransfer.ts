@@ -5,6 +5,7 @@
  */
 
 import { Actor, Permissions, requirePermission } from "@/utils/types/actor";
+import { logBatchEvent } from "@/lib/hedera";
 import {
   InitiateTransferSchema,
   validateInput,
@@ -21,8 +22,7 @@ import {
   ForbiddenError,
   BusinessRuleViolationError,
 } from "@/utils/types/errors";
-import { hedera10Client } from "@/lib/hedera10Client";
-import type { OwnershipTransfer } from "@/lib/generated/prisma";
+import { OwnershipTransfer } from "@/lib/generated/prisma/client";
 
 export interface InitiateTransferOutput {
   transfer: OwnershipTransfer;
@@ -86,12 +86,28 @@ export class InitiateTransferUseCase {
       status: "PENDING",
     });
 
+    // 8b. update the status of batch to
+    console.log("batch.batchIdbatch.batchIdbatch.batchId", batch.batchId);
+    await this.batchRepo.updateStatus(batch.batchId, "IN_TRANSIT");
+
+    // 8B. STORE TRANSFER INITIATION ON CHAIN
+
+    const transferSeq = await logBatchEvent(
+      batch.registryTopicId ?? "",
+      "BATCH_TRANSFER_INITIATION",
+      {
+        batchId: batch.batchId,
+        transferFrom: batch.organizationId,
+        transferTo: input.toOrgId,
+        timestamp: new Date().toISOString(),
+      },
+    );
+
     // 9. Store off-chain event (HCS-2 logging for transfers TBD - event type not yet supported)
-    const eventSeq = 0;
     await this.batchRepo.createEvent({
       batchId: batch.id,
       eventType: "TRANSFER_INITIATED",
-      hederaSeq: eventSeq,
+      hederaSeq: transferSeq ?? 0,
       payload: {
         transferId: transfer.id,
         fromOrgId: batch.organizationId,
@@ -99,31 +115,15 @@ export class InitiateTransferUseCase {
       },
     });
 
-    // 10. Announce via HCS-10 if available
-    const fromOrg = await this.orgRepo.findById(batch.organizationId);
-    if (fromOrg?.organizationAgent?.outboundTopic) {
-      try {
-        await hedera10Client.sendMessage(
-          fromOrg.organizationAgent.outboundTopic,
-          JSON.stringify({
-            p: "hcs-10",
-            op: "transfer_initiated",
-            batch_id: batch.batchId,
-            transfer_id: transfer.id,
-            to_org: input.toOrgId,
-          }),
-          "Transfer initiation announcement"
-        );
-      } catch (e) {
-        console.warn("Failed to announce transfer initiation (non-fatal):", e);
-      }
-    }
+
+
 
     return {
       transfer,
       transferId: transfer.id,
-      eventSequence: eventSeq,
+      eventSequence: transferSeq ?? 0
     };
+    
   }
 }
 

@@ -46,14 +46,14 @@ const HospitalReports = () => {
         const fetchData = async () => {
             try {
                 // Get organization ID
-                const orgResponse = await fetch("/api/organizations/me");
+                const orgResponse = await fetch("/api/web/organizations/me");
                 if (orgResponse.ok) {
                     const orgResult = await orgResponse.json();
                     const organizationId = orgResult.organizationId;
                     setOrgId(organizationId);
 
                     // Fetch reports data
-                    const reportsResponse = await fetch(`/api/hospital/reports?orgId=${organizationId}`);
+                    const reportsResponse = await fetch(`/api/web/hospital/reports?orgId=${organizationId}`);
                     if (reportsResponse.ok) {
                         const data = await reportsResponse.json();
                         setReportsData(data);
@@ -78,7 +78,7 @@ const HospitalReports = () => {
 
         setSubmitting(true);
         try {
-            const response = await fetch('/api/hospital/reports', {
+            const response = await fetch('/api/web/hospital/reports', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ const HospitalReports = () => {
                 setSeverity("");
                 
                 // Refresh reports data
-                const reportsResponse = await fetch(`/api/hospital/reports?orgId=${orgId}`);
+                const reportsResponse = await fetch(`/api/web/hospital/reports?orgId=${orgId}`);
                 if (reportsResponse.ok) {
                     const data = await reportsResponse.json();
                     setReportsData(data);
@@ -153,28 +153,28 @@ const HospitalReports = () => {
 
             {/* Visual Statistics Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="border-2 border-blue-200 dark:border-blue-800">
+                <Card className="border-2 border-primary/20">
                     <CardContent className="p-4 sm:p-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Total Reports</p>
-                                <p className="text-2xl font-bold text-blue-600">{reportsData?.recentReports?.length || 0}</p>
+                                <p className="text-2xl font-bold text-primary">{reportsData?.recentReports?.length || 0}</p>
                             </div>
-                            <ClipboardList className="h-8 w-8 text-blue-500" />
+                            <ClipboardList className="h-8 w-8 text-primary" />
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card  className="border-2 border-orange-200 dark:border-orange-800">
+                <Card  className="border-2 border-status-warning/20">
                     <CardContent className="p-4 sm:p-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Pending</p>
-                                <p className="text-2xl font-bold text-orange-600">
+                                <p className="text-2xl font-bold text-status-warning">
                                     {reportsData?.recentReports?.filter(r => r.status.toLowerCase() === 'pending').length || 0}
                                 </p>
                             </div>
-                            <Timer className="h-8 w-8 text-orange-500" />
+                            <Timer className="h-8 w-8 text-status-warning" />
                         </div>
                     </CardContent>
                 </Card>

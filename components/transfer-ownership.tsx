@@ -94,7 +94,7 @@ export function TransferOwnership() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="font-montserrat font-bold text-3xl text-foreground">Transfer Ownership</h1>
+          <h1 className="font-sans font-bold text-3xl text-foreground">Transfer Ownership</h1>
           <p className="text-muted-foreground">Transfer medication batches to distributors, hospitals, or pharmacies</p>
         </div>
         <Dialog open={isTransferModalOpen} onOpenChange={setIsTransferModalOpen}>
@@ -106,7 +106,7 @@ export function TransferOwnership() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="font-montserrat">Transfer Batch Ownership</DialogTitle>
+              <DialogTitle className="font-sans">Transfer Batch Ownership</DialogTitle>
               <DialogDescription>Select a batch and recipient to initiate blockchain transfer</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">

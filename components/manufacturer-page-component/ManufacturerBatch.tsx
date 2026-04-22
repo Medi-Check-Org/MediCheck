@@ -7,37 +7,33 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "react-toastify"
-import { $Enums } from "@/lib/generated/prisma"
 import {
     Plus,
     Search,
     Eye,
     ArrowUpRight,
-    CheckCircle,
     Clock,
-    XCircle,
     Zap,
 } from "lucide-react";
-import { MedicationBatchInfoProps } from "@/utils"
+import { MedicationBatchInfoProps } from "@/utils";
+import { OrganizationProp } from "@/utils/types/schemType";
+import { Product, $Enums } from "@/lib/generated/prisma/browser"
+import CreateBatchModal from "./components/CreateBatchSelection"
+import { getStatusIcon, getStatusDisplay, getStatusColor } from "@/utils/helpers/getHelpers"
+import CreateNewBatchForm from "./components/CreateNewBatchForm"
+import { formatProductDate } from "@/utils/helpers/formatters"
+import AttachUnitsContainer from "./components/AttachExistingUnitToBatch";
+import BatchGrouping from "./components/BatchGrouping"
+import { UniversalLoader } from "@/components/ui/universal-loader"
 
-interface Product {
-    id: string;
-    name: string;
-    description: string;
-    category: string;
-    dosageForm?: string;
-    strength?: string;
-    activeIngredients: string[];
-    nafdacNumber?: string;
-    shelfLifeMonths?: number;
-    storageConditions?: string;
-}
 
 const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; allBatches: MedicationBatchInfoProps[]; loadBatches: () => void }) => {
 
-    const [isCreateBatchOpen, setIsCreateBatchOpen] = useState(false);
+    const [openBatchCreationModal, setOpenBatchCreationModal] = useState(false);
+
+    const [selectedCreationModal, setSelectedCreationModal] = useState<'attach-existing' | 'create-new' | "">("")
 
     const [isLoading, setIsLoading] = useState(false);
 
@@ -45,14 +41,12 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
 
     const [newBatch, setNewBatch] = useState({
         drugName: "",
-        composition: "",
         batchSize: "",
-        manufacturingDate: "",
-        expiryDate: "",
-        storageInstructions: "",
     });
 
     const [products, setProducts] = useState<Product[]>([]);
+
+    const [gettingProduct, setGettingProduct] = useState(true)
 
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -60,7 +54,14 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
 
     const [selectedBatch, setSelectedBatch] = useState<any>(null);
 
-    const [organizations, setOrganizations] = useState<any[]>([]);
+    const [organizations, setOrganizations] = useState<OrganizationProp[]>([]);
+
+    const [isGroupingModalOpen, setIsGroupingModalOpen] = useState(false)
+
+    const resetOpenedModals = () => {
+        setSelectedCreationModal("");
+        setOpenBatchCreationModal(false)
+    }
 
     useEffect(() => {
         setBatches(allBatches);
@@ -70,17 +71,27 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
     }, [allBatches, orgId]);
 
     const loadProducts = async () => {
+
+        setGettingProduct(true)
+
         try {
-            const res = await fetch(`/api/products?organizationId=${orgId}`);
+
+            const res = await fetch(`/api/web/products?organizationId=${orgId}`);
+
             const data = await res.json();
-            
+
+            console.log(data)
+
             if (res.ok) {
                 setProducts(data.products || []);
             } else {
-                console.error("Failed to load products:", data.error);
+                console.error("Failed to load products:", data.error); // we need visible error logging for users or placeholder
             }
         } catch (error) {
-            console.error("Failed to load products:", error);
+            console.error("Failed to load products:", error); // we need visible error logging for users or placeholder
+        }
+        finally {
+            setGettingProduct(false)
         }
     };
 
@@ -90,50 +101,64 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
 
         setIsLoading(true)
 
-        if (!orgId) return;
+        if (!orgId) {
+            setIsLoading(false);
+            return;
+        }
+
+        if (parseInt(newBatch.batchSize) > (products.find((product) => product.name === newBatch.drugName && product.organizationId === orgId)?.numberOfProductAvailable ?? 0)) {
+            toast.info("Batch size cannot exceed available product quantity")
+            return;
+        }
 
         try {
 
-            if (!newBatch?.drugName || !newBatch?.batchSize || !newBatch.manufacturingDate || !newBatch.expiryDate) {
+            if (!newBatch?.drugName || !newBatch?.batchSize || parseInt(newBatch.batchSize) <= 0) {
                 toast.info("Please fill in all required fields")
                 return
             };
 
-            const res = await fetch("/api/batches", {
+            const res = await fetch("/api/web/batches/create", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...newBatch, organizationId: orgId }),
+                body: JSON.stringify({ ...newBatch, organizationId: orgId, batchSize: parseInt(newBatch?.batchSize), productId: products.find(p => p.name === newBatch.drugName)?.id }),
             });
 
-            const data = await res.json();
+            const result = await res.json();
 
-            if (!res.ok) throw new Error(data.error);
+            if (!res.ok) {
+                console.error("API ERROR:", result)
+                throw new Error(result.message || "Something went wrong")
+            }
 
             toast.success("Batch created successfully!");
 
-            setIsCreateBatchOpen(false);
+            resetOpenedModals();
 
             loadBatches()
 
         }
         catch (error) {
             toast.error("Error creating batch. Please try again.")
+            console.log(error)
         }
         finally {
             setIsLoading(false)
         }
     }
 
-    const filteredBatches = batches.filter(batch =>
+    const filteredBatches = batches?.filter(batch =>
         batch.batchId.toLowerCase().includes(searchQuery.toLowerCase()) ||
         batch.drugName.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    ) ?? [];
+
 
     const [transferForm, setTransferForm] = useState({
         toOrganization: "",
         transferReason: "",
         notes: "",
     })
+
 
     // Batch viewing state
     const [isViewBatchOpen, setIsViewBatchOpen] = useState(false);
@@ -143,11 +168,13 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
     // Get organizations for transfer
     const loadOrganizations = async () => {
         try {
-            const res = await fetch("/api/organizations");
+            const res = await fetch("/api/web/organizations");
             if (res.ok) {
                 const data = await res.json();
+                console.log("original List of organizations for transfer", data);
                 // Filter out the current organization from the list
-                const otherOrgs = data.filter((org: any) => org.id !== orgId);
+                const otherOrgs = data.filter((org: OrganizationProp) => org.id !== orgId);
+                console.log("filtered list of organization", otherOrgs)
                 setOrganizations(otherOrgs);
             }
         } catch (error) {
@@ -162,6 +189,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
             loadOrganizations();
         }
     }, [isTransferOpen]);
+
 
     // Handle batch transfer
     const handleTransferBatch = async () => {
@@ -185,7 +213,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                 notes: transferForm.notes || "",
             };
 
-            const res = await fetch("/api/transfer/ownership", {
+            const res = await fetch("/api/web/transfers/initiate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(transferData),
@@ -215,166 +243,90 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
         }
     };
 
-    const getStatusColor = (status: string) => {
-        // use enum value instead of hardcoding
-        switch (status) {
-            case $Enums.BatchStatus.DELIVERED:
-                return "default"
-            case $Enums.BatchStatus.CREATED:
-                return "secondary"
-            case $Enums.BatchStatus.IN_TRANSIT:
-                return "outline"
-            case $Enums.BatchStatus.FLAGGED:
-                return "destructive"
-            case $Enums.BatchStatus.EXPIRED:
-                return "destructive"
-            case $Enums.BatchStatus.RECALLED:
-                return "destructive"
-            default:
-                return "secondary"
-        }
-    }
-
-    const getStatusIcon = (status: string) => {
-        // use enum value instead of hardcoding
-        switch (status) {
-            case $Enums.BatchStatus.DELIVERED:
-                return <CheckCircle className="h-4 w-4" />
-            case $Enums.BatchStatus.CREATED:
-            case $Enums.BatchStatus.IN_TRANSIT:
-                return <Clock className="h-4 w-4" />
-            case $Enums.BatchStatus.EXPIRED:
-            case $Enums.BatchStatus.FLAGGED:
-            case $Enums.BatchStatus.RECALLED:
-                return <XCircle className="h-4 w-4" />
-            default:
-                return <Clock className="h-4 w-4" />
-        }
-    }
-
-    const getStatusDisplay = (status: string) => {
-        // use enum value instead of hardcoding
-        switch (status) {
-            case $Enums.BatchStatus.DELIVERED:
-                return "Delivered"
-            case $Enums.BatchStatus.CREATED:
-                return "Created"
-            case $Enums.BatchStatus.IN_TRANSIT:
-                return "In Transit"
-            case $Enums.BatchStatus.FLAGGED:
-                return "Flagged"
-            case $Enums.BatchStatus.EXPIRED:
-                return "Expired"
-            case $Enums.BatchStatus.RECALLED:
-                return "Recalled"
-            default:
-                return status
-        }
-    }
 
     return (
         <div className="space-y-6">
+
+            {(gettingProduct || !orgId) && <UniversalLoader text="Loading batches." />}
+
+            {/* Modal */}
+
+            {openBatchCreationModal &&
+                <CreateBatchModal
+                    isOpen={openBatchCreationModal}
+                    onClose={() => setOpenBatchCreationModal(false)}
+                    onSelect={setSelectedCreationModal}
+                />
+            }
+            
+             {selectedCreationModal === 'create-new' && (
+                <CreateNewBatchForm
+                    newBatch={newBatch}
+                    setNewBatch={setNewBatch}
+                    products={products}
+                    orgId={orgId}
+                    handleCreateBatch={handleCreateBatch}
+                    setIsCreateBatchOpen={() => setSelectedCreationModal("")}
+                    isLoading={isLoading}
+                />
+            )}
+
+            {selectedCreationModal === "attach-existing" && (
+                <AttachUnitsContainer
+                    onSuccess={async () => {
+                        setSelectedCreationModal("");
+                        loadBatches();
+                    }}
+                    onCancel={() => setSelectedCreationModal("")}
+                    orgId={orgId}
+                    products={products}
+                />
+            )}        
+
+            {isGroupingModalOpen && (
+                <BatchGrouping
+                    products={products}
+                    availableBatches={batches}
+                    organizationId={orgId}
+                    onSuccess={loadBatches}
+                    onCancel={() => { setIsGroupingModalOpen(false); }}
+                />
+            )}
+
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
-                    <h1 className="font-montserrat font-bold text-2xl sm:text-3xl text-foreground">Batch Management</h1>
+                    <h1 className="font-sans font-bold text-2xl sm:text-3xl text-foreground">Batch Management</h1>
                     <p className="text-muted-foreground text-sm sm:text-base">Create, view, and manage product batches</p>
                 </div>
-                {/* create batch dialog */}
-                <Dialog open={isCreateBatchOpen} onOpenChange={setIsCreateBatchOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="cursor-pointer w-full sm:w-auto" disabled={products.length === 0}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            <span className="hidden sm:inline">Create Batch</span>
-                            <span className="sm:hidden">New Batch</span>
-                            {products.length === 0 && <span className="hidden sm:inline"> (No products)</span>}
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle>Create New Batch</DialogTitle>
-                            <DialogDescription>Create a new manufacturing batch</DialogDescription>
-                        </DialogHeader>
-                        <form onSubmit={handleCreateBatch} method="post">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="product">Product</Label>
-                                    <Select
-                                        value={newBatch.drugName}
-                                        onValueChange={(value) => setNewBatch({ ...newBatch, drugName: value })}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select product" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {products.length > 0 ? (
-                                                products.map((product) => (
-                                                    <SelectItem key={product.id} value={product.name}>
-                                                        {product.name} ({product.category})
-                                                    </SelectItem>
-                                                ))
-                                            ) : (
-                                                <SelectItem value="no-products" disabled>
-                                                    No products available - Create products first
-                                                </SelectItem>
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="quantity">Batch Size</Label>
-                                    <Input
-                                        id="quantity"
-                                        type="number"
-                                        placeholder="Enter quantity"
-                                        value={newBatch.batchSize}
-                                        onChange={(e) => setNewBatch({ ...newBatch, batchSize: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="production-date">Production Date</Label>
-                                    <Input
-                                        id="production-date"
-                                        type="date"
-                                        value={newBatch.manufacturingDate}
-                                        onChange={(e) => setNewBatch({ ...newBatch, manufacturingDate: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="expiry-date">Expiry Date</Label>
-                                    <Input
-                                        id="expiry-date"
-                                        type="date"
-                                        value={newBatch.expiryDate}
-                                        onChange={(e) => setNewBatch({ ...newBatch, expiryDate: e.target.value })}
-                                    />
-                                </div>
-                                <div className="sm:col-span-2 space-y-2">
-                                    <Label htmlFor="composition">Composition</Label>
-                                    <Textarea
-                                        id="composition"
-                                        placeholder="Enter composition details"
-                                        value={newBatch.composition}
-                                        onChange={(e) => setNewBatch({ ...newBatch, composition: e.target.value })}
-                                    />
-                                </div>
-                                <div className="sm:col-span-2 space-y-2">
-                                    <Label htmlFor="notes">Storage Instructions</Label>
-                                    <Textarea
-                                        id="notes"
-                                        placeholder="Enter storage requirements"
-                                        value={newBatch.storageInstructions}
-                                        onChange={(e) => setNewBatch({ ...newBatch, storageInstructions: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex justify-end space-x-2 mt-4">
-                                <Button className="cursor-pointer" variant="outline" onClick={() => setIsCreateBatchOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button className="cursor-pointer">{isLoading ? "Creating..." : "Create Batch"}</Button>
-                            </div>
-                        </form>
-                    </DialogContent>
-                </Dialog>
+
+                <div className="flex items-center gap-x-4">
+                    <Button
+                        className="cursor-pointer w-full sm:w-auto"
+                        disabled={gettingProduct || products.length === 0}
+                        onClick={() => setOpenBatchCreationModal(true)}
+                    >
+                        {!gettingProduct && <Plus className="h-4 w-4" />}
+                        {gettingProduct ? <span>Loading Product...</span> :
+                            <>
+                                <span className="hidden sm:inline">Create Batch</span>
+                                <span className="sm:hidden">New Batch</span>
+                            </>
+                        }
+                        {gettingProduct || (products.length === 0 && <span className="hidden sm:inline"> (No products)</span>)}
+                    </Button>
+
+                    <Button
+                        className="cursor-pointer w-full sm:w-auto"
+                        disabled={gettingProduct || products.length === 0}
+                        onClick={() => setIsGroupingModalOpen(true)}
+                    >
+                        {gettingProduct ? <span>Loading...</span> :
+                            <>
+                                <span className="hidden sm:inline">Group Batch</span>
+                            </>
+                        }
+                    </Button>
+                </div>
             </div>
 
             {/* Batch Overview Stats */}
@@ -391,10 +343,12 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                         </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">In Transit</CardTitle>
-                        <Clock className="h-4 w-4 text-blue-600" />
+                        <div className="h-8 w-8 rounded-md bg-accent/10 flex items-center justify-center">
+                            <Clock className="h-4 w-4 text-accent" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
@@ -405,10 +359,12 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                         </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="border border-border shadow-sm">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Created</CardTitle>
-                        <Zap className="h-4 w-4 text-yellow-600" />
+                        <div className="h-8 w-8 rounded-md bg-status-warning/10 flex items-center justify-center">
+                            <Zap className="h-4 w-4 text-status-warning" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
@@ -461,12 +417,12 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                             <div>
                                                 <span className="text-muted-foreground">Production:</span>
                                                 <br />
-                                                <span>{new Date(batch.manufacturingDate).toLocaleDateString()}</span>
+                                                <span>{formatProductDate(batch?.product?.manufacturingDate)}</span>
                                             </div>
                                             <div>
                                                 <span className="text-muted-foreground">Expiry:</span>
                                                 <br />
-                                                <span>{new Date(batch.expiryDate).toLocaleDateString()}</span>
+                                                <span>{formatProductDate(batch?.product?.expiryDate)}</span>
                                             </div>
                                             <div>
                                                 <span className="text-muted-foreground">Size:</span>
@@ -502,7 +458,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                                 className="flex-1 cursor-pointer min-h-[44px] touch-manipulation"
                                             >
                                                 <ArrowUpRight className="h-4 w-4 mr-1" />
-                                                {batch.status === $Enums.BatchStatus.IN_TRANSIT ? "In Transit": "Transfer"}
+                                                {batch.status === $Enums.BatchStatus.IN_TRANSIT ? "In Transit" : "Transfer"}
                                             </Button>
                                         </div>
                                     </div>
@@ -521,22 +477,33 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="min-w-[120px]">Batch ID</TableHead>
-                                    <TableHead className="min-w-[150px]">Product</TableHead>
-                                    <TableHead className="min-w-[120px] hidden sm:table-cell">Production Date</TableHead>
-                                    <TableHead className="min-w-[120px] hidden md:table-cell">Expiry Date</TableHead>
-                                    <TableHead className="min-w-[100px] hidden sm:table-cell">Batch Size</TableHead>
-                                    <TableHead className="min-w-[120px]">Status</TableHead>
-                                    <TableHead className="min-w-[140px]">Actions</TableHead>
+                                    <TableHead className="min-w-30">Batch ID</TableHead>
+                                    <TableHead className="min-w-30">Batch Type</TableHead>
+                                    <TableHead className="min-w-37.5">Product</TableHead>
+                                    <TableHead className="min-w-30 hidden sm:table-cell">Production Date</TableHead>
+                                    <TableHead className="min-w-30 hidden md:table-cell">Expiry Date</TableHead>
+                                    <TableHead className="min-w-25 hidden sm:table-cell">Batch Size</TableHead>
+                                    <TableHead className="min-w-30">Status</TableHead>
+                                    <TableHead className="min-w-35">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {filteredBatches.map((batch) => (
                                     <TableRow key={batch.batchId}>
                                         <TableCell className="font-medium">{batch.batchId}</TableCell>
+                                        <TableCell className="font-medium flex gap-2 items-center">
+                                            <span>
+                                                {batch.parentBatchId ? "Grouped" : "Single"}
+                                            </span>
+                                            {filteredBatches.some(b => b.parentBatchId === batch.id) && (
+                                                <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold uppercase">
+                                                    Container Batch
+                                                </span>
+                                            )}
+                                        </TableCell>
                                         <TableCell className="font-medium">{batch.drugName}</TableCell>
-                                        <TableCell className="hidden sm:table-cell">{new Date(batch.manufacturingDate).toLocaleDateString()}</TableCell>
-                                        <TableCell className="hidden md:table-cell">{new Date(batch.expiryDate).toLocaleDateString()}</TableCell>
+                                        <TableCell className="hidden sm:table-cell">{formatProductDate(batch?.product?.manufacturingDate)}</TableCell>
+                                        <TableCell className="hidden md:table-cell">{formatProductDate(batch?.product?.expiryDate)}</TableCell>
                                         <TableCell className="hidden sm:table-cell">{batch.batchSize.toLocaleString()}</TableCell>
                                         <TableCell>
                                             <Badge variant={getStatusColor(batch.status)} className="flex items-center gap-1 w-fit">
@@ -558,19 +525,21 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                                     <Eye className="h-4 w-4 mr-1" />
                                                     View
                                                 </Button>
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        setSelectedBatch(batch)
-                                                        setIsTransferOpen(true)
-                                                    }}
-                                                    // disabled={batch.status === "DELIVERED" || batch.status === "IN_TRANSIT"}
-                                                    disabled={batch.status === $Enums.BatchStatus.IN_TRANSIT}
-                                                    className="w-full sm:w-auto cursor-pointer"
-                                                >
-                                                    <ArrowUpRight className="h-4 w-4 mr-1" />
-                                                    {batch.status === $Enums.BatchStatus.IN_TRANSIT ? "In Transit": "Transfer"}
-                                                </Button>
+                                                {!batch.parentBatchId && (
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            setSelectedBatch(batch)
+                                                            setIsTransferOpen(true)
+                                                        }}
+                                                        disabled={batch.status === $Enums.BatchStatus.IN_TRANSIT}
+                                                        className="w-full sm:w-auto cursor-pointer"
+                                                    >
+                                                        <ArrowUpRight className="h-4 w-4 mr-1" />
+                                                        {batch.status === $Enums.BatchStatus.IN_TRANSIT ? "In Transit" : "Transfer"}
+                                                    </Button>
+                                                )}
+                                   
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -607,10 +576,10 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                         <span className="text-muted-foreground">Batch Size:</span>
                                         <span className="ml-2 font-medium">{viewingBatch.batchSize.toLocaleString()} units</span>
                                     </div>
-                                    <div className="text-sm">
+                                    {/* <div className="text-sm">
                                         <span className="text-muted-foreground">Current Location:</span>
                                         <span className="ml-2 font-medium">{viewingBatch.currentLocation || 'Not specified'}</span>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
 
@@ -620,14 +589,14 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                     <h4 className="font-semibold text-sm">Production Information</h4>
                                     <div className="text-sm">
                                         <span className="text-muted-foreground">Manufacturing Date:</span>
-                                        <div className="font-medium">{new Date(viewingBatch.manufacturingDate).toLocaleDateString()}</div>
+                                        <div className="font-medium">{formatProductDate(viewingBatch?.product?.manufacturingDate)}</div>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
                                     <h4 className="font-semibold text-sm">Expiry Information</h4>
                                     <div className="text-sm">
                                         <span className="text-muted-foreground">Expiry Date:</span>
-                                        <div className="font-medium">{new Date(viewingBatch.expiryDate).toLocaleDateString()}</div>
+                                        <div className="font-medium">{formatProductDate(viewingBatch?.product?.expiryDate)}</div>
                                     </div>
                                 </div>
                             </div>
@@ -651,7 +620,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                     </div>
                                 </div>
                             )}
-                            
+
                             {/* Metadata */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
                                 <div className="space-y-2">
@@ -675,7 +644,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                         <Button variant="outline" onClick={() => setIsViewBatchOpen(false)}>
                             Close
                         </Button>
-                        <Button 
+                        <Button
                             onClick={() => {
                                 setIsViewBatchOpen(false)
                                 if (viewingBatch) {
@@ -712,7 +681,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                 </SelectTrigger>
                                 <SelectContent className="max-h-[200px]">
                                     {organizations.length > 0 ? (
-                                        organizations.map((org) => (
+                                        organizations.filter(org => org.id !== selectedBatch?.organizationId || org.id !== orgId).map((org) => (
                                             <SelectItem key={org.id} value={org.id} className="py-3">
                                                 <div className="flex flex-col items-start">
                                                     <span className="font-medium">{org.companyName}</span>
@@ -753,7 +722,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                                 className="resize-none min-h-[100px]"
                             />
                         </div>
-                        
+
                         {/* Transfer Summary */}
                         {selectedBatch && transferForm.toOrganization && (
                             <div className="p-3 bg-muted/20 rounded-lg border">
@@ -768,8 +737,8 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                         )}
                     </div>
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 sm:justify-end sm:space-x-2 mt-6 pt-4 border-t">
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             onClick={() => {
                                 setIsTransferOpen(false)
                                 setTransferForm({
@@ -783,7 +752,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                         >
                             Cancel
                         </Button>
-                        <Button 
+                        <Button
                             onClick={handleTransferBatch}
                             disabled={isTransferring || !transferForm.toOrganization || !transferForm.transferReason.trim()}
                             className="w-full sm:w-auto order-1 sm:order-2 min-h-[44px] touch-manipulation"
@@ -803,6 +772,7 @@ const ManufacturerBatch = ({ orgId, allBatches, loadBatches }: { orgId: string; 
                     </div>
                 </DialogContent>
             </Dialog>
+
         </div>
     )
 }

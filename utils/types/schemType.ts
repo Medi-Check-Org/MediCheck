@@ -1,3 +1,5 @@
+import { Product } from "@/lib/generated/prisma/client";
+
 export enum UserRoleEnum {
   ORGANIZATION_MEMBER = "ORGANIZATION_MEMBER",
   CONSUMER = "CONSUMER",
@@ -139,8 +141,6 @@ export interface MedicationBatchProp {
   drugName: string;
   composition?: string | null;
   batchSize: number;
-  manufacturingDate: Date;
-  expiryDate: Date;
   storageInstructions?: string | null;
   currentLocation?: string | null;
   status: BatchStatusEnum;
@@ -158,6 +158,9 @@ export interface MedicationBatchProp {
     route: string;
     lastUpdate: Date;
   };
+  product?: Product;
+  productId?: string;
+  parentBatchId?: string;
 }
 export interface MedicationUnitProp {
   id: string;
@@ -217,34 +220,3 @@ export interface CounterfeitReportProp {
   updatedAt: Date;
 }
 
-/**
- * 🔒 Message Envelope Interface — standardized for all HCS-10 messages
- */
-export interface HCS10Envelope {
-  p: "hcs-10"; // Protocol identifier
-  op:
-    | "connection_request"
-    | "connection_created"
-    | "message"
-    | "close_connection";
-  data: string; // JSON-stringified payload
-  payer: string; // Agent account ID sending message
-  outbound_topic_id?: string;
-  connection_topic_id?: string;
-  created?: Date;
-  sig?: string; // Signature of data
-}
-
-/**
- * 🧾 Agent registration payload
- */
-export interface AgentRegistrationPayload {
-  accountId: string;
-  orgId: string;
-  role: string; // "manufacturer" | "distributor" | "pharmacy" | "hospital" | "regulator" | "gateway"
-  inboundTopic: string;
-  outboundTopic: string;
-  managedRegistry?: string;
-  profileId?: string;
-  publicKey: string;
-}
